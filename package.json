@@ -1,1 +1,24 @@
-{"name":"onhold","version":"0.1.0","private":true,"type":"module","scripts":{"build":"node scripts/build.mjs","test":"node --test test/*.test.mjs","dev":"python3 -m http.server 4173 -d dist"}}
+{
+  "name": "onhold",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/*.test.mjs && cargo test --offline --manifest-path backend/Cargo.toml",
+    "dev": "npm run build && cargo run --manifest-path backend/Cargo.toml",
+    "prebuild": "node scripts/contracts.mjs",
+    "pretest": "node scripts/contracts.mjs",
+    "preview:static": "python3 -m http.server 4189 -d dist"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0",
+    "ethers": "^6.17.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.10",
+    "solc": "^0.8.30"
+  }
+}

@@ -14,3 +14,23 @@ export const illustrations = {
   'copy-value': frame(`${tabs}${sidebar}${table}${outline(265, 244, 179, 37)}${outline(463, 244, 327, 37)}${rect(474, 248, 305, 26, '#d6e1fc', 'none', 2)}${text(479, 267, 'sk-ant-sid02-EXAMPLE-ONLY…', 14, '#233d7c')}${callout(769, 304, 1)}<path d="M761 291L744 277" stroke="${orange}" stroke-width="2"/>${text(686, 348, '双击值并复制完整内容', 15, orange, 600)}${text(270, 368, '不是 sessionKeyLC', 15, muted)}${rect(264, 397, 664, 72, '#fff3eb')}${text(287, 428, '仅复制 sessionKey 的 Value，不要复制整份 Cookie。', 17, orange, 600)}${text(287, 453, '不要把真实凭证发给他人，也不要截图分享。', 16, '#8b543b')}`),
   verify: frame(`${text(76, 120, 'ONHOLD', 25, ink, 800)}${text(76, 165, '验证 Claude 封禁状态', 27, ink, 600)}${rect(76, 192, 844, 48, '#f2f4fa')}${text(96, 222, '领取钱包  0x1234…abcd', 17, muted)}${text(78, 282, '会话凭证', 16, ink, 600)}${rect(76, 296, 844, 49, 'white', orange)}${text(95, 328, '••••••••••••••••••••••••••••••••', 19, muted)}${callout(930, 319, 1)}${text(77, 377, '正式上线前，需明确说明凭证用途及处理方式。', 16, muted)}${rect(76, 407, 844, 49, '#292d48')}${text(391, 438, '验证封禁状态（示意）', 17, 'white', 600)}${text(78, 486, '此图不是验证成功凭证；领取还需服务器确认和钱包交易。', 15, muted)}`),
 };
+const englishLabels = {
+  '界面示意 · 全部为虚构示例':'Illustration · Fictional examples',
+  '你的账号目前受到限制':'Your account is restricted',
+  '请确认已登录需要验证的 Claude 账号。':'Sign in to the Claude account you want to verify.',
+  '账号受限页面示意':'Restriction page example',
+  '登录后看到受限提示，再回到引导继续。':'After confirming the restriction, return to this guide.',
+  '1  Application（应用）    →    2  Cookies / claude.ai':'1  Application    →    2  Cookies / claude.ai',
+  '3  在筛选框输入 sessionKey':'3  Filter for sessionKey',
+  '双击值并复制完整内容':'Double-click and copy the full value',
+  '不是 sessionKeyLC':'Not sessionKeyLC',
+  '仅复制 sessionKey 的 Value，不要复制整份 Cookie。':'Copy only the sessionKey value, not all cookies.',
+  '不要把真实凭证发给他人，也不要截图分享。':'Do not share real credentials or screenshots of them.',
+  '验证 Claude 封禁状态':'Verify Claude account restriction',
+  '领取钱包  0x1234…abcd':'Receiving wallet  0x1234…abcd',
+  '会话凭证':'Session credential',
+  '正式上线前，需明确说明凭证用途及处理方式。':'Review how your credential will be used before submitting.',
+  '验证封禁状态（示意）':'Verify restriction (illustration)',
+  '此图不是验证成功凭证；领取还需服务器确认和钱包交易。':'This is not claim proof. Server verification and a wallet transaction are required.',
+};
+export const englishIllustrations=Object.fromEntries(Object.entries(illustrations).map(([name,source])=>[name+'-en',Object.entries(englishLabels).reduce((svg,[zh,en])=>svg.replaceAll(zh,en),source)]));

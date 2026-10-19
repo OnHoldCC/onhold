@@ -14,18 +14,19 @@ export function formatEth(value) {
   return (wei / 10n**18n).toString() + (decimal ? '.' + decimal : '');
 }
 export function currentPrice(ad, now = Date.now()) {
+  if (BigInt(ad.bid) === 0n) return 0n;
   const days = Math.max(0, Math.floor((now - ad.startedAt) / 86400000));
   const price = BigInt(ad.bid) >> BigInt(Math.min(days,256));
   return price > 0n ? price : 1n;
 }
 export function seedMarket(now = Date.now()) {
   const rows = [
-    ['LOOP','把想法，变成下一个作品。','开发工具','0.08',32,4268,'Build. Ship. Repeat.','loop'],
-    ['Mint Studio','为独立创造者，造一间工作室。','创作者','0.064',13,3512,'Make something yours.','mint'],
-    ['序章','一群开发者的下一次出发。','社区','0.048',52,2864,'每一个开始，都算数。','chapter'],
-    ['OpenKit','开放的工具，无限的可能。','开发工具','0.024',3,2106,'Less setup. More building.','openkit'],
-    ['像素公园','在这里，找到一起创造的人。','社区','0.036',29,1948,'A place for your next idea.','pixel'],
-    ['MADE BY YOU','认真做的小东西，也值得被看见。','创作者','0.018',6,2144,'Small things. Big feelings.','made'],
+    ['LOOP','统一接口，连接你需要的 AI 模型。','开发工具','0.08',32,4268,'Build. Ship. Repeat.','loop'],
+    ['Mint API','面向开发者的轻量 API 中转服务。','创作者','0.064',13,3512,'Make something yours.','mint'],
+    ['Bridge API','你的模型调用，从这里连接。','社区','0.048',52,2864,'每一个开始，都算数。','chapter'],
+    ['OpenLink','一个入口，连接多种模型服务。','开发工具','0.024',3,2106,'Less setup. More building.','openkit'],
+    ['CloudRoute','为你的 AI 工作流提供中转入口。','社区','0.036',29,1948,'A place for your next idea.','pixel'],
+    ['Nova Relay','从这里找到下一条模型调用路径。','创作者','0.018',6,2144,'Small things. Big feelings.','made'],
   ];
   return {ads:rows.map(([title,description,category,bid,hours,clicks,tagline,cover],id) => ({id,title,description,category,bid:parseEth(bid).toString(),startedAt:now-hours*3600000,clicks,tagline,cover,url:'https://example.com/'})),history:[],localClicks:0};
 }

@@ -1,14 +1,13 @@
-import { mkdir, copyFile, writeFile } from 'node:fs/promises';
+import { mkdir, copyFile, writeFile, rm } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
-import { illustrations } from '../src/illustrations.mjs';
-
-const root = fileURLToPath(new URL('../', import.meta.url));
-await mkdir(join(root, 'dist/assets'), { recursive: true });
-for (const file of ['index.html', 'analytics.html', 'claim.html', 'style.css', 'app.js', 'steps.mjs', 'shell.js', 'pages.js', 'market.mjs']) {
-  await copyFile(join(root, 'src', file), join(root, 'dist', file));
-}
-for (const [name, svg] of Object.entries(illustrations)) {
-  await writeFile(join(root, 'dist/assets', name + '.svg'), svg);
-}
-console.log('Built 3 pages and 4 guide illustrations in dist/.');
+import { build } from 'esbuild';
+import { illustrations, englishIllustrations } from '../src/illustrations.mjs';
+const root=fileURLToPath(new URL('../',import.meta.url));
+await rm(join(root,'dist'),{recursive:true,force:true});
+await mkdir(join(root,'dist/assets'),{recursive:true});
+await build({entryPoints:[join(root,'src/App.jsx')],outfile:join(root,'dist/app.js'),bundle:true,minify:true,format:'esm',target:['es2022'],define:{'process.env.NODE_ENV':'"production"'}});
+for(const file of ['index.html','claim.html','analytics.html']) await copyFile(join(root,'src/index.html'),join(root,'dist',file));
+await copyFile(join(root,'src/style.css'),join(root,'dist/style.css'));
+for(const [name,svg] of Object.entries({...illustrations,...englishIllustrations})) await writeFile(join(root,'dist/assets',name+'.svg'),svg);
+console.log('Built React app: 3 pages, 2 languages, $Claude components.');

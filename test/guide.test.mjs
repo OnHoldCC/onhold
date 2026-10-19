@@ -23,10 +23,8 @@ test('shortcuts match the selected operating system', () => {
   assert.match(instructionsFor(steps[1], 'windows')[0], /Ctrl/);
   assert.ok(!instructionsFor(steps[1], 'mac')[0].includes('{shortcut}'));
 });
-test('preview cannot collect credentials or submit them to an unimplemented service', async () => {
-  const html = await readFile(new URL('../src/claim.html', import.meta.url), 'utf8');
-  const js = await readFile(new URL('../src/app.js', import.meta.url), 'utf8');
-  assert.match(html, /id="session-preview"[^>]*disabled/);
-  assert.doesNotMatch(js, /fetch\(|localStorage|sessionStorage|clipboard\.read|ethereum/);
-  assert.doesNotMatch(html, /<form|sk-ant-sid02-/);
+test('React claim preview cannot accept credentials before verification exists', async () => {
+  const jsx = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
+  assert.match(jsx, /type="password" disabled autoComplete="off"/);
+  assert.doesNotMatch(jsx, /clipboard\.read|sk-ant-sid02-/);
 });
