@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="description" content="ONHOLD：用四步图解了解如何验证 Claude 封禁状态。无需安装扩展。">
+  <title>验证领取 · ONHOLD</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body data-page="claim">
+  <a class="skip" href="#guide">跳到图解</a>
+  <main class="site-main claim-main">
+
+    <section class="intro">
+      <div><div class="eyebrow">CLAUDE ACCOUNT VERIFICATION</div><h1>账号被封，下一步看这里。</h1><p>不用装插件。跟着图片完成操作，再回到这里验证。</p></div>
+      <div class="guide-stamp"><span aria-hidden="true">↗</span><strong>4 步图解</strong><small>桌面版 Chrome</small></div>
+    </section>
+    <div class="notice"><span class="notice-icon" aria-hidden="true">i</span><p><strong>这是操作引导预览。</strong>验证服务和领取合约尚未接入，请勿输入真实会话凭证。图中所有账号及凭证均为虚构示例。</p></div>
+    <section class="claim-summary"><div><span>领取钱包</span><strong id="claim-wallet">请先连接领取钱包</strong></div><div><span>计划验证方式</span><strong>封禁状态自动验证</strong></div><div><span>当前进度</span><strong>图片引导预览</strong></div></section>
+    <div class="workspace" id="guide">
+      <aside class="step-sidebar" aria-label="操作步骤">
+        <div class="sidebar-label">验证指南</div>
+        <nav id="step-nav"></nav>
+        <div class="sidebar-help"><span aria-hidden="true">⌘</span><strong>请使用电脑操作</strong><p>手机浏览器不支持本教程中的 Chrome 开发者工具。</p></div>
+      </aside>
+      <section class="guide-card" aria-labelledby="step-title">
+        <div class="card-top"><span id="step-count" class="overline">STEP 01 / 04</span><div class="os-switch" role="group" aria-label="电脑系统"><button type="button" data-os="mac" aria-pressed="true">macOS</button><button type="button" data-os="windows" aria-pressed="false">Windows / Linux</button></div></div>
+        <h2 id="step-title" tabindex="-1"></h2><p id="step-intro" class="step-intro"></p>
+        <button class="illustration" id="zoom" type="button" aria-label="放大当前步骤图片"><img id="step-image" width="1000" height="560" alt=""><span class="zoom-hint">↗ 点击查看大图</span></button>
+        <ol id="instructions" class="instructions"></ol>
+        <a class="open-claude" id="open-claude" href="https://claude.ai/restricted" target="_blank" rel="noopener noreferrer">打开 Claude 受限页面 <span aria-hidden="true">↗</span></a>
+        <div class="demo-form" id="demo-form" hidden><label for="session-preview">会话凭证</label><input id="session-preview" type="password" disabled placeholder="验证服务未接入，暂不接收真实凭证" autocomplete="off"><p>真实验证功能接入后，此处会显示验证结果与领取入口。</p></div>
+        <div class="step-tip"><span aria-hidden="true">↳</span><p id="step-tip"></p></div>
+        <div class="card-bottom"><button type="button" id="previous" class="previous">← 上一步</button><span id="page-dots" aria-hidden="true"></span><button type="button" id="next" class="next">下一步 <span aria-hidden="true">→</span></button></div>
+      </section>
+    </div>
+    <section class="verification-fields"><h2>验证后，能确认哪些信息？</h2><div class="field-grid"><div><span>账号状态</span><strong>standing</strong><small>确认当前受限状态</small></div><div><span>封禁时间</span><strong>banned_at</strong><small>接口记录的时间</small></div><div><span>此前订阅</span><strong>prev_plan_tier</strong><small>不代表当前有效订阅</small></div><div><span>被封组织</span><strong>banned_orgs[].uuid</strong><small>组织标识，不是个人用户 ID</small></div></div><p>不含完整封禁历史、订阅订单或付款金额。正式领取以服务端核验为准。</p></section>
+    <section class="faq" aria-label="常见问题"><h2>操作时遇到问题？</h2>
+      <details><summary>看不到 Application（应用）标签？</summary><p>开发者工具顶部空间不足时，部分标签会折叠到 » 菜单中。也可以拉宽开发者工具后再查找。</p></details>
+      <details><summary>找不到 sessionKey，或者验证失败？</summary><p>确认选择的是 claude.ai 的 Cookie，且已登录正确的账号。会话可能已经过期，可重新登录再试。网络错误、403 或验证码拦截都不等于账号被封禁。</p></details>
+      <details><summary>为什么不能直接上传封禁截图领取？</summary><p>本页的图片用于教你操作。封禁截图和用户自己提交的 JSON 无法单独证明真实性，正式领取需要服务器验证真实状态，并检查是否重复领取。</p></details>
+    </section>
+    <footer class="site-footer"><span>© ONHOLD · 独立社区项目</span><span>无需安装浏览器扩展 · 不接收真实凭证</span></footer>
+  </main>
+  <dialog id="image-dialog" aria-label="操作图解大图"><div class="dialog-top"><strong id="dialog-title"></strong><button type="button" id="close-dialog" aria-label="关闭大图">关闭 ×</button></div><img id="large-image" alt=""><p>界面示意，具体菜单名称可能随 Chrome 版本和语言有所不同。</p></dialog>
+  <noscript><p class="notice">请启用 JavaScript 查看分步图解。也可直接查看图片：<a href="assets/open-claude.svg">打开 Claude</a>、<a href="assets/find-session.svg">找到凭证</a>、<a href="assets/copy-value.svg">复制值</a>、<a href="assets/verify.svg">返回验证</a>。</p></noscript>
+</body>
+</html>
