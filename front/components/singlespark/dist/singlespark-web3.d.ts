@@ -1,0 +1,23 @@
+import { SingleSparkChainIcon, SingleSparkTokenIcon, SingleSparkTokenIdentity } from "./singlespark-assets";
+import { SingleSparkPriceChange, SingleSparkSparkline, SingleSparkStatCard, SingleSparkStatGrid, SingleSparkBondingProgress, SingleSparkTradesTable } from "./singlespark-stats";
+import { SingleSparkCandlestickChart } from "./singlespark-chart";
+import { SingleSparkTradeTabs, SingleSparkAmountPresets, SingleSparkSlippageControl, SingleSparkTradeSummary, SingleSparkTransactionStatus, SingleSparkTokenTradePanel } from "./singlespark-trade";
+export declare const singleSparkWeb3Components: {
+    SingleSparkChainIcon: typeof SingleSparkChainIcon;
+    SingleSparkTokenIcon: typeof SingleSparkTokenIcon;
+    SingleSparkTokenIdentity: typeof SingleSparkTokenIdentity;
+    SingleSparkPriceChange: typeof SingleSparkPriceChange;
+    SingleSparkSparkline: typeof SingleSparkSparkline;
+    SingleSparkStatCard: typeof SingleSparkStatCard;
+    SingleSparkStatGrid: typeof SingleSparkStatGrid;
+    SingleSparkBondingProgress: typeof SingleSparkBondingProgress;
+    SingleSparkTradesTable: typeof SingleSparkTradesTable;
+    SingleSparkCandlestickChart: typeof SingleSparkCandlestickChart;
+    SingleSparkTradeTabs: typeof SingleSparkTradeTabs;
+    SingleSparkTokenAmountInput: import("react").ForwardRefExoticComponent<import("./singlespark-trade.shared").SingleSparkTokenAmountInputProps & import("react").RefAttributes<HTMLInputElement>>;
+    SingleSparkAmountPresets: typeof SingleSparkAmountPresets;
+    SingleSparkSlippageControl: typeof SingleSparkSlippageControl;
+    SingleSparkTradeSummary: typeof SingleSparkTradeSummary;
+    SingleSparkTransactionStatus: typeof SingleSparkTransactionStatus;
+    SingleSparkTokenTradePanel: typeof SingleSparkTokenTradePanel;
+};

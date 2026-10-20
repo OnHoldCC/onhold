@@ -1,0 +1,186 @@
+{
+  "source": "https://usepaid.app/payments",
+  "capturedAt": "2026-10-07",
+  "payments": [
+    {
+      "amount": "$0.06",
+      "recipient": "mert",
+      "avatar": "reference-ab413c373c8c.webp",
+      "age": "28m",
+      "breakdowns": [
+        {
+          "ticker": "ARGON",
+          "image": "reference-7cf22f29ac79.webp",
+          "amount": "$0.06",
+          "transfers": [
+            {
+              "asset": "SOL",
+              "amount": "0.000538605 SOL",
+              "transactionUrl": "https://solscan.io/tx/TLHgMQa4HYignHWq3z3Set3snx9iHh5CwbG99qYcDeM2vLavVZ3mAdcb8HARs8nBWsmqcHApHt7j9BsrfFW4mbZ"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "amount": "$14.74",
+      "recipient": "Zack Morris",
+      "avatar": "reference-9d159fc176a0.webp",
+      "age": "1h",
+      "breakdowns": [
+        {
+          "ticker": "ZACK",
+          "image": "reference-88726a2e7447.webp",
+          "amount": "$13.81",
+          "transfers": [
+            {
+              "asset": "SOL",
+              "amount": "0.114593495 SOL",
+              "transactionUrl": "https://solscan.io/tx/4eUUDEYY2gCC6eHBrng4utbrFd58JLZnMqneeH88t1WYpy75BaF1JWoKPduKB9Ze1B9R8H6HYHGKFoyjisM24G9J"
+            }
+          ]
+        },
+        {
+          "ticker": "ZACK",
+          "image": "reference-fb7ca6abb1a0.webp",
+          "amount": "$0.93",
+          "transfers": [
+            {
+              "asset": "SOL",
+              "amount": "0.007725785 SOL",
+              "transactionUrl": "https://solscan.io/tx/4eUUDEYY2gCC6eHBrng4utbrFd58JLZnMqneeH88t1WYpy75BaF1JWoKPduKB9Ze1B9R8H6HYHGKFoyjisM24G9J"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "amount": "$6.32",
+      "recipient": "Charmi",
+      "avatar": "reference-1e4118537ff3.webp",
+      "age": "2h",
+      "breakdowns": [
+        {
+          "ticker": "PIKA",
+          "image": "reference-29b8a1962caa.webp",
+          "amount": "$4.93",
+          "transfers": [
+            {
+              "asset": "SOL",
+              "amount": "0.040187212 SOL",
+              "transactionUrl": "https://solscan.io/tx/5RVZi1yN6MEpwm9EFc9tA9GrSZFrVXiQA3EmDXexHyEcKu4v1Tg6FCaEqmHrYyS5dKSgNvrsftoKM8CDfdAiFnBB"
+            }
+          ]
+        },
+        {
+          "ticker": "CHAR",
+          "image": "reference-d0be5ad85a36.webp",
+          "amount": "$1.19",
+          "transfers": [
+            {
+              "asset": "SOL",
+              "amount": "0.010111962 SOL",
+              "transactionUrl": "https://solscan.io/tx/5RVZi1yN6MEpwm9EFc9tA9GrSZFrVXiQA3EmDXexHyEcKu4v1Tg6FCaEqmHrYyS5dKSgNvrsftoKM8CDfdAiFnBB"
+            }
+          ]
+        },
+        {
+          "ticker": "NMANDER",
+          "image": "reference-7577b9b73811.webp",
+          "amount": "$0.19",
+          "transfers": [
+            {
+              "asset": "SOL",
+              "amount": "0.001583744 SOL",
+              "transactionUrl": "https://solscan.io/tx/5RVZi1yN6MEpwm9EFc9tA9GrSZFrVXiQA3EmDXexHyEcKu4v1Tg6FCaEqmHrYyS5dKSgNvrsftoKM8CDfdAiFnBB"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "amount": "$1,415.19",
+      "recipient": "anabology",
+      "avatar": "reference-0f21a52fb607.webp",
+      "age": "3h",
+      "breakdowns": [
+        {
+          "ticker": "SLOPCORE",
+          "image": "reference-1f0b47e67470.webp",
+          "amount": "$999.34",
+          "transfers": [
+            {
+              "asset": "SOL",
+              "amount": "8.449555623 SOL",
+              "transactionUrl": "https://solscan.io/tx/3LoncYdTRtWn7H2UG8zF4CUaC5uRRJ1dHkaP2d4maR224CEwkx9M3XhLriVbc5cUAmqM2E64w9sz1Z4vSuDT8d6W"
+            }
+          ]
+        },
+        {
+          "ticker": "CLAUDIA",
+          "image": "reference-a4384f39708e.webp",
+          "amount": "$384.76",
+          "transfers": [
+            {
+              "asset": "SOL",
+              "amount": "3.24995948 SOL",
+              "transactionUrl": "https://solscan.io/tx/3LoncYdTRtWn7H2UG8zF4CUaC5uRRJ1dHkaP2d4maR224CEwkx9M3XhLriVbc5cUAmqM2E64w9sz1Z4vSuDT8d6W"
+            }
+          ]
+        },
+        {
+          "ticker": "CLAUDIA",
+          "image": "reference-3c69025c1a95.webp",
+          "amount": "$31.09",
+          "transfers": [
+            {
+              "asset": "SOL",
+              "amount": "0.262919285 SOL",
+              "transactionUrl": "https://solscan.io/tx/3LoncYdTRtWn7H2UG8zF4CUaC5uRRJ1dHkaP2d4maR224CEwkx9M3XhLriVbc5cUAmqM2E64w9sz1Z4vSuDT8d6W"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "amount": "$8,733.35",
+      "recipient": "You",
+      "avatar": "reference-d5cfe4706eee.webp",
+      "age": "7h",
+      "breakdowns": [
+        {
+          "ticker": "parafactual",
+          "image": "reference-730357c00823.webp",
+          "amount": "$8,733.35",
+          "transfers": [
+            {
+              "asset": "SOL",
+              "amount": "71.779305864 SOL",
+              "transactionUrl": "https://solscan.io/tx/5xqvmFSjg7QMiaAqaxvTwPD7XA63Zxpp3BmZt2rujRNQwwE4oRPbGieCYtk1yDM8RkqgUUjaDa1rLF9V2eJVrtvC"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "amount": "$1.81",
+      "recipient": "marcelo santos/#AiXovia",
+      "avatar": "reference-eb89ce97a73c.webp",
+      "age": "9h",
+      "breakdowns": [
+        {
+          "ticker": "PF",
+          "image": "reference-1c2d9a218fe0.webp",
+          "amount": "$1.81",
+          "transfers": [
+            {
+              "asset": "SOL",
+              "amount": "0.015252007 SOL",
+              "transactionUrl": "https://solscan.io/tx/2TdsdSuB52rgEzgY9zxwzvqWWVcibjGw3fJzPxYCPNHkLyxhJHo3DKX5xEsNfxx7odotwR3tdSFpuC2btLJf7i1D"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,276 @@
+/* react/components/ui/NavigationIndicator.css */
+.app-navigation-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  color: var(--text, var(--ss-text));
+  opacity: .14;
+}
+.app-navigation-indicator__liquid {
+  display: block;
+  overflow: visible;
+  fill: currentColor;
+}
+.app-navigation-indicator__liquid > span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+}
+.app-navigation-indicator__head {
+  width: 44px;
+  height: 34px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.app-navigation-indicator__tail {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.app-navigation-indicator__neck {
+  width: 100px;
+  height: 38px;
+  transform-origin: 0 50%;
+}
+.app-navigation-indicator__neck svg {
+  display: block;
+  overflow: visible;
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-navigation-indicator__liquid > span {
+    will-change: auto;
+  }
+}
+
+/* react/components/ui/AddressLink.css */
+.address-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+}
+.address-link__explorer {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: var(--soft);
+}
+.address-link__explorer:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.singlespark-button.contract-copy {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  height: 28px;
+  min-height: 28px;
+  padding: 0 6px;
+  gap: 5px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted, var(--ss-text));
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1;
+}
+.contract-copy code {
+  font-family: var(--font-mono, var(--ss-font-mono));
+}
+.contract-copy > svg {
+  width: 14px;
+  height: 14px;
+}
+.singlespark-button.contract-copy[aria-label=Copied] {
+  color: var(--text-strong, var(--ss-text));
+}
+@media (hover: hover) {
+  .singlespark-button.contract-copy:hover {
+    color: var(--text, var(--ss-text));
+    border-color: var(--line, var(--ss-border));
+    background: var(--surface, var(--ss-bg));
+  }
+  .singlespark-button.contract-copy:hover:not(:focus-visible) {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .14);
+  }
+}
+@media (pointer: coarse) {
+  .singlespark-button.contract-copy,
+  .address-link__explorer {
+    height: 44px;
+    min-height: 44px;
+  }
+  .address-link__explorer {
+    width: 44px;
+  }
+}
+
+/* react/components/ui/Input.css */
+.app-input {
+  appearance: none;
+  box-sizing: border-box;
+  min-width: 0;
+  color: var(--text);
+  caret-color: var(--accent);
+  font: 400 16px/1.5 var(--font-ui);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
+}
+.app-input:not(.app-input--bare) {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--field);
+}
+.app-input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+.app-input:not(.app-input--bare):hover:not(:disabled) {
+  border-color: var(--muted);
+}
+.app-input:not(.app-input--bare):focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb), .14);
+}
+.app-input:not(.app-input--bare)[aria-invalid=true] {
+  border-color: var(--icon-danger);
+  background: color-mix(in srgb, var(--surface) 97%, var(--icon-danger));
+}
+.app-input:not(.app-input--bare)[aria-invalid=true]:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--icon-danger) 14%, transparent);
+}
+.app-input:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+.app-input[readonly] {
+  color: var(--soft);
+}
+.app-input--bare {
+  border: 0;
+  background: transparent;
+}
+.app-input--bare:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.app-input[type=number] {
+  appearance: textfield;
+}
+.app-input::-webkit-inner-spin-button,
+.app-input::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+.app-textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+.app-checkbox {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+}
+.app-checkbox input {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  border: 1px solid var(--muted);
+  border-radius: 5px;
+  background: var(--field);
+  cursor: pointer;
+}
+.app-checkbox input:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+.app-checkbox i {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--button-text);
+  font-size: 16px;
+  font-weight: 700;
+  opacity: 0;
+  pointer-events: none;
+}
+.app-checkbox input:checked + i {
+  opacity: 1;
+}
+.app-checkbox input:focus-visible,
+.app-range:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.app-checkbox:has(input:disabled) {
+  opacity: .55;
+}
+.app-checkbox input:disabled {
+  cursor: not-allowed;
+}
+.app-range {
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+.app-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 6px;
+  background: var(--line-2);
+}
+.app-range::-moz-range-track {
+  height: 6px;
+  border-radius: 6px;
+  background: var(--line-2);
+}
+.app-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -7px;
+  border: 3px solid var(--surface);
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.app-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 3px solid var(--surface);
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.app-range:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-input {
+    transition: none;
+  }
+}

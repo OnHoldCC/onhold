@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "project": {
+    "team_name": "default",
+    "region_name": "rainbond",
+    "app_name": "onhold"
+  },
+  "components": [
+    {
+      "name": "postgres",
+      "role": "database",
+      "image": "docker.1ms.run/library/postgres:16-bookworm",
+      "port": 5432,
+      "port_alias": "DATABASE",
+      "env": {
+        "POSTGRES_DB": "onhold",
+        "POSTGRES_USER": "postgres",
+        "POSTGRES_PASSWORD": "$POSTGRES_PASSWORD",
+        "PGDATA": "/var/lib/postgresql/data/pgdata"
+      },
+      "connection_envs": {
+        "DB_NAME": "onhold",
+        "DB_USER": "onhold",
+        "DB_PASS": "$DB_PASSWORD"
+      },
+      "storage": [
+        {
+          "volume_name": "postgres-data",
+          "volume_type": "share-file",
+          "volume_path": "/var/lib/postgresql/data"
+        }
+      ],
+      "protocol": "tcp"
+    },
+    {
+      "name": "redis",
+      "role": "cache",
+      "image": "docker.1ms.run/library/redis:7-bookworm",
+      "port": 6379,
+      "port_alias": "REDIS",
+      "storage": [
+        {
+          "volume_name": "redis-data",
+          "volume_type": "share-file",
+          "volume_path": "/data"
+        }
+      ],
+      "protocol": "tcp"
+    },
+    {
+      "name": "api",
+      "role": "service",
+      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261020-static-permissions",
+      "port": 8080,
+      "env": {
+        "ONHOLD_ORIGIN": "https://onhold.cc",
+        "ONHOLD_MARKET_ADDRESS": "0x4b48656Dab017f9eE369Fc7d5873F5f911386241",
+        "ONHOLD_MARKET_FROM_BLOCK": "137843424",
+        "ONHOLD_CHAIN_RPC_URL": "https://bsc-testnet-rpc.publicnode.com",
+        "ONHOLD_CHAIN_WS_URL": "wss://bsc-testnet-rpc.publicnode.com",
+        "ONHOLD_BUYBACK_VAULT": "0x1c59592F3fd8c27AAc41cEDB50eaBE3F42b68850",
+        "ONHOLD_BUYBACK_FROM_BLOCK": "137843516",
+        "ONHOLD_BUYBACK_FLAP_LIVE": "false"
+      },
+      "depends_on": [
+        "postgres",
+        "redis"
+      ],
+      "storage": [
+        {
+          "volume_name": "api-data",
+          "volume_type": "share-file",
+          "volume_path": "/data"
+        }
+      ]
+    }
+  ]
+}

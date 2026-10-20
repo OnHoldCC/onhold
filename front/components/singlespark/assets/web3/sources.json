@@ -1,0 +1,133 @@
+{
+  "checkedAt": "2026-10-07",
+  "assets": [
+    {
+      "file": "networks-arbitrum-one.svg",
+      "source": "https://github.com/0xa3k5/web3icons",
+      "package": "@web3icons/core@4.0.58",
+      "kind": "community",
+      "variant": "branded",
+      "sha256": "8480f7abfc5cbecf40d7239543c6659e884fb598fd34a689c613dd08347465d7"
+    },
+    {
+      "file": "networks-avalanche.svg",
+      "source": "https://github.com/0xa3k5/web3icons",
+      "package": "@web3icons/core@4.0.58",
+      "kind": "community",
+      "variant": "branded",
+      "sha256": "9d08572e1d7aea76786e384db20e773ba9000a38deaeabf230c676da1964152f"
+    },
+    {
+      "file": "networks-base.svg",
+      "source": "https://brand.base.org/base-brand.zip",
+      "archiveEntry": "1_Base Brand Assets/The Square/Base_square_blue.svg",
+      "guidelines": "https://brand.base.org/core-identifiers",
+      "kind": "official",
+      "sha256": "b4f2b487011713f98481cc53c4ce095629b4876acbdbc2f0f3ad69a9688ba82e"
+    },
+    {
+      "file": "networks-binance-smart-chain.svg",
+      "source": "https://www.bnbchain.org/images/brand-guidelines/svg/BNB%20Chain_Symbol_Yellow.svg",
+      "guidelines": "https://www.bnbchain.org/en/brand-guidelines",
+      "kind": "official",
+      "sha256": "b8ff1ce0b5af2e2d9bcf5ec89fedd5224079f4f7267e306e23e8d691024f5eff"
+    },
+    {
+      "file": "networks-bitcoin.svg",
+      "source": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/svg/color/btc.svg",
+      "kind": "community",
+      "sha256": "5a8131ecdf855b12cb56080aeeeefea266976529c45b2d58c284a13b7519f4ca"
+    },
+    {
+      "file": "networks-ethereum.svg",
+      "source": "https://ethereum.org/images/assets/svgs/eth-diamond-black.svg",
+      "guidelines": "https://ethereum.org/assets/",
+      "kind": "official",
+      "sha256": "4611f65a00cff2e61dd7815aa59cb1bed0e0a266acca7eafc8212e78c7c7d10e"
+    },
+    {
+      "file": "networks-optimism.svg",
+      "source": "https://optimism.io/files/5a7eaedf4e0c96529342e556b52cb05da12d9f23.zip",
+      "archiveEntry": "OP Mainnet/SVG/OP_mainnet.svg",
+      "guidelines": "https://optimism.io/brand",
+      "kind": "official",
+      "sha256": "a301cb9b4921da795368bc3d71d524174528932d46e57df55a572a979b270286"
+    },
+    {
+      "file": "networks-solana.svg",
+      "source": "https://solana.com/src/img/branding/solanaLogoMark.svg",
+      "guidelines": "https://solana.com/branding",
+      "kind": "official",
+      "sha256": "3d3401109aa061dec40a8659f1847817a8e647f98de1e65e76e86a95bbe1f08a"
+    },
+    {
+      "file": "networks-sui.svg",
+      "source": "https://github.com/0xa3k5/web3icons",
+      "package": "@web3icons/core@4.0.58",
+      "kind": "community",
+      "variant": "branded",
+      "sha256": "cf698e47da9b29148e3b2c76ce3b20a19d18732072e6dd95b717aad301e29ba3"
+    },
+    {
+      "file": "tokens-AVAX.svg",
+      "source": "https://github.com/0xa3k5/web3icons",
+      "package": "@web3icons/core@4.0.58",
+      "kind": "community",
+      "variant": "background",
+      "sha256": "c9f57cf0ec0d5f2cff744830e3a3e43c0692b34b2983f10516a8deafc79b6584"
+    },
+    {
+      "file": "tokens-BNB.svg",
+      "source": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/svg/color/bnb.svg",
+      "guidelines": "https://github.com/spothq/cryptocurrency-icons",
+      "kind": "community",
+      "sha256": "ce2befc91baa544c13b63d6c02a12cfcf84702a5ec29b650e358a8b4a96c4ce8"
+    },
+    {
+      "file": "tokens-BTC.svg",
+      "source": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/svg/color/btc.svg",
+      "kind": "community",
+      "sha256": "5a8131ecdf855b12cb56080aeeeefea266976529c45b2d58c284a13b7519f4ca"
+    },
+    {
+      "file": "tokens-ETH.svg",
+      "source": "https://ethereum.org/images/assets/eth-diamond-purple.png",
+      "guidelines": "https://ethereum.org/assets/",
+      "kind": "official",
+      "sha256": "b03f2825319b03c8d218c182c763eed19bad0701288339945b7a9ab6966c3d4d",
+      "sourceSha256": "9eb3a3787b884a9886859dd8ab2cb8d2b2c4f19c0c4d6f7f199dc2defa404fcd",
+      "checkedAt": "2026-10-11",
+      "format": "Original PNG embedded byte for byte in a square SVG wrapper"
+    },
+    {
+      "file": "tokens-SOL.svg",
+      "source": "https://solana.com/src/img/branding/solanaLogoMark.svg",
+      "guidelines": "https://solana.com/branding",
+      "kind": "official",
+      "sha256": "3d3401109aa061dec40a8659f1847817a8e647f98de1e65e76e86a95bbe1f08a"
+    },
+    {
+      "file": "tokens-SUI.svg",
+      "source": "https://github.com/0xa3k5/web3icons",
+      "package": "@web3icons/core@4.0.58",
+      "kind": "community",
+      "variant": "background",
+      "sha256": "92709536646227b17865cc92af1f208801517f4ece8a1fdff0ee26347f394ff7"
+    },
+    {
+      "file": "tokens-USDC.svg",
+      "source": "https://6778953.fs1.hubspotusercontent-na1.net/hubfs/6778953/Pressroom/brandkit/logo-downloads/usdc.zip",
+      "archiveEntry": "Token Logo/USDC Token.svg",
+      "guidelines": "https://www.circle.com/pressroom",
+      "kind": "official",
+      "sha256": "fe4f9d5f34ef4ebeb5d80e1f5ff63dcaf5a0d5495f4adf206e4c3011d1f5c57d"
+    },
+    {
+      "file": "tokens-USDT.svg",
+      "source": "https://tether.to/images/logoCircle.svg",
+      "guidelines": "https://tether.to/en/media/",
+      "kind": "official",
+      "sha256": "7c9f13b068996186c4df0f3dcdeeeb86e11cee6d8a9e7597cec19ccee164d7c5"
+    }
+  ]
+}

@@ -1,9 +1,10 @@
 node_modules/
-out/
-cache/
-.env
-broadcast/
-previews/
+front/dist/
+contracts/artifacts/
 backend/target/
 backend/data/
-artifacts/
+.env
+.env.*
+!.env.example
+.DS_Store
+.rainbond/

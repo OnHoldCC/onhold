@@ -1,0 +1,30 @@
+{
+  "chainId": 97,
+  "protocol": "nft-staking-v4",
+  "mock": true,
+  "adKeeper": "0xdd8A393d142dcdC1EBe8710F7945067e53796a92",
+  "mockPortalAddress": "0x7A4a8DaEC93644DfB3bf7757Dd7fE8040591a5Ea",
+  "deployer": "0x38fBfdAfF05536b7d80b16688dA6041Bd6338160",
+  "verifier": "0x7CF4F59dDafF184115A4A5C4CFa3fbB707f6779A",
+  "keeper": "0x38fBfdAfF05536b7d80b16688dA6041Bd6338160",
+  "marketAddress": "0x4b48656Dab017f9eE369Fc7d5873F5f911386241",
+  "tokenAddress": "0xbF987ffBdd19255555A279542575115da57230bD",
+  "rendererAddress": "0x0620fD6EDab6fB6475002372599E3d701256Fb87",
+  "buybackFactoryAddress": "0x61cA6d44a6847aE9A63977fC59689e3f089572e6",
+  "buybackVaultAddress": "0x1c59592F3fd8c27AAc41cEDB50eaBE3F42b68850",
+  "marketFromBlock": 137843424,
+  "buybackFromBlock": 137843516,
+  "buybackMode": "standalone-test-token",
+  "flapLive": false,
+  "transactions": {
+    "core": "0xf649454313c2c52af8bea9f56641d4238d6bb7d5d5420abb569be2053a3bb5a4",
+    "verifier": "0xdc2323af430858055cec006b7416dcad1420ea935f29c61e1d48b303d02a5c70",
+    "adKeeper": "0x2b400af2226cf1ce24d8721aecec5c179405bd4e6333929cd2e16edd3696aec9",
+    "keeperGas": "0xb785f3cef5873fdc26866dff79d776451c4fa902c0ba11508b8bbbbc359f0d67",
+    "buybackFactory": "0x6f6cc8ad2b3318a846a3d02f54e103e6f5ca6b5e3bd1088c486dd7f670b5d122",
+    "standaloneBuyback": "0x3baa45fff8e9d63e3a840acd7a196746fb47433adc0cefbd78fd7dc0af4fc583"
+  },
+  "buybackMinimumBNB": "0.001",
+  "maxKeeperGasRefundBNB": "0.0001",
+  "previousBuybackVaults": []
+}

@@ -1,0 +1,9 @@
+export async function loadNftPage(tier,page,signal){
+ if(!['all','pro','max'].includes(tier)||!Number.isSafeInteger(page)||page<1)throw Error('invalid_page');
+ const params=new URLSearchParams({tier,page:String(page),page_size:'12'});
+ const response=await fetch(`/api/nfts?${params}`,{credentials:'omit',cache:'no-store',signal});
+ if(!response.ok)throw Error('gallery_unavailable');const value=await response.json();
+ if(value.configured===false&&value.available===false&&Array.isArray(value.items))return value;
+ if(value.configured!==true||value.storage!=='postgresql'||value.tier!==tier||!Number.isSafeInteger(value.page)||value.page<1||!Number.isSafeInteger(value.total)||value.total<0||!Number.isSafeInteger(value.pages)||value.pages<1||!Array.isArray(value.items)||value.items.length>12||value.items.some(item=>!/^\d+$/.test(item.id)||![1,2].includes(item.tier)||(tier!=='all'&&item.tier!==(tier==='pro'?1:2))))throw Error('invalid_gallery_response');
+ return value;
+}

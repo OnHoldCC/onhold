@@ -1,0 +1,32 @@
+{
+  "chainId": 97,
+  "deployer": "0x38fBfdAfF05536b7d80b16688dA6041Bd6338160",
+  "verifier": "0x7CF4F59dDafF184115A4A5C4CFa3fbB707f6779A",
+  "keeper": "0x38fBfdAfF05536b7d80b16688dA6041Bd6338160",
+  "marketAddress": "0x999B23c5dbe6AaA5aFb284D81767d1de1b95FDEf",
+  "tokenAddress": "0x936484bA5D07E91657344eEeE0d126272441eDf2",
+  "rendererAddress": "0xf116Cc6555a347B4417176bF071830A219881b65",
+  "buybackFactoryAddress": "0x678d05Ba335eCAB8ac98Edb8Ed1776F425b2AcdE",
+  "buybackVaultAddress": "0x2e147F899008D8DFE0f0C5aC2d419fEf63180569",
+  "marketFromBlock": 137816858,
+  "buybackFromBlock": 137820384,
+  "buybackMode": "standalone-test-token",
+  "flapLive": false,
+  "transactions": {
+    "core": "0x2aad58232e7170ca1a4812eb522ff36b3d077f89a3f138a543052d6e4f68864a",
+    "verifier": "0x3250f52bb63bc79f6a777931dcda700696131d8cc80a922be23a0dbf5266bcd9",
+    "buybackFactory": "0x1a3903bb97187d7102e3c3339341f4370eef064c595facd7429bf3b682041dac",
+    "standaloneBuyback": "0x932dcc09fe43e44acbf87aecb0103e9c2a2b49f844c6c903a656ec8793563445",
+    "buybackFactoryGasV2": "0x198ffdd500fa55d3f0c299a169b5232cee5817f5a53ddcc205458684cda3ad74",
+    "standaloneBuybackGasV2": "0x593935d87da5c6ffbbf59bdb86eede0dfa02606c4d4e5519ad07f7009d2f7f22"
+  },
+  "buybackMinimumBNB": "0.001",
+  "maxKeeperGasRefundBNB": "0.0001",
+  "previousBuybackVaults": [
+    {
+      "vault": "0xfE9fCA25D6243E5bBbbed6B544B2B71DC97d6BE8",
+      "factory": "0xd75883551934Dcf4d487D23C386a57C9535aE70b",
+      "fromBlock": 137816900
+    }
+  ]
+}

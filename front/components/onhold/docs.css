@@ -1,0 +1,82 @@
+/* Reused from SingleSparkFront/front/features/docs/how.css. */
+.how-page { --soft:var(--muted); --text-strong:var(--text); --line-2:var(--line); --font-brand: var(--font-ui); display: grid; grid-template-columns: 208px minmax(0, 760px); align-items: start; gap: 28px 56px; max-width: 1024px; margin: 0 auto; padding: 24px 0 64px; font-family: var(--font-ui); font-weight: 600; }
+.how-page article { min-width: 0; font-size: 16px; }
+.how-page article [id] { scroll-margin-top: 96px; }
+.how-outline { position: sticky; top: 96px; padding-right: 24px; }
+.how-scroll-curve { position: absolute; top: 0; bottom: 0; right: -16px; width: 32px; pointer-events: none; }
+.how-scroll-curve svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.how-scroll-curve path { fill: none; stroke-width: 1.5; }
+.how-scroll-track { stroke: var(--line-2); }
+.how-scroll-curve .how-scroll-beam { stroke-width: 2; stroke-dasharray: 1000; stroke-dashoffset: 1000; filter: drop-shadow(0 0 5px #f97316); }
+.how-scroll-spark { position: absolute; visibility: hidden; display: grid; place-items: center; width: 24px; height: 24px; transform: translate(-50%, -50%); filter: drop-shadow(0 0 8px #f9731666); }
+.how-outline-tree > summary { min-height: 44px; padding: 10px 0; color: var(--text); font-size: 14px; font-weight: 800; cursor: pointer; }
+.how-outline-tree > summary:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; }
+.how-outline ol { list-style: none; padding: 0; margin: 0; }
+.how-outline-tree > ol { max-height: calc(100dvh - 180px); overflow-y: auto; overscroll-behavior: contain; padding-right: 6px; scrollbar-width: none; }
+.how-outline-tree > ol::-webkit-scrollbar { display: none; }
+.how-outline ol ol { padding-left: 12px; margin-bottom: 12px; border-left: 1px solid var(--line-2); }
+.how-outline-tree > ol > li > a { color: var(--text-strong); font-weight: 800; }
+.how-outline ol ol a { font-size: 13px; }
+.how-outline a { display: flex; align-items: center; min-height: 44px; padding: 8px 0; color: var(--soft); font-size: 14px; line-height: 1.5; }
+.how-outline a:hover, .how-outline a:focus-visible { color: var(--text-strong); text-decoration: underline; text-underline-offset: 4px; }
+.how-outline a:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; border-radius: 2px; }
+.how-page p { margin: 0; color: var(--soft); line-height: 1.8; overflow-wrap: anywhere; }
+.how-page h1, .how-page h2, .how-page h3, .how-page h4 { margin: 0; color: var(--text); font-weight: 800; text-wrap: balance; }
+.how-page h1 { margin: 12px 0 16px; font: 800 clamp(30px, 3vw, 36px)/1.2 var(--font-brand); letter-spacing: -.035em; }
+.how-page h2 { margin-bottom: 16px; font-size: 22px; line-height: 1.4; letter-spacing: -.02em; }
+.how-page h3 { font-size: 18px; line-height: 1.5; }
+.how-page h4 { font-size: 16px; line-height: 1.5; }
+.how-page .how-eyebrow { color: var(--muted); font-size: 12px; font-weight: 650; letter-spacing: .08em; }
+.how-page article > section { margin-top: 36px; padding-top: 32px; border-top: 1px solid var(--line); }
+.how-page article > section > section { margin-top: 28px; }
+.how-page p + p { margin-top: 12px; }
+.how-page p + h3 { margin-top: 24px; }
+.how-page h3 + p { margin-top: 8px; }
+.how-page h4 + p, .how-page p + h4 { margin-top: 8px; }
+.how-lead { font-size: 17px; }
+
+.how-page article section p+p { margin-top:16px; }
+.how-scroll-spark img { border-radius:50%; }
+@media(max-width:700px) { .how-page { grid-template-columns:1fr;gap:24px;padding-top:8px; } .how-outline { position:relative;top:0;padding-right:0; } .how-scroll-curve { display:none; } }
+
+.flywheel{margin:0;--wheel-ink:var(--text,var(--ink));--wheel-accent:var(--accent,#c36948)}
+.how-page .flywheel-intro{max-width:60ch;font-size:14px}
+.flywheel-map{position:relative;aspect-ratio:800/660;margin:14px -8px 12px}
+.flywheel-circuit{position:absolute;inset:0;width:100%;height:100%;overflow:visible;fill:none}
+.flywheel-circuit path{stroke:var(--muted);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.flywheel-circuit marker path{stroke:var(--muted);stroke-width:1.5}
+.flywheel-circuit .flywheel-track{stroke:var(--wheel-accent);stroke-width:1.4;stroke-dasharray:5 10;opacity:.65}
+.flywheel-inner{fill:none;stroke:var(--wheel-accent);stroke-width:.8;opacity:.25}
+.flywheel-circuit .flywheel-motion{stroke:var(--wheel-accent);stroke-width:2.3}
+.flywheel-center{position:absolute;left:50%;top:49.24%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;max-width:34%;line-height:1.4}
+.flywheel-center img{border-radius:50%;width:56px;height:56px;object-fit:cover}
+.flywheel-center strong{font-size:27px;font-weight:850;letter-spacing:-1px;color:var(--wheel-accent)}
+.flywheel-center span{font-size:12px;color:var(--muted)}
+.flywheel-steps{position:absolute;inset:0;list-style:none;margin:0;padding:0}
+.flywheel-steps li{position:absolute;left:var(--step-x);top:var(--step-y);transform:translate(-50%,-50%);width:25%;min-height:88px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;line-height:1.4}
+.flywheel-steps li>strong{position:relative;color:var(--wheel-ink);font-size:15px;font-weight:800;line-height:1.3}
+.flywheel-steps li>span:last-child{position:relative;color:var(--muted);font-size:11px;line-height:1.5}
+.flywheel-step-index{position:relative;color:var(--muted);font-size:9px;letter-spacing:.08em;line-height:1}
+.flywheel-box{position:absolute;inset:0;width:100%;height:100%;fill:var(--card);stroke:var(--line);stroke-width:1.1;overflow:visible;pointer-events:none}
+.flywheel-box path+path{fill:none;opacity:.55;stroke-width:.7}
+.flywheel-reinvest .flywheel-box{fill:color-mix(in srgb,var(--wheel-accent) 7%,var(--card));stroke:var(--wheel-accent)}
+.flywheel-steps .flywheel-reinvest>strong,.flywheel-reinvest .flywheel-step-index{color:var(--wheel-accent)}
+.flywheel-burn{display:flex;justify-content:center;align-items:center;gap:9px;padding:14px 8px;border-top:1px dashed var(--line);color:var(--muted);font-size:12px;text-align:center}
+.flywheel-burn-dot{width:6px;height:6px;border-radius:50%;background:var(--wheel-accent);flex-shrink:0}
+.flywheel figcaption{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:8px}
+.how-page .flywheel figcaption p{font-size:11px;line-height:1.7}
+.flywheel figcaption button{flex-shrink:0;min-height:44px;font-size:11px;padding:8px 12px}
+@keyframes onhold-flywheel-turn{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:no-preference){.flywheel-rotor{transform-origin:400px 325px;animation:onhold-flywheel-turn 40s linear infinite}}
+.flywheel[data-paused=true] .flywheel-rotor{animation-play-state:paused}
+@media(max-width:560px){
+ .flywheel-map{aspect-ratio:auto;padding-top:280px;margin:0;overflow:hidden}
+ .flywheel-circuit{width:640px;height:528px;max-width:none;left:50%;top:135px;transform:translate(-50%,-50%)}
+ .flywheel-links{display:none}
+ .flywheel-center{top:135px;max-width:70%}
+ .flywheel-steps{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .flywheel-steps li{position:relative;left:auto;top:auto;transform:none;width:auto;min-height:108px;padding:12px}
+ .flywheel-steps li>strong{font-size:14px}
+ .flywheel-steps li>span:last-child{font-size:12px}
+ .flywheel figcaption{align-items:flex-start;flex-direction:column;gap:8px}
+}

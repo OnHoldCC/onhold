@@ -13,10 +13,10 @@ contract ClaudeTestToken is ERC20, ERC20Burnable {
     }
     constructor(address recipient) ERC20("Claude Test Token", "Claude") {
         require(block.chainid == 97 || block.chainid == 31337, "Testnet only");
-        _mint(recipient, 1_000_000 ether);
+        _mint(recipient, 100_000_000 ether);
     }
 }
-// One wallet transaction deploys both contracts and funds a test-only claim pool.
+// One wallet transaction deploys both contracts and funds a test-only 100 million token mining pool.
 contract TestDeployment {
     ClaudeTestToken public immutable token;
     OnholdMarket public immutable market;

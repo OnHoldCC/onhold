@@ -1,0 +1,1 @@
+The existing SingleSparkIcon wrapper is reused unchanged. Its local icon registry adds one pickaxe glyph from https://github.com/lucide-icons/lucide/blob/main/icons/pickaxe.svg (ISC; original SVG and LICENSE retained here). SingleSparkIcon supplies the same size, currentColor and 1.7 stroke as the other menu icons. Upstream SingleSpark workspaces are unchanged.

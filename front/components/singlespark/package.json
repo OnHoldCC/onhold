@@ -1,0 +1,79 @@
+{
+  "name": "@singlespark/component-atlas",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist",
+    "assets",
+    "react",
+    "README.md",
+    "docs/component-audit/web3-integration.md",
+    "docs/component-audit/source-index.json"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./singlespark": {
+      "types": "./dist/singlespark.d.ts",
+      "import": "./dist/singlespark.js"
+    },
+    "./backers": {
+      "types": "./dist/backers.d.ts",
+      "import": "./dist/backers.js"
+    },
+    "./singlespark.css": "./dist/singlespark.css",
+    "./backers.css": "./dist/backers.css",
+    "./tokens": {
+      "types": "./dist/tokens.d.ts",
+      "import": "./dist/tokens.js"
+    },
+    "./theme": {
+      "types": "./dist/theme.d.ts",
+      "import": "./dist/theme.js"
+    },
+    "./icons": {
+      "types": "./dist/icons.d.ts",
+      "import": "./dist/icons.js"
+    },
+    "./theme.css": "./dist/theme.css",
+    "./chain-icons": {
+      "types": "./dist/chain-icons.d.ts",
+      "import": "./dist/chain-icons.js"
+    },
+    "./token-icons": {
+      "types": "./dist/token-icons.d.ts",
+      "import": "./dist/token-icons.js"
+    },
+    "./primitives": {
+      "types": "./dist/primitives.d.ts",
+      "import": "./dist/primitives.js"
+    },
+    "./assets": {
+      "types": "./dist/assets.d.ts",
+      "import": "./dist/assets.js"
+    },
+    "./feedback": {
+      "types": "./dist/feedback.d.ts",
+      "import": "./dist/feedback.js"
+    },
+    "./stats": {
+      "types": "./dist/stats.d.ts",
+      "import": "./dist/stats.js"
+    },
+    "./ui": {
+      "types": "./dist/ui.d.ts",
+      "import": "./dist/ui.js"
+    },
+    "./ui.css": "./dist/ui.css"
+  },
+  "peerDependencies": {
+    "react": ">=18 <20",
+    "react-dom": ">=18 <20"
+  }
+}
