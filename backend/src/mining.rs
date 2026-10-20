@@ -190,6 +190,8 @@ struct Snapshot {
     funding: Option<Funding>,
     #[serde(default)]
     mock_minimum: Option<String>,
+    #[serde(default)]
+    ad_price_interval: Option<u64>,
     #[serde(default = "zero")]
     ad_team: String,
     #[serde(default = "zero")]
@@ -221,6 +223,7 @@ impl Snapshot {
             referral_bonus: zero(),
             funding: None,
             mock_minimum: None,
+            ad_price_interval: None,
             ad_team: zero(),
             ad_reserve: zero(),
             ad_reinvested: zero(),
@@ -254,6 +257,10 @@ impl Snapshot {
         };
         if is("MockConfiguration(uint256,address)") {
             self.mock_minimum = Some(word(data, 0)?.into());
+        } else if is("AdPriceIntervalConfigured(uint256)") {
+            let interval = small(word(data, 0)?)?;
+            if interval != 60 { return Err(invalid()); }
+            self.ad_price_interval = Some(interval);
         } else if is("RewardsCheckpoint(address,uint256,uint256,uint256,uint256,uint256,uint256)") {
             self.rpt = word(data, 0)?.into();
             self.updated = small(word(data, 1)?)?;
@@ -402,13 +409,9 @@ impl Snapshot {
             .checked_add(additional)
             .ok_or_else(invalid)
     }
-    fn mining(&self, account: Option<&str>) -> Result<Value, ApiError> {
-        let ends_at = if self.started == 0 {
-            0
-        } else {
-            self.started + MINING_DURATION
-        };
-        let daily = if self.started == 0 || self.total_weight == 0 || self.time >= ends_at {
+    fn daily_emission(&self) -> Result<u128, ApiError> {
+        let ends_at = self.started + MINING_DURATION;
+        Ok(if self.started == 0 || self.total_weight == 0 || self.time >= ends_at {
             0
         } else {
             match &self.funding {
@@ -420,7 +423,15 @@ impl Snapshot {
                 }
                 None => BASE * 86400 / MINING_DURATION as u128,
             }
+        })
+    }
+    fn mining(&self, account: Option<&str>) -> Result<Value, ApiError> {
+        let ends_at = if self.started == 0 {
+            0
+        } else {
+            self.started + MINING_DURATION
         };
+        let daily = self.daily_emission()?;
         let mut rpt = uint(&self.rpt)?;
         if self.total_weight > 0 {
             let delta = self
@@ -472,7 +483,7 @@ impl Snapshot {
             .transpose()?
             .unwrap_or(POOL - BASE);
         Ok(
-            json!({"startedAt":self.started,"endsAt":ends_at,"durationDays":365,"daily":amount(U256::from_u128(daily))?,"totalWeight":self.total_weight,"totalEffective":self.total_weight,"minted":self.minted,"claimed":amount(uint(&self.claimed)?)?,"passes":passes,"ownedCount":owned.len(),"stakedCount":staked.len(),"earned":amount(earned)?,"weight":wallet.weight,"effective":wallet.weight,"referrer":wallet.referrer,"referralRewards":amount(uint(&wallet.referral_pending)?)?,"referralEarned":amount(uint(&wallet.referral_earned)?)?,"poolBudget":amount(U256::from_u128(base.checked_add(referral).ok_or_else(invalid)?))?,"basePool":amount(U256::from_u128(base))?,"referralPool":amount(U256::from_u128(referral))?,"adTeamRevenue":amount(uint(&self.ad_team)?)?,"adBuybackReserve":amount(uint(&self.ad_reserve)?)?,"adReinvested":amount(uint(&self.ad_reinvested)?)?,"estimated":true}),
+            json!({"startedAt":self.started,"endsAt":ends_at,"durationDays":365,"daily":amount(U256::from_u128(daily))?,"totalWeight":self.total_weight,"totalEffective":self.total_weight,"minted":self.minted,"claimed":amount(uint(&self.claimed)?)?,"passes":passes,"ownedCount":owned.len(),"stakedCount":staked.len(),"earned":amount(earned)?,"weight":wallet.weight,"effective":wallet.weight,"shareBps":if self.total_weight==0 {0} else {(wallet.weight as u128*10000/self.total_weight as u128) as u64},"referrer":wallet.referrer,"referralRewards":amount(uint(&wallet.referral_pending)?)?,"referralEarned":amount(uint(&wallet.referral_earned)?)?,"poolBudget":amount(U256::from_u128(base.checked_add(referral).ok_or_else(invalid)?))?,"basePool":amount(U256::from_u128(base))?,"referralPool":amount(U256::from_u128(referral))?,"adTeamRevenue":amount(uint(&self.ad_team)?)?,"adBuybackReserve":amount(uint(&self.ad_reserve)?)?,"adReinvested":amount(uint(&self.ad_reinvested)?)?,"estimated":true}),
         )
     }
 }
@@ -499,6 +510,7 @@ struct Cache {
     seen: u64,
     last_error: Option<&'static str>,
     replay: bool,
+    network: Option<Value>,
 }
 impl Tracker {
     pub fn from_env() -> Result<Option<Self>, Box<dyn std::error::Error>> {
@@ -531,6 +543,7 @@ impl Tracker {
                         seen: 0,
                         last_error: None,
                         replay: false,
+                        network: None,
                     })),
                 }))
             }
@@ -597,7 +610,7 @@ impl Dirty {
 }
 impl Snapshot {
     fn global(&self) -> Value {
-        json!({"next_block":self.next_block,"block":self.block,"hash":self.hash,"time":self.time,"started":self.started,"updated":self.updated,"total_weight":self.total_weight,"rpt":self.rpt,"allocated":self.allocated,"minted":self.minted,"claimed":self.claimed,"referral_bonus":self.referral_bonus,"funding":self.funding,"mock_minimum":self.mock_minimum,"ad_team":self.ad_team,"ad_reserve":self.ad_reserve,"ad_reinvested":self.ad_reinvested,"recipient_count":self.recipient_count,"recipients":[],"wallets":{},"passes":{},"ads":{},"history":[]})
+        json!({"next_block":self.next_block,"block":self.block,"hash":self.hash,"time":self.time,"started":self.started,"updated":self.updated,"total_weight":self.total_weight,"rpt":self.rpt,"allocated":self.allocated,"minted":self.minted,"claimed":self.claimed,"referral_bonus":self.referral_bonus,"funding":self.funding,"mock_minimum":self.mock_minimum,"ad_price_interval":self.ad_price_interval,"ad_team":self.ad_team,"ad_reserve":self.ad_reserve,"ad_reinvested":self.ad_reinvested,"recipient_count":self.recipient_count,"recipients":[],"wallets":{},"passes":{},"ads":{},"history":[]})
     }
 }
 async fn load_model(
@@ -889,7 +902,7 @@ pub async fn gallery(
     Ok((
         [(header::CACHE_CONTROL, "no-store")],
         Json(
-            json!({"configured":true,"available":cache.connected&&!cache.syncing&&now().saturating_sub(cache.seen)<60,"storage":"postgresql","market":tracker.market,"tier":query.tier.unwrap_or_else(||"all".into()),"page":page,"page_size":size,"total":total,"pages":pages,"confirmed_block":cursor.as_ref().and_then(|v|v["block"].as_u64()),"items":items}),
+            json!({"configured":true,"available":cursor.as_ref().and_then(|v|v["block"].as_u64()).is_some_and(|block|block>=tracker.start),"stale":!cache.connected||cache.syncing||now().saturating_sub(cache.seen)>=60||now().saturating_sub(cursor.as_ref().and_then(|v|v["time"].as_u64()).unwrap_or(0))>=60,"connected":cache.connected,"syncing":cache.syncing,"storage":"postgresql","market":tracker.market,"tier":query.tier.unwrap_or_else(||"all".into()),"page":page,"page_size":size,"total":total,"pages":pages,"confirmed_block":cursor.as_ref().and_then(|v|v["block"].as_u64()),"items":items}),
         ),
     ))
 }
@@ -923,7 +936,8 @@ pub async fn snapshot(
     };
     let (data, owned, staked, history_total) =
         load_model(store, &tracker, false, wallet.as_deref()).await?;
-    let available = connected && !syncing && now().saturating_sub(seen) < 60;
+    let available = data.block >= tracker.start;
+    let stale = !connected || syncing || now().saturating_sub(seen) >= 60 || now().saturating_sub(data.time) >= 60;
     let mut ads=(0..6).map(|id|data.ads.get(&id).map(|ad|serde_json::to_value(ad).map_err(|_|invalid())).unwrap_or_else(||Ok(json!({"id":id,"empty":true,"bid":"0","startedAt":0,"version":"0","url":"https://example.com/","description":"","avatar":"","tags":[]})))).collect::<Result<Vec<_>,_>>()?;
     if let Some(minimum) = &data.mock_minimum {
         let minimum = units(minimum)?.to_string();
@@ -938,22 +952,37 @@ pub async fn snapshot(
         .take(200)
         .map(|ad| serde_json::to_value(ad).map_err(|_| invalid()))
         .collect::<Result<Vec<_>, _>>()?;
+    for ad in ads.iter_mut().chain(history.iter_mut()) {
+        ad["priceIntervalSeconds"] = json!(data.ad_price_interval.unwrap_or(86400));
+    }
     let telemetry = crate::analytics::cached(&state)?;
     crate::analytics::apply_campaigns(&telemetry, &tracker.market, &mut ads);
     crate::analytics::apply_campaigns(&telemetry, &tracker.market, &mut history);
     let mut mining = data.mining(wallet.as_deref())?;
+    mining["network"] = cached_network(&state).await.and_then(|v| v.get("latest").cloned()).unwrap_or(Value::Null);
     mining["ownedCount"] = json!(owned);
     mining["stakedCount"] = json!(staked);
     let burned = if let Some(burn) = &state.burn {
         let client = store.read.get().await.map_err(|_| pg::error())?;
-        client.query_opt("SELECT data->'totals'->'burned' FROM buyback_state WHERE vault=$1 AND data->>'available'='true' AND (data->>'checked_at')::bigint >= $2", &[&burn.vault, &(now().saturating_sub(390) as i64)]).await.map_err(|_| pg::error())?.map(|row|row.get::<_,Value>(0)).unwrap_or(Value::Null)
+        client.query_opt("SELECT data->'totals'->'burned' FROM buyback_state WHERE vault=$1 AND (data->>'confirmed_block')::bigint > 0 AND data->'totals'->'burned' IS NOT NULL", &[&burn.vault]).await.map_err(|_| pg::error())?.map(|row|row.get::<_,Value>(0)).unwrap_or(Value::Null)
     } else {
         Value::Null
     };
+    let client = store.read.get().await.map_err(|_| pg::error())?;
+    let claim_rows = client.query(
+        "SELECT data FROM chain_events WHERE market=$1 AND block_number<=$2 AND data->'topics'->>0 IN ($3,$4) ORDER BY block_number DESC,log_index DESC LIMIT 8",
+        &[&tracker.market,&(data.block as i64),&crypto::hex(&crypto::keccak("RewardPaid(address,uint256)")),&crypto::hex(&crypto::keccak("ReferralPaid(address,uint256)"))],
+    ).await.map_err(|_| pg::error())?;
+    let claims = claim_rows.into_iter().map(|row| {
+        let log:Value=row.get(0);
+        let raw=log["data"].as_str().and_then(|s|s.strip_prefix("0x")).ok_or_else(invalid)?;
+        let recipient=log["topics"][1].as_str().and_then(|s|s.strip_prefix("0x")).ok_or_else(invalid)?;
+        Ok(json!({"amount":amount(uint(word(raw,0)?)?)?,"recipient":address(recipient,0)?,"txHash":log["transactionHash"],"block":quantity(&log["blockNumber"])?}))
+    }).collect::<Result<Vec<Value>,ApiError>>()?;
     Ok((
         [(header::CACHE_CONTROL, "no-store")],
         Json(
-            json!({"configured":true,"available":available,"connected":connected,"syncing":syncing,"last_error":tracker.cache.lock().map_err(|_|crate::internal())?.last_error,"chain_id":97,"protocol":"nft-staking-v4","mock":data.mock_minimum.is_some(),"market":tracker.market,"storage":"postgresql","metadata_cache":store.redis.is_some(),"confirmed_block":data.block,"block_hash":data.hash,"as_of":data.time,"mining":mining,"ads":ads,"history":history,"historyTotal":history_total,"financial":{"recipients":data.recipient_count,"claimed":amount(uint(&data.claimed)?)?,"burned":burned,"marketAddress":tracker.market}}),
+            json!({"configured":true,"available":available,"stale":stale,"connected":connected,"syncing":syncing,"last_error":tracker.cache.lock().map_err(|_|crate::internal())?.last_error,"chain_id":97,"protocol":"nft-staking-v4","mock":data.mock_minimum.is_some(),"market":tracker.market,"storage":"postgresql","metadata_cache":store.redis.is_some(),"confirmed_block":data.block,"block_hash":data.hash,"as_of":data.time,"mining":mining,"ads":ads,"history":history,"historyTotal":history_total,"financial":{"claims":claims,"recipients":data.recipient_count,"claimed":amount(uint(&data.claimed)?)?,"burned":burned,"marketAddress":tracker.market}}),
         ),
     ))
 }
@@ -1080,26 +1109,49 @@ pub async fn load(state: &AppState) -> Result<(), ApiError> {
     }
     Ok(())
 }
+fn validate_deployment(logs: &Value, market: &str, start: u64, header: &Value) -> Result<(), ApiError> {
+    let logs = logs.as_array().ok_or_else(invalid)?;
+    let mismatch = || ApiError(StatusCode::BAD_GATEWAY, "deployment_block_mismatch");
+    if logs.len() != 1 { return Err(mismatch()); }
+    let log = &logs[0];
+    let topics = log["topics"].as_array().ok_or_else(invalid)?;
+    if topics.len() != 3
+        || topics[0] != crypto::hex(&crypto::keccak("OwnershipTransferred(address,address)"))
+        || topics[1] != format!("0x{}", zero())
+        || log["address"].as_str().map(str::to_ascii_lowercase).as_deref() != Some(market)
+        || quantity(&log["blockNumber"])? != start
+        || log["removed"] != false
+        || log["blockHash"] != header["hash"]
+        || crypto::bytes(header["hash"].as_str().unwrap_or(""), 32).is_err()
+        || quantity(&header["number"])? != start
+        || log["data"] != "0x"
+    { return Err(mismatch()); }
+    let owner = topics[2].as_str().and_then(|v| v.strip_prefix("0x")).ok_or_else(invalid)?;
+    if owner.len() != 64 || address(owner, 0)? == ZERO { return Err(mismatch()); }
+    Ok(())
+}
 pub async fn check(state: &AppState) -> Result<(), ApiError> {
     if let Some(tracker) = &state.mining {
         let result=rpc(state,"eth_call",json!([{"to":tracker.market,"data":crypto::hex(&crypto::keccak("PROTOCOL_ID()")[..4])},"latest"])).await?;
         if result != crypto::hex(&crypto::keccak("onhold.nft-staking.v4")) {
             return Err(ApiError(StatusCode::BAD_GATEWAY, "protocol_mismatch"));
         }
-        let prior = rpc(
+        // Constructor logs survive state pruning and bind the configured deployment block.
+        let logs = rpc(
             state,
-            "eth_getCode",
-            json!([tracker.market, format!("0x{:x}", tracker.start - 1)]),
+            "eth_getLogs",
+            json!([{"address":tracker.market,"fromBlock":format!("0x{:x}",tracker.start),"toBlock":format!("0x{:x}",tracker.start),"topics":[crypto::hex(&crypto::keccak("OwnershipTransferred(address,address)")),format!("0x{}",zero())]}]),
         )
         .await?;
-        if prior != "0x" {
-            return Err(ApiError(
-                StatusCode::BAD_GATEWAY,
-                "deployment_block_mismatch",
-            ));
-        }
+        let header = rpc(state, "eth_getBlockByNumber", json!([format!("0x{:x}",tracker.start),false])).await?;
+        validate_deployment(&logs, &tracker.market, tracker.start, &header)?;
     }
     Ok(())
+}
+pub fn health(state: &AppState) -> Result<Value, ApiError> {
+    let Some(tracker) = &state.mining else { return Ok(json!({"configured":false,"available":true})); };
+    let cache = tracker.cache.lock().map_err(|_| crate::internal())?;
+    Ok(json!({"configured":true,"available":cache.connected&&!cache.syncing&&now().saturating_sub(cache.seen)<60&&now().saturating_sub(cache.snapshot.time)<60,"connected":cache.connected,"syncing":cache.syncing,"confirmed_block":cache.snapshot.block,"last_error":cache.last_error}))
 }
 pub fn status(state: &AppState, connected: bool, syncing: bool, error: Option<&'static str>) {
     if let Some(tracker) = &state.mining {
@@ -1148,9 +1200,125 @@ pub async fn apply_stream(
     apply_logs(state, tracker, model, header.clone(), logs, false).await
 }
 
+const NETWORK_PERIODS: [(&str, u64, u64); 6] = [
+    ("1h", 3600, 900), ("4h", 14400, 900), ("1d", 86400, 900),
+    ("7d", 604800, 3600), ("30d", 2592000, 14400), ("90d", 7776000, 43200),
+];
+fn network_sample(model: &Snapshot, at: u64) -> Result<Value, ApiError> {
+    let daily = model.daily_emission()?;
+    Ok(json!({"sampledAt":at,"asOf":model.time,"block":model.block,"totalWeight":model.total_weight,
+        "daily":amount(U256::from_u128(daily))?,
+        "perWeightDaily":amount(U256::from_u128(if model.total_weight==0 {0} else {daily/model.total_weight as u128}))?}))
+}
+async fn cached_network(state: &AppState) -> Option<Value> {
+    let tracker = state.mining.as_ref()?;
+    let memory = tracker.cache.lock().ok()?.network.clone();
+    if let Some(value) = &memory {
+        if now().saturating_sub(value["latest"]["sampledAt"].as_u64().unwrap_or(0)) < 900 {
+            return memory;
+        }
+    }
+    if let Some(mut redis) = state.pg.as_ref().and_then(|s| s.redis.clone()) {
+        if let Ok(Some(raw)) = redis::cmd("GET").arg(format!("onhold:mining-stats:v1:{}", tracker.market))
+            .query_async::<Option<String>>(&mut redis).await {
+            if let Ok(value) = serde_json::from_str::<Value>(&raw) {
+                if value["market"] == tracker.market && value["latest"].is_object() { return Some(value); }
+            }
+        }
+    }
+    if memory.is_some() { return memory; }
+    let store=state.pg.as_ref()?;
+    let client=store.read.get().await.ok()?;
+    let row=client.query_opt("SELECT data FROM mining_samples WHERE market=$1 ORDER BY sampled_at DESC LIMIT 1",&[&tracker.market]).await.ok()??;
+    drop(client);
+    let value=network_history(store,&tracker.market,row.get(0)).await.ok()?;
+    cache_network(state,&value).await;
+    Some(value)
+}
+async fn cache_network(state:&AppState,value:&Value) {
+    let Some(tracker)=&state.mining else { return; };
+    if let Some(mut redis)=state.pg.as_ref().and_then(|s|s.redis.clone()) {
+        let result:Result<(),_>=redis::cmd("SET").arg(format!("onhold:mining-stats:v1:{}",tracker.market)).arg(value.to_string()).arg("EX").arg(1800).query_async(&mut redis).await;
+        if result.is_err() { eprintln!("Mining statistics Redis write failed; retaining memory snapshot"); }
+    }
+    if let Ok(mut cache)=tracker.cache.lock() { cache.network=Some(value.clone()); }
+}
+async fn network_history(store:&pg::Store,market:&str,latest:Value)->Result<Value,ApiError> {
+    let at=latest["sampledAt"].as_u64().ok_or_else(invalid)?;
+    let client=store.read.get().await.map_err(|_|pg::error())?;
+    let mut history=serde_json::Map::new();
+    for (period,seconds,bucket) in NETWORK_PERIODS {
+        let rows=client.query("SELECT DISTINCT ON (sampled_at / $3) data FROM mining_samples WHERE market=$1 AND sampled_at >= $2 AND sampled_at <= $4 ORDER BY sampled_at / $3,sampled_at DESC",
+            &[&market,&(at.saturating_sub(seconds) as i64),&(bucket as i64),&(at as i64)]).await.map_err(|_|pg::error())?;
+        history.insert(period.into(),json!(rows.iter().map(|r|r.get::<_,Value>(0)).collect::<Vec<_>>()));
+    }
+    Ok(json!({"market":market,"latest":latest,"history":history}))
+}
+async fn refresh_network(state: &AppState) -> Result<(), ApiError> {
+    let Some(tracker) = &state.mining else { return Ok(()); };
+    let at = now();
+    if let Some(value) = cached_network(state).await {
+        let fresh = at.saturating_sub(value["latest"]["sampledAt"].as_u64().unwrap_or(0)) < 900;
+        tracker.cache.lock().map_err(|_| invalid())?.network = Some(value);
+        if fresh { return Ok(()); }
+    }
+    let model = {
+        let cache = tracker.cache.lock().map_err(|_| invalid())?;
+        if !cache.connected || cache.syncing || at.saturating_sub(cache.snapshot.time) > 60 { return Ok(()); }
+        cache.snapshot.clone()
+    };
+    let latest = network_sample(&model, at)?;
+    let store = state.pg.as_ref().ok_or_else(pg::error)?;
+    store.write.lock().await.execute("INSERT INTO mining_samples(market,sampled_at,data) VALUES($1,$2,$3) ON CONFLICT(market,sampled_at) DO UPDATE SET data=excluded.data",
+        &[&tracker.market,&(at as i64),&latest]).await.map_err(|_| pg::error())?;
+    let value=network_history(store,&tracker.market,latest).await?;
+    cache_network(state,&value).await;
+    Ok(())
+}
+pub async fn run_stats(state: AppState) {
+    if state.mining.is_none() { return; }
+    let mut timer=tokio::time::interval(std::time::Duration::from_secs(15));
+    timer.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    loop {
+        timer.tick().await;
+        if refresh_network(&state).await.is_err() { eprintln!("Mining statistics refresh failed; retaining previous snapshot"); }
+    }
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkQuery { period: Option<String> }
+pub async fn network_stats(State(state): State<AppState>, Query(query): Query<NetworkQuery>) -> Result<impl axum::response::IntoResponse, ApiError> {
+    let period=query.period.as_deref().unwrap_or("1d");
+    if !NETWORK_PERIODS.iter().any(|p|p.0==period) { return Err(ApiError(StatusCode::BAD_REQUEST,"invalid_period")); }
+    let value=cached_network(&state).await;
+    let latest=value.as_ref().map(|v|v["latest"].clone()).unwrap_or(Value::Null);
+    let stale=now().saturating_sub(latest["sampledAt"].as_u64().unwrap_or(0)) >= 1800;
+    let history=value.as_ref().and_then(|v|v["history"][period].as_array()).cloned().unwrap_or_default();
+    Ok(([(header::CACHE_CONTROL,"no-store")],Json(json!({"configured":state.mining.is_some(),"available":!latest.is_null(),"stale":stale,"period":period,"refreshSeconds":900,"latest":latest,"history":history}))))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn deployment_requires_the_constructor_event_at_the_exact_market_and_block() {
+        let market = "0x1111111111111111111111111111111111111111";
+        let header = json!({"number":"0x64","hash":format!("0x{}","a".repeat(64))});
+        let event = json!({"blockHash":header["hash"],"address":market,"blockNumber":"0x64","removed":false,"data":"0x","topics":[crypto::hex(&crypto::keccak("OwnershipTransferred(address,address)")),format!("0x{}",zero()),format!("0x{}{}","0".repeat(24),"2".repeat(40))]});
+        assert!(validate_deployment(&json!([event]),market,100,&header).is_ok());
+        for logs in [json!([]),json!([event,event]),json!([{"blockNumber":"0x64","topics":[]}])] {
+            assert!(validate_deployment(&logs,market,100,&header).is_err());
+        }
+        for (key,value) in [("address",json!(ZERO)),("blockNumber",json!("0x65")),("removed",json!(true)),("data",json!("0x01")),("blockHash",json!(format!("0x{}","b".repeat(64)))),("removed",Value::Null)] {
+            let mut bad=event.clone();bad[key]=value;
+            assert!(validate_deployment(&json!([bad]),market,100,&header).is_err());
+        }
+        for index in 0..3 {
+            let mut bad=event.clone();bad["topics"][index]=json!(format!("0x{}",zero()));
+            if index==1 {bad["topics"][index]=event["topics"][2].clone();}
+            assert!(validate_deployment(&json!([bad]),market,100,&header).is_err());
+        }
+    }
     fn log(signature: &str, topics: Vec<String>, words: Vec<U256>) -> Value {
         let mut all = vec![crypto::hex(&crypto::keccak(signature))];
         all.extend(topics);
@@ -1158,6 +1326,24 @@ mod tests {
     }
     fn topic(account: &str) -> String {
         format!("0x{}{}", "0".repeat(24), account.trim_start_matches("0x"))
+    }
+    #[test]
+    fn network_stats_use_the_same_release_and_weight_as_wallet_rewards() {
+        let mut s=Snapshot::new(1);
+        s.started=100;s.updated=100;s.time=86500;s.total_weight=4;s.block=42;
+        let account=format!("0x{}", "11".repeat(20));
+        let mut wallet=Wallet::default();wallet.weight=1;s.wallets.insert(account.clone(),wallet);
+        let sample=network_sample(&s,90000).unwrap();
+        assert_eq!(sample["totalWeight"],4);
+        assert_eq!(sample["daily"],s.mining(Some(&account)).unwrap()["daily"]);
+        assert_eq!(sample["perWeightDaily"],amount(U256::from_u128(s.daily_emission().unwrap()/4)).unwrap());
+        assert_eq!(s.mining(Some(&account)).unwrap()["shareBps"],2500);
+        s.time=100+MINING_DURATION;
+        assert_eq!(network_sample(&s,90000).unwrap()["perWeightDaily"],"0.000000000000000000");
+        s.total_weight=0;
+        assert_eq!(network_sample(&s,90000).unwrap()["daily"],"0.000000000000000000");
+        assert_eq!(s.mining(None).unwrap()["shareBps"],0);
+        assert_eq!(NETWORK_PERIODS.iter().map(|p|p.0).collect::<Vec<_>>(),vec!["1h","4h","1d","7d","30d","90d"]);
     }
     #[test]
     fn mock_configuration_survives_pg_global_projection() {
@@ -1169,7 +1355,11 @@ mod tests {
             vec![U256::from_u64(100000000000000), U256::from_u64(1)],
         ))
         .unwrap();
+        assert!(s.ad_price_interval.is_none());
+        s.apply(&log("AdPriceIntervalConfigured(uint256)", vec![], vec![U256::from_u64(60)])).unwrap();
+        assert!(s.apply(&log("AdPriceIntervalConfigured(uint256)", vec![], vec![U256::ZERO])).is_err());
         let loaded: Snapshot = serde_json::from_value(s.global()).unwrap();
+        assert_eq!(loaded.ad_price_interval, Some(60));
         assert_eq!(
             uint(loaded.mock_minimum.as_ref().unwrap()).unwrap(),
             U256::from_u64(100000000000000)

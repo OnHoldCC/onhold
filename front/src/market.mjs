@@ -16,8 +16,8 @@ export function formatEth(value) {
 }
 export function currentPrice(ad, now = Date.now()) {
   if (BigInt(ad.bid) === 0n) return 0n;
-  const days = Math.max(0, Math.floor((now - ad.startedAt) / 86400000));
-  const price = BigInt(ad.bid) >> BigInt(Math.min(days,256));
+  const periods = Math.max(0, Math.floor((now - ad.startedAt) / ((ad.priceIntervalSeconds ?? 86400) * 1000)));
+  const price = BigInt(ad.bid) >> BigInt(Math.min(periods,256));
   return price > 0n ? price : 1n;
 }
 export function requiredBid(ad,now=Date.now()) {
@@ -37,12 +37,13 @@ export function seedMarket(now = Date.now()) {
   return {ads:rows.map(([title,description,category,bid,hours,clicks,tagline,cover],id) => ({id,title,description,technology:'Rust · Axum',avatar:'',category,bid:parseEth(bid).toString(),startedAt:now-hours*3600000,clicks,tagline,cover,url:'https://example.com/'})),history:[],localClicks:0};
 }
 export function auctionCurve(ad, now = Date.now()) {
-  const elapsed = Math.max(0, now - ad.startedAt), day = Math.floor(elapsed / 86400000);
-  const startDay = Math.max(0, day - 1);
-  return {price:currentPrice(ad,now),nextPrice:currentPrice(ad,ad.startedAt+(day+1)*86400000),nextAt:ad.startedAt+(day+1)*86400000,progress:(elapsed%86400000)/86400000,startDay,position:(elapsed/86400000-startDay)/4,levels:Array.from({length:5},(_,i)=>currentPrice(ad,ad.startedAt+(startDay+i)*86400000))};
+  const interval = (ad.priceIntervalSeconds ?? 86400) * 1000;
+  const elapsed = Math.max(0, now - ad.startedAt), period = Math.floor(elapsed / interval);
+  const startDay = Math.max(0, period - 1);
+  return {price:currentPrice(ad,now),nextPrice:currentPrice(ad,ad.startedAt+(period+1)*interval),nextAt:ad.startedAt+(period+1)*interval,progress:(elapsed%interval)/interval,startDay,intervalSeconds:interval/1000,position:(elapsed/interval-startDay)/4,levels:Array.from({length:5},(_,i)=>currentPrice(ad,ad.startedAt+(startDay+i)*interval))};
 }
 function validAd(ad,index) {
-  return ad && ad.id === index && typeof ad.title === 'string' && ad.title.length > 0 && ad.title.length <= 253 && typeof ad.description === 'string' && Array.from(ad.description).length <= 80 && categories.includes(ad.category) && typeof ad.bid === 'string' && /^\d{1,24}$/.test(ad.bid) && BigInt(ad.bid) > 0n && Number.isSafeInteger(ad.startedAt) && ad.startedAt > 0 && Number.isSafeInteger(ad.clicks) && ad.clicks >= 0 && ad.clicks < 1e9 && safeUrl(ad.url) && (ad.tags === undefined || (Array.isArray(ad.tags) && new Set(ad.tags).size === ad.tags.length && ad.tags.every(tag=>typeof tag==='string'&&tag.trim()===tag&&tag.length>0) && Array.from(ad.tags.join('')).length<=10)) && (ad.avatar === undefined || ad.avatar === '' || safeUrl(ad.avatar)) && (ad.technology === undefined || (typeof ad.technology === 'string' && Array.from(ad.technology).length <= 24)) && typeof ad.tagline === 'string' && ad.tagline.length <= 80 && ['loop','mint','chapter','openkit','pixel','made'].includes(ad.cover);
+  return ad && (ad.priceIntervalSeconds===undefined||[60,86400].includes(ad.priceIntervalSeconds)) && ad.id === index && typeof ad.title === 'string' && ad.title.length > 0 && ad.title.length <= 253 && typeof ad.description === 'string' && Array.from(ad.description).length <= 80 && categories.includes(ad.category) && typeof ad.bid === 'string' && /^\d{1,24}$/.test(ad.bid) && BigInt(ad.bid) > 0n && Number.isSafeInteger(ad.startedAt) && ad.startedAt > 0 && Number.isSafeInteger(ad.clicks) && ad.clicks >= 0 && ad.clicks < 1e9 && safeUrl(ad.url) && (ad.tags === undefined || (Array.isArray(ad.tags) && new Set(ad.tags).size === ad.tags.length && ad.tags.every(tag=>typeof tag==='string'&&tag.trim()===tag&&tag.length>0) && Array.from(ad.tags.join('')).length<=10)) && (ad.avatar === undefined || ad.avatar === '' || safeUrl(ad.avatar)) && (ad.technology === undefined || (typeof ad.technology === 'string' && Array.from(ad.technology).length <= 24)) && typeof ad.tagline === 'string' && ad.tagline.length <= 80 && ['loop','mint','chapter','openkit','pixel','made'].includes(ad.cover);
 }
 export function loadMarket(storage) {
   try {

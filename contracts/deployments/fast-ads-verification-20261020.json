@@ -1,0 +1,38 @@
+{
+  "verifiedAt": "2026-10-20T08:33:45.276Z",
+  "chainId": 97,
+  "mock": true,
+  "market": "0xa007D8a37C2ff82CBFf81900cE174D26945167AF",
+  "source": "browser",
+  "bidHash": "0x0aa4d238dc77199f4df43898d2b96532376fa1e6aa3a47470734b4b210be2eae",
+  "initialBidBNB": "0.00008",
+  "minimumBidBNB": "0.00001",
+  "adKeeperMinimumBNB": "0.0001",
+  "priceIntervalSeconds": 60,
+  "samples": [
+    {
+      "offsetSeconds": 0,
+      "block": 137855952,
+      "timestamp": 1792485106,
+      "priceBNB": "0.00008"
+    },
+    {
+      "offsetSeconds": 60,
+      "block": 137856079,
+      "timestamp": 1792485166,
+      "priceBNB": "0.00004"
+    },
+    {
+      "offsetSeconds": 120,
+      "block": 137856210,
+      "timestamp": 1792485226,
+      "priceBNB": "0.00002"
+    }
+  ],
+  "checks": [
+    "Public testnet receipts succeeded",
+    "Price halves at 60 and 120 seconds",
+    "Listing version and start time stay unchanged during decay",
+    "Price decay requires no keeper or user transaction"
+  ]
+}

@@ -48,14 +48,18 @@ contract MockOnholdMarket is OnholdMarket {
     bool public constant MOCK_ONLY = true;
     address public immutable mockPortal;
     event MockConfiguration(uint256 minimumBid, address portal);
+    event AdPriceIntervalConfigured(uint256 secondsPerPeriod);
     constructor(address initialOwner, IERC20 token, address initialVerifier, address portal)
         OnholdMarket(initialOwner, token, initialVerifier) {
         require(block.chainid == 97 || block.chainid == 31337, "Testnet only");
         mockPortal = portal;
         emit MockConfiguration(minimumAdBid(), portal);
+        emit AdPriceIntervalConfigured(adPriceInterval());
     }
     function adBuybackPortal() public view override returns (address) { return mockPortal; }
-    function minimumAdBid() public pure override returns (uint256) { return 0.0001 ether; }
+    function minimumAdBid() public pure override returns (uint256) { return 0.00001 ether; }
+    function MIN_AD_BUYBACK() public pure override returns (uint256) { return 0.0001 ether; }
+    function adPriceInterval() public pure override returns (uint256) { return 60 seconds; }
 }
 
 contract MockTestDeployment {
@@ -68,6 +72,28 @@ contract MockTestDeployment {
         token = new MockClaudeToken(address(this), address(portal));
         portal.initialize(token);
         market = new MockOnholdMarket(msg.sender, IERC20(address(token)), msg.sender, address(portal));
+        token.transfer(address(market), token.totalSupply());
+    }
+}
+
+// Separate deployment: signed attempt IDs permit repeated real UUIDs only on test chains.
+contract RepeatUuidMockMarket is MockOnholdMarket {
+    bool public constant UUID_UNIQUENESS_DISABLED = true;
+    constructor(address initialOwner, IERC20 token, address initialVerifier, address portal)
+        MockOnholdMarket(initialOwner, token, initialVerifier, portal) {}
+    function _validateRecordNullifier(bytes32, string calldata) internal pure override {}
+}
+
+contract RepeatUuidMockTestDeployment {
+    MockClaudeToken public immutable token;
+    RepeatUuidMockMarket public immutable market;
+    MockSwapPortal public immutable portal;
+    constructor() {
+        require(block.chainid == 97 || block.chainid == 31337, "Testnet only");
+        portal = new MockSwapPortal();
+        token = new MockClaudeToken(address(this), address(portal));
+        portal.initialize(token);
+        market = new RepeatUuidMockMarket(msg.sender, IERC20(address(token)), msg.sender, address(portal));
         token.transfer(address(market), token.totalSupply());
     }
 }

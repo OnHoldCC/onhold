@@ -73,7 +73,7 @@ contract OnholdPassMining is ERC721Enumerable, Ownable, StakingRewards, EIP712 {
         require(block.timestamp <= deadline, "Mint proof expired");
         require(referrer != recipient, "Self referral");
         require(bytes(record.account).length <= 640 && bytes(record.uuid).length == 36 && bytes(record.bannedAt).length > 0 && bytes(record.bannedAt).length <= 64 && bytes(record.plan).length <= 80, "Invalid record");
-        require(keccak256(bytes(string.concat("ONHOLD:restricted-consumer-org:v1:", record.uuid))) == nullifier, "Record UUID mismatch");
+        _validateRecordNullifier(nullifier, record.uuid);
         bytes32 recordHash = keccak256(abi.encode(keccak256(bytes(record.account)), keccak256(bytes(record.uuid)), keccak256(bytes(record.bannedAt)), keccak256(bytes(record.plan))));
         bytes32 digest = _hashTypedDataV4(keccak256(abi.encode(MINT_TYPEHASH, recipient, nullifier, tier, referrer, deadline, recordHash)));
         require(ECDSA.recover(digest, signature) == verifier, "Invalid proof");
@@ -88,6 +88,10 @@ contract OnholdPassMining is ERC721Enumerable, Ownable, StakingRewards, EIP712 {
         _safeMint(recipient, tokenId);
         emit PassMinted(recipient, nullifier, tokenId, tier, passWeight(tokenId), referrer);
         emit PassRecorded(tokenId, record.account, record.uuid, record.bannedAt, record.plan);
+    }
+
+    function _validateRecordNullifier(bytes32 nullifier, string calldata uuid) internal pure virtual {
+        require(keccak256(bytes(string.concat("ONHOLD:restricted-consumer-org:v1:", uuid))) == nullifier, "Record UUID mismatch");
     }
 
     function passWeight(uint256 tokenId) public view returns (uint256) {

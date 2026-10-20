@@ -76,7 +76,7 @@ fn invite_code(db: &rusqlite::Connection, wallet: &str) -> rusqlite::Result<Stri
     }
     Err(rusqlite::Error::InvalidQuery)
 }
-fn resolve_invite(
+pub(super) fn resolve_invite(
     db: &rusqlite::Connection,
     code: Option<&str>,
 ) -> rusqlite::Result<Option<String>> {
@@ -192,6 +192,16 @@ fn parse_standing(value: &Value) -> Result<Standing, ApiError> {
         ban_category,
     })
 }
+fn verification_nullifier(account: &Standing, token: &str, repeat_uuid: bool) -> String {
+    if repeat_uuid {
+        crypto::hex(&crypto::keccak(format!(
+            "ONHOLD:e2e-repeat-uuid:v1:{}:{token}",
+            account.record.uuid
+        )))
+    } else {
+        account.nullifier.clone()
+    }
+}
 pub async fn verify(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -209,9 +219,14 @@ pub async fn verify(
     }
     uploads::quota(state.clone(), "verify", 100).await?;
     let endpoint = std::env::var("ONHOLD_E2E_STANDING_URL").ok();
-    if let Some(endpoint) = &endpoint {
-        // Synthetic standing is restricted to a debug build and a deployed chain-97 Mock market.
-        if !cfg!(debug_assertions) || endpoint != "http://127.0.0.1:4198/mock-standing" {
+    let repeat_uuid = std::env::var("ONHOLD_E2E_REPEAT_UUID").as_deref() == Ok("true");
+    if endpoint.is_some() || repeat_uuid {
+        // Test overrides require a debug build and a matching deployed chain-97 Mock market.
+        if !cfg!(debug_assertions)
+            || endpoint
+                .as_deref()
+                .is_some_and(|value| value != "http://127.0.0.1:4198/mock-standing")
+        {
             return Err(error(
                 StatusCode::SERVICE_UNAVAILABLE,
                 "invalid_mock_configuration",
@@ -223,6 +238,15 @@ pub async fn verify(
             .ok_or(error(StatusCode::SERVICE_UNAVAILABLE, "nft_not_configured"))?;
         if rpc(&state, "eth_chainId", json!([])).await? != "0x61"
             || contract_call(&state, &signer.market, "MOCK_ONLY()", &[]).await?
+                != json!(format!("0x{:064x}", 1))
+        {
+            return Err(error(
+                StatusCode::SERVICE_UNAVAILABLE,
+                "invalid_mock_configuration",
+            ));
+        }
+        if repeat_uuid
+            && contract_call(&state, &signer.market, "UUID_UNIQUENESS_DISABLED()", &[]).await?
                 != json!(format!("0x{:064x}", 1))
         {
             return Err(error(
@@ -270,7 +294,7 @@ pub async fn verify(
     );
     let token_hash = crypto::hex(&crypto::keccak(&token));
     let expires = now() + 600;
-    let nullifier = account.nullifier.clone();
+    let nullifier = verification_nullifier(&account, &token, repeat_uuid);
     let tier = account.tier;
     let banned_at = account.banned_at.clone();
     let public_record = account.record.clone();
@@ -330,12 +354,14 @@ async fn quote_data(state: AppState, request: &MintRequest) -> Result<Quote, Api
         .ok_or(error(StatusCode::SERVICE_UNAVAILABLE, "nft_not_configured"))?;
     let token_hash = crypto::hex(&crypto::keccak(&request.verification_token));
     let checked_wallet = wallet.clone();
+    let checked_market=signer.market.clone();
     let record=database(state.clone(),move|db|{
   let record=db.query_row("SELECT a.nullifier,a.tier,s.expires_at,r.record,r.image FROM verification_sessions s JOIN verified_accounts a ON s.nullifier=a.nullifier JOIN verified_nft_records r ON s.token_hash=r.token_hash WHERE s.token_hash=?1 AND s.expires_at>=unixepoch()",[token_hash],|row|Ok((row.get::<_,String>(0)?,row.get::<_,u8>(1)?,row.get::<_,u64>(2)?,row.get::<_,String>(3)?,row.get::<_,Option<String>>(4)?))).optional()?;
   let existing:Option<(String,String,String)>=db.query_row("SELECT nullifier,wallet,status FROM nft_mints WHERE nullifier=?1",params![record.as_ref().map(|r|r.0.as_str())],|row|Ok((row.get(0)?,row.get(1)?,row.get(2)?))).optional()?;
-  let bound:Option<String>=db.query_row("SELECT referrer FROM nft_mints WHERE wallet=?1 ORDER BY rowid LIMIT 1",[checked_wallet],|r|r.get(0)).optional()?;
+  let bound=crate::referrals::bound(db,&checked_market,&checked_wallet)?;
   Ok((record,existing,bound))
  }).await?;
+    if record.2.is_none(){return Err(error(StatusCode::CONFLICT,"referral_binding_required"));}
     if let Some(bound) = record.2 {
         if request
             .referral_code
@@ -402,20 +428,30 @@ pub(super) async fn rpc(state: &AppState, method: &str, params: Value) -> Result
         .json(&json!({"jsonrpc":"2.0","id":1,"method":method,"params":params}))
         .send()
         .await
-        .map_err(|_| error(StatusCode::BAD_GATEWAY, "chain_unavailable"))?;
+        .map_err(|cause| {
+            eprintln!("chain RPC failed: method={method} reason={}", if cause.is_timeout(){"timeout"}else if cause.is_connect(){"connect"}else{"transport"});
+            error(StatusCode::BAD_GATEWAY, "chain_unavailable")
+        })?;
     if !response.status().is_success() {
+        eprintln!("chain RPC failed: method={method} http_status={}", response.status().as_u16());
         return Err(error(StatusCode::BAD_GATEWAY, "chain_unavailable"));
     }
     let value: Value = response
         .json()
         .await
-        .map_err(|_| error(StatusCode::BAD_GATEWAY, "chain_unavailable"))?;
+        .map_err(|_| {
+            eprintln!("chain RPC failed: method={method} reason=invalid_json");
+            error(StatusCode::BAD_GATEWAY, "chain_unavailable")
+        })?;
     if value.get("error").is_some() || value.get("result").is_none() {
-        return Err(error(StatusCode::BAD_GATEWAY, "chain_unavailable"));
+        let message = value["error"]["message"].as_str().unwrap_or("").to_ascii_lowercase();
+        let reason = if message.contains("pruned") || message.contains("missing trie node") { "chain_history_unavailable" } else { "chain_unavailable" };
+        eprintln!("chain RPC failed: method={method} upstream_code={:?} reason={reason}", value["error"]["code"].as_i64());
+        return Err(error(StatusCode::BAD_GATEWAY, reason));
     }
     Ok(value["result"].clone())
 }
-async fn contract_call(
+pub(super) async fn contract_call(
     state: &AppState,
     market: &str,
     signature: &str,
@@ -649,6 +685,19 @@ mod tests {
         }
     }
     #[test]
+    fn repeat_uuid_attempts_preserve_real_records_but_do_not_collide() {
+        let account = parse_standing(&standing()).unwrap();
+        assert_eq!(
+            verification_nullifier(&account, "first", false),
+            account.nullifier
+        );
+        let first = verification_nullifier(&account, "first", true);
+        assert_ne!(first, account.nullifier);
+        assert_ne!(first, verification_nullifier(&account, "second", true));
+        assert_eq!(first, verification_nullifier(&account, "first", true));
+        assert_eq!(account.record.uuid, "f40c6c60-10ea-4c0b-8a79-c98e4cd102e9");
+    }
+    #[test]
     fn invite_codes_are_stable_unique_and_resolve_only_valid_codes() {
         let state = state();
         let db = state.db.lock().unwrap();
@@ -666,6 +715,11 @@ mod tests {
         for invalid in [wallet.as_str(), "nonexistent", "000000000000"] {
             assert!(resolve_invite(&db, Some(invalid)).unwrap().is_none());
         }
+    }
+    #[tokio::test]
+    async fn new_mint_requires_a_signed_referral_binding(){
+        let request=MintRequest{verification_token:"a".repeat(64),wallet:format!("0x{}","22".repeat(20)),referral_code:None,signature:None};
+        assert_eq!(quote_data(state(),&request).await.err().unwrap().1,"referral_binding_required");
     }
     #[tokio::test]
     async fn mint_quote_checks_short_code_identity_expiry_and_existing_reservations() {
@@ -700,6 +754,7 @@ mod tests {
                 ],
             )
             .unwrap();
+            db.execute("INSERT INTO wallet_referrals(market,wallet,referrer,bound_at) VALUES(?1,?2,?3,unixepoch())",params![state.claims.as_ref().unwrap().market,wallet,inviter]).unwrap();
             invite_code(&db, &inviter).unwrap()
         };
         let mut request = MintRequest {
@@ -747,6 +802,11 @@ mod tests {
             .contains("Example Organization"));
         assert!(response["message"].as_str().unwrap().contains(&inviter));
         let quote = quote_data(state.clone(), &request).await.unwrap();
+        let saved_code=request.referral_code.clone();
+        let other_code={let db=state.db.lock().unwrap();invite_code(&db,&format!("0x{}","55".repeat(20))).unwrap()};
+        request.referral_code=Some(other_code);
+        assert_eq!(quote_data(state.clone(),&request).await.err().unwrap().1,"referrer_already_bound");
+        request.referral_code=saved_code;
         assert_eq!(quote.referrer, inviter);
         assert_eq!(quote.tier, 1);
         assert!(quote.message.contains("NFT mint authorization"));

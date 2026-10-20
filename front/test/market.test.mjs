@@ -81,3 +81,14 @@ test('Mock minimum comes from the indexed deployment and does not change the pro
  assert.equal(requiredBid({...ad,minimumBid:'100000000000000'}),100000000000000n);
  assert.equal(requiredBid({...ad,minimumBid:'invalid'}),10000000000000000n);
 });
+
+test('testnet 60-second prices, required bids and curve use the contract period',()=>{
+  const ad={bid:'800',startedAt:now,priceIntervalSeconds:60,minimumBid:'1'};
+  assert.equal(currentPrice(ad,now+59999),800n);
+  assert.equal(currentPrice(ad,now+60000),400n);
+  assert.equal(requiredBid(ad,now+60000),440n);
+  const curve=auctionCurve(ad,now+120000);
+  assert.equal(curve.price,200n);assert.equal(curve.nextPrice,100n);
+  assert.equal(curve.nextAt,now+180000);assert.equal(curve.intervalSeconds,60);
+  assert.equal(curve.progress,0);assert.deepEqual(curve.levels,[400n,200n,100n,50n,25n]);
+});

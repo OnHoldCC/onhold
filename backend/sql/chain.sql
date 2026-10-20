@@ -207,3 +207,12 @@ COMMENT ON COLUMN buyback_events.tx_hash IS '同时完成回购与销毁的链�
 COMMENT ON COLUMN buyback_events.log_index IS 'BuybackBurned 事件在区块中的日志序号；与 Vault、交易哈希组成幂等键，防止重放重复入库。';
 COMMENT ON COLUMN buyback_events.block_number IS '该笔回购销毁事件所在的已确认区块高度。';
 COMMENT ON COLUMN buyback_events.data IS '合并后的交易详情：spent 为回购支出（BNB），burned 为销毁数量（$Claude），gas_refunded 为 Keeper 补偿（BNB），并含交易哈希、日志序号和区块；金额使用可读十进制字符串。';
+
+-- 每 15 分钟采集的全网挖矿统计；Redis 缓存最新值与各时间窗口曲线。
+CREATE TABLE IF NOT EXISTS mining_samples (
+    market TEXT NOT NULL,
+    sampled_at BIGINT NOT NULL,
+    data JSONB NOT NULL,
+    PRIMARY KEY (market, sampled_at)
+);
+COMMENT ON TABLE mining_samples IS '已确认区块的挖矿权重与单位权重日收益快照；不回填未采集的历史，不代表 PoW 算力。';

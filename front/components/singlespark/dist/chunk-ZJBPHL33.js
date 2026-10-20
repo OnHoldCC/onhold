@@ -146,11 +146,12 @@ import { jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
 function SingleSparkWalletButton({
   address,
   connecting = false,
+  walletIcon,
   children,
   ...props
 }) {
   return /* @__PURE__ */ jsxs2(SingleSparkButton, { variant: "secondary", loading: connecting, ...props, children: [
-    /* @__PURE__ */ jsx2(SingleSparkIcon, { name: "wallet" }),
+    walletIcon || /* @__PURE__ */ jsx2(SingleSparkIcon, { name: "wallet" }),
     children || (address ? `${address.slice(0, 4)}\u2026${address.slice(-4)}` : "Connect wallet")
   ] });
 }
@@ -247,6 +248,7 @@ function SingleSparkWalletStatus({
   wallet = "Phantom",
   address,
   message,
+  walletIcon,
   onDisconnect,
   onRetry,
   className = ""
@@ -264,7 +266,7 @@ function SingleSparkWalletStatus({
       "data-status": status,
       children: [
         /* @__PURE__ */ jsxs5("div", { role: "status", "aria-live": "polite", children: [
-          /* @__PURE__ */ jsx5("span", { className: "singlespark-wallet-status-mark", children: status === "connecting" ? /* @__PURE__ */ jsx5(SingleSparkLoading, { size: 22, decorative: true }) : /* @__PURE__ */ jsx5(
+          /* @__PURE__ */ jsx5("span", { className: "singlespark-wallet-status-mark", children: walletIcon && status === "connected" ? walletIcon : status === "connecting" ? /* @__PURE__ */ jsx5(SingleSparkLoading, { size: 22, decorative: true }) : /* @__PURE__ */ jsx5(
             SingleSparkIcon,
             {
               name: status === "connected" ? "check" : status === "error" ? "close" : "wallet",

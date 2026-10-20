@@ -8,3 +8,4 @@ backend/data/
 !.env.example
 .DS_Store
 .rainbond/
+front/previews/e2e/*real-claude*.png

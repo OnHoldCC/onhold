@@ -41,13 +41,36 @@ async function signed(market,recipient,{nullifier,tier=1,referrer=ZeroAddress,de
 // Anvil advances timestamps between estimate and mining; execution tests reserve checkpoint gas.
 const close=(actual,expected,tolerance=10n)=>assert.ok(actual>=expected-tolerance&&actual<=expected+tolerance,`${actual} differs from ${expected}`);
 test('ad price and the 0.01 BNB payment minimum are independent',async()=>{
-  const {market}=await fixture();await (await market.bid(0,0,...listing,{value:parseEther('0.08')})).wait();
+  const {market}=await fixture();assert.equal(await market.adPriceInterval(),86400n);await (await market.bid(0,0,...listing,{value:parseEther('0.08')})).wait();
   const start=Number((await market.ads(0)).startedAt);
   await advance(start+86399);assert.equal(await market.currentPrice(0),parseEther('0.08'));
   await advance(start+86400);assert.equal(await market.currentPrice(0),parseEther('0.04'));
   await advance(start+86400*5);assert.equal(await market.currentPrice(0),parseEther('0.0025'));
   await assert.rejects(market.bid(0,1,...listing,{value:parseEther('0.009')}),/Minimum bid/);
   await (await market.bid(0,1,...listing,{value:parseEther('0.01')})).wait();
+});
+test('Mock ads halve every 60 seconds without transactions, floor at 1 wei and reset on replacement',async()=>{
+  const a=artifact('MockTestDeployment');
+  const deployed=await new ContractFactory(a.abi,a.bytecode,owner).deploy();await deployed.waitForDeployment();
+  const market=new Contract(await deployed.market(),artifact('MockOnholdMarket').abi,owner);
+  assert.equal(await market.adPriceInterval(),60n);
+  assert.equal(await market.minimumAdBid(),parseEther('0.00001'));
+  assert.equal(await market.MIN_AD_BUYBACK(),parseEther('0.0001'));
+  await (await market.bid(0,0,...listing,{value:parseEther('0.0008')})).wait();
+  const start=Number((await market.ads(0)).startedAt),version=(await market.ads(0)).version;
+  const nonce=await provider.getTransactionCount(await owner.getAddress());
+  await advance(start+59);assert.equal(await market.currentPrice(0),parseEther('0.0008'));
+  await advance(start+60);assert.equal(await market.currentPrice(0),parseEther('0.0004'));
+  assert.equal(await market.requiredBid(0),parseEther('0.00044'));
+  await advance(start+120);assert.equal(await market.currentPrice(0),parseEther('0.0002'));
+  assert.equal(await provider.getTransactionCount(await owner.getAddress()),nonce);
+  assert.equal((await market.ads(0)).version,version);
+  await (await market.bid(0,version,...listing,{value:parseEther('0.00022')})).wait();
+  const reset=Number((await market.ads(0)).startedAt);assert.ok(reset>start);
+  await advance(reset+59);assert.equal(await market.currentPrice(0),parseEther('0.00022'));
+  await advance(reset+60);assert.equal(await market.currentPrice(0),parseEther('0.00011'));
+  await advance(reset+60*256);assert.equal(await market.currentPrice(0),1n);
+  assert.equal(await market.requiredBid(0),await market.minimumAdBid());
 });
 test('strict bids, versions, UTF8 tag totals, URLs and revenue ownership',async()=>{
   const {market}=await fixture();await (await market.bid(0,0,...listing,{value:parseEther('0.08')})).wait();
@@ -434,4 +457,25 @@ test('fee settlement, buyback, burn and bounded keeper compensation are atomic',
   await (await processor.setRecipient(await user.getAddress())).wait();
   await assert.rejects(vault.settleAndExecute(parseEther('0.0009'),1,await timestamp()+90),/Invalid fee recipient/);
   assert.equal(await vault.totalGasRefunded(),refund);
+});
+
+test('repeat-UUID deployment permits separately signed attempts, rejects replay and leaves standard UUID binding intact',async()=>{
+ const factory=new ContractFactory(artifact('RepeatUuidMockTestDeployment').abi,artifact('RepeatUuidMockTestDeployment').bytecode,owner);
+ const deployment=await factory.deploy();await deployment.waitForDeployment();
+ const market=new Contract(await deployment.market(),artifact('RepeatUuidMockMarket').abi,owner),recipient=await user.getAddress();
+ assert.equal(await market.UUID_UNIQUENESS_DISABLED(),true);assert.equal(await market.MOCK_ONLY(),true);
+ const record={account:'Repeat UUID test',uuid:crypto.randomUUID(),bannedAt:'2026-10-20T00:00:00Z',plan:'claude_pro'};
+ const first=await signed(market,recipient,{record,nullifier:id('first independent verification')});
+ const second=await signed(market,recipient,{record,nullifier:id('second independent verification')});
+ await(await market.connect(user).mintPass(...first)).wait();
+ await assert.rejects(market.connect(user).mintPass(...first),/Account already minted/);
+ await(await market.connect(user).mintPass(...second)).wait();
+ assert.equal(await market.balanceOf(recipient),2n);
+ assert.equal((await market.records(1)).uuid,record.uuid);assert.equal((await market.records(2)).uuid,record.uuid);
+ const tampered=await signed(market,recipient,{record,nullifier:id('third independent verification')});tampered[5]={...record,account:'Tampered'};
+ await assert.rejects(market.connect(user).mintPass(...tampered),/Invalid proof/);
+ const standard=(await fixture()).market;
+ await assert.rejects(standard.connect(user).mintPass(...await signed(standard,recipient,{record,nullifier:first[1]})),/Record UUID mismatch/);
+ await(await standard.connect(user).mintPass(...await signed(standard,recipient,{record}))).wait();
+ await assert.rejects(standard.connect(user).mintPass(...await signed(standard,recipient,{record})),/Account already minted/);
 });

@@ -1,9 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {messages,translate,translateError} from '../src/i18n.mjs';
+import {messages,translate,translateError,initialLocale,supportedLocales} from '../src/i18n.mjs';
 import {stepsEn} from '../src/steps-en.mjs';
 import {steps} from '../src/steps.mjs';
 import {makeEvent} from '../src/telemetry.mjs';
+test('browser language selects a supported locale unless the user saved a preference',()=>{
+  for(const lang of supportedLocales)assert.equal(initialLocale(null,[`${lang}-XX`]),lang);
+  assert.equal(initialLocale(null,['zh-Hant-TW','en-US']),'zh');
+  assert.equal(initialLocale(null,['ru-RU','pt-BR']),'pt');
+  assert.equal(initialLocale('ja',['zh-CN']),'ja');
+  assert.equal(initialLocale('invalid',['FR-ca']),'fr');
+  assert.equal(initialLocale(null,['ru-RU']),'en');
+  assert.equal(initialLocale(null,[]),'en');
+});
 test('English and Chinese contain the same translation keys',()=>{
   assert.deepEqual(Object.keys(messages.en).sort(),Object.keys(messages.zh).sort());
   for(const value of Object.values(messages.en)) assert.doesNotMatch(value,/[\u4e00-\u9fff]/);
@@ -13,7 +22,7 @@ test('English and Chinese contain the same translation keys',()=>{
 test('English tutorial uses the same real screenshots with English instructions',()=>{
   assert.equal(stepsEn.length,4);
   assert.deepEqual(stepsEn.map(step=>step.image),steps.map(step=>step.image));
-  for(const step of stepsEn){assert.equal(step.instructions.length,3);assert.doesNotMatch([step.title,step.intro,step.alt,...step.instructions,step.tip].join(' '),/[\u4e00-\u9fff]/);}
+  for(const step of stepsEn){assert.ok(step.instructions.length>=3);assert.doesNotMatch([step.title,step.intro,step.alt,...step.instructions,step.tip].join(' '),/[\u4e00-\u9fff]/);}
 });
 test('telemetry payload only contains the documented non-sensitive fields',()=>{
   assert.deepEqual(makeEvent('ad_click','home',2,'event-00000000000001'),{event_id:'event-00000000000001',kind:'ad_click',page:'home',site_id:2});
@@ -41,4 +50,21 @@ test('all locales describe 365-day linear mining and claiming without unstaking'
   assert.match(translate('en','holdingRule'),/Claim anytime without unstaking/);
   assert.match(translate('zh','holdingRule'),/随时领取，无需解押/);
   assert.match(translate('en','miningInvite'),/15%/);
+});
+
+test('mining competition and test-auction rules are named in every locale',()=>{
+ for(const lang of Object.keys(messages))for(const key of ['networkMining','networkWeight','perWeightDaily','myWeightShare','networkStatsNote','miningCompetition','miningHistoryPending','testAdRules'])assert.notEqual(translate(lang,key),key);
+});
+
+test('navigation labels are translated in every non-English locale',()=>{
+ const expected={zh:['首页','领取','销毁'],ja:['ホーム','受け取る','バーン'],ko:['홈','보상 받기','소각'],es:['Inicio','Reclamar','Quema'],fr:['Accueil','Réclamer','Destruction'],de:['Startseite','Abholen','Verbrennen'],pt:['Início','Resgatar','Queima']};
+ for(const [lang,labels]of Object.entries(expected))assert.deepEqual(['home','claim','burn'].map(key=>translate(lang,key)),labels);
+});
+
+test('cURL guide names every required action in order',()=>{
+ for(const guide of [steps,stepsEn]){
+  const flow=guide[1].instructions.join(' ');let last=-1;
+  for(const action of ['F12','Network','F5','standing','Copy','Copy as cURL']){const index=flow.indexOf(action,last+1);assert.ok(index>last,action);last=index;}
+  assert.equal(guide[1].image,'guide/network-curl.png');assert.equal(guide[2].image,'guide/verify.png');
+ }
 });

@@ -13,6 +13,9 @@ export function validateTestTransaction(tx,{market,account,role,iface,spent=0n})
 }
 if(process.argv[1]&&resolve(process.argv[1])===import.meta.filename){
  const root=resolve(import.meta.dirname,'../..'),dir=resolve(process.env.ONHOLD_TESTNET_DATA_DIR||join(root,'backend/data/testnet-v4-mock'));
+ const realStanding=process.env.ONHOLD_E2E_REAL_STANDING==='true';
+ const bridgePort=Number(process.env.ONHOLD_E2E_PORT||4198),apiAddress=process.env.ONHOLD_ADDR||'127.0.0.1:4190';
+ if(!Number.isInteger(bridgePort)||bridgePort<1024||bridgePort>65535||!/^127\.0\.0\.1:\d{4,5}$/.test(apiAddress))throw Error('Loopback test ports required');
  const deployment=JSON.parse(readFileSync(join(dir,'addresses.json'))),keys=JSON.parse(readFileSync(join(dir,'keys.json')));
  if(deployment.chainId!==97||deployment.mock!==true||keys.chainId!==97)throw Error('Explicit Mock testnet deployment required');
  const connection=new FetchRequest(process.env.ONHOLD_CHAIN_RPC_URL||'https://bsc-testnet-rpc.publicnode.com');connection.timeout=15000;
@@ -23,13 +26,14 @@ if(process.argv[1]&&resolve(process.argv[1])===import.meta.filename){
  if(!await market.MOCK_ONLY())throw Error('Mock market required');
  const wallets={user:new Wallet(keys.deployerPrivateKey,provider),inviter:new Wallet(keys.adKeeperPrivateKey,provider)};
  const script=readFileSync(join(root,'backend/scripts/e2e-browser-wallet.js'));
- const origin='http://127.0.0.1:4198',report=join(dir,'browser-transactions.jsonl');let busy=false,spent=0n;
+ const origin=`http://127.0.0.1:${bridgePort}`,report=join(dir,'browser-transactions.jsonl');let busy=false,spent=0n;
  const readonly=new Set(['eth_chainId','eth_blockNumber','eth_getBalance','eth_getCode','eth_call','eth_estimateGas','eth_gasPrice','eth_maxPriorityFeePerGas','eth_feeHistory','eth_getBlockByNumber','eth_getTransactionByHash','eth_getTransactionReceipt','eth_getTransactionCount']);
  const send=(res,status,body,headers={})=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store',...headers});res.end(typeof body==='string'?body:JSON.stringify(body));};
  const server=createServer(async(req,res)=>{
   try{
-   if(req.headers.host!=='127.0.0.1:4198')return send(res,403,{error:'host_rejected'});
+   if(req.headers.host!==`127.0.0.1:${bridgePort}`)return send(res,403,{error:'host_rejected'});
    if(req.url==='/mock-standing'){
+    if(realStanding)return send(res,404,{error:'real_claude_verification_enabled'});
     if(req.headers.cookie!=='sessionKey=sk-ant-sid-onhold-mock-browser-pro-20261020')return send(res,401,{error:'fixture_only'});
     return send(res,200,{standing:'bad_standing',has_active_org:false,org_type:'consumer',prev_plan_tier:'claude_pro',banned_at:'2026-10-20T01:00:00Z',ban_category:'MOCK E2E fixture',banned_orgs:[{uuid:'cb58162b-ecb0-4ddc-bc04-70c79d452ff1',name:'MOCK E2E Pro Account'}]});
    }
@@ -58,13 +62,13 @@ if(process.argv[1]&&resolve(process.argv[1])===import.meta.filename){
     return send(res,200,{result});
    }
    if(req.method==='POST'&&req.headers.origin!==origin)return send(res,403,{error:'origin_rejected'});
-   const upstream=proxyRequest({hostname:'127.0.0.1',port:4190,path:req.url,method:req.method,headers:{...req.headers,host:'127.0.0.1:4190'}},response=>{
+   const upstream=proxyRequest({hostname:'127.0.0.1',port:Number(apiAddress.split(':')[1]),path:req.url,method:req.method,headers:{...req.headers,host:apiAddress}},response=>{
     const isHtml=response.headers['content-type']?.includes('text/html');
-    if(isHtml){const chunks=[];response.on('data',chunk=>chunks.push(chunk));response.on('end',()=>{const html=Buffer.concat(chunks).toString().replace('<head>','<head><script src="/__e2e/wallet.js"></script>');res.writeHead(response.statusCode,{'Content-Type':'text/html','Cache-Control':'no-store'});res.end(html);});}
+    if(isHtml){const chunks=[];response.on('data',chunk=>chunks.push(chunk));response.on('end',()=>{const html=Buffer.concat(chunks).toString().replace('<head>',`<head><script src="/__e2e/wallet.js" data-market="${marketAddress}" data-real-standing="${realStanding}" data-repeat-uuid="${deployment.repeatUuid===true}"></script>`);res.writeHead(response.statusCode,{'Content-Type':'text/html','Cache-Control':'no-store'});res.end(html);});}
     else{res.writeHead(response.statusCode,response.headers);response.pipe(res);}
    });upstream.on('error',()=>send(res,502,{error:'api_not_ready'}));req.pipe(upstream);
   }catch(error){send(res,400,{error:{code:-32603,message:error.shortMessage||error.message}});}
  });
- server.listen(4198,'127.0.0.1',()=>console.log('Mock browser E2E: http://127.0.0.1:4198/claim.html (test wallet bridge, keys server-side)'));
+ server.listen(bridgePort,'127.0.0.1',()=>console.log(JSON.stringify({browserE2E:origin+'/claim.html',realStanding,repeatUuid:deployment.repeatUuid===true,market:marketAddress})));
  for(const signal of ['SIGTERM','SIGINT'])process.on(signal,()=>{server.close();provider.destroy();});
 }

@@ -1,4 +1,5 @@
 // SingleSparkFront TokenMediaUpload; only API and translation bindings adapted for ONHOLD.
+import {Notice} from './Feedback';
 import { useEffect, useRef, useState } from 'react';
 import { SingleSparkLoading } from '@singlespark/component-atlas/primitives';
 import { SingleSparkIcon } from '@singlespark/component-atlas/icons';
@@ -135,7 +136,7 @@ export function TokenMediaUpload({
           void upload(file);
         }}
       />
-      {error && <div className="token-media-upload__error" role="alert">{t(error)}</div>}
+      {error && <Notice error>{t(error)}</Notice>}
       {preview && !uploading && <button className="token-media-upload__remove" type="button" disabled={disabled} onClick={clear}>{t(imagesOnly ? 'create.media.removeImage' : 'create.media.remove')}</button>}
     </div>
   );

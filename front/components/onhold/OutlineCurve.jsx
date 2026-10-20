@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef } from 'react';
-// Reused from SingleSparkFront/front/features/docs/OutlineCurve.tsx; viewport follows .app-body.
+// Reused from SingleSparkFront/front/features/docs/OutlineCurve.tsx.
 
 
 const curve = 'M 16 12 C 56 69, -24 69, 16 126 C 56 183, -24 183, 16 240 C 56 297, -24 297, 16 354 C 56 411, -24 411, 16 468';
@@ -17,7 +17,8 @@ export function OutlineCurve({ content }) {
       if (motion.matches) { tip.style.visibility='hidden';return; }
       const box = article.getBoundingClientRect();
       if (!box.height) return;
-      const viewport=article.closest('.app-body');
+      const body=article.closest('.app-body');
+      const viewport=body&&/auto|scroll/.test(getComputedStyle(body).overflowY)?body:null;
       const top=(viewport?.getBoundingClientRect().top||0)+96;
       const height=viewport?.clientHeight||window.innerHeight;
       const progress = Math.max(0, Math.min(1, (top - box.top) / Math.max(1, box.height - height + 96)));

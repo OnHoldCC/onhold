@@ -23,7 +23,6 @@ contract OnholdMarket is OnholdPassMining {
     uint256 public adBuybackReserve;
     uint256 public totalAdReinvested;
     uint256 public constant AD_BUYBACK_INTERVAL = 3 minutes;
-    uint256 public immutable MIN_AD_BUYBACK;
     uint256 public lastAdBuyback;
     address public adKeeper;
     event BidPlaced(uint8 indexed slot, address indexed advertiser, uint256 amount, uint256 version);
@@ -37,13 +36,14 @@ contract OnholdMarket is OnholdPassMining {
         OnholdPassMining(initialOwner, token, initialVerifier) {
         require(block.chainid == 56 || block.chainid == 97 || block.chainid == 31337, "Unsupported chain");
         adKeeper = initialOwner;
-        MIN_AD_BUYBACK = block.chainid == 56 ? 0.01 ether : 0.001 ether;
     }
     receive() external payable {}
     function adBuybackPortal() public view virtual returns (address) {
         return block.chainid == 56 ? 0xe2cE6ab80874Fa9Fa2aAE65D277Dd6B8e65C9De0 : 0x5bEacaF7ABCbB3aB280e80D007FD31fcE26510e9;
     }
     function minimumAdBid() public pure virtual returns (uint256) { return MIN_BID; }
+    function MIN_AD_BUYBACK() public view virtual returns (uint256) { return block.chainid == 56 ? 0.01 ether : 0.001 ether; }
+    function adPriceInterval() public pure virtual returns (uint256) { return 1 days; }
     function setAdKeeper(address keeper) external onlyOwner {
         require(keeper != address(0), "Invalid keeper");
         adKeeper = keeper;
@@ -53,7 +53,7 @@ contract OnholdMarket is OnholdPassMining {
         require(msg.sender == adKeeper, "Keeper required");
         require(miningStartedAt != 0 && block.timestamp < miningStartedAt + rewardsDuration, "Mining inactive");
         require(block.timestamp >= lastAdBuyback + AD_BUYBACK_INTERVAL, "Too early");
-        require(amount >= MIN_AD_BUYBACK && amount <= adBuybackReserve && minOutput > 0, "Invalid amount");
+        require(amount >= MIN_AD_BUYBACK() && amount <= adBuybackReserve && minOutput > 0, "Invalid amount");
         require(deadline >= block.timestamp && deadline <= block.timestamp + 2 minutes, "Invalid deadline");
         adBuybackReserve -= amount;
         lastAdBuyback = block.timestamp;
@@ -73,8 +73,8 @@ contract OnholdMarket is OnholdPassMining {
         require(slot < 6, "Invalid slot");
         Ad storage ad = ads[slot];
         if (ad.initialBid == 0) return 0;
-        uint256 daysElapsed = (block.timestamp - ad.startedAt) / 1 days;
-        uint256 price = daysElapsed >= 256 ? 0 : ad.initialBid >> daysElapsed;
+        uint256 periodsElapsed = (block.timestamp - ad.startedAt) / adPriceInterval();
+        uint256 price = periodsElapsed >= 256 ? 0 : ad.initialBid >> periodsElapsed;
         return price == 0 ? 1 : price;
     }
     function requiredBid(uint8 slot) public view returns (uint256) {

@@ -1,0 +1,1 @@
+Brand vector snapshots use the same @web3icons/react 4.1.24 icons as SingleSparkFront/front/components/WalletIcons.tsx (MIT package). Wallet marks remain the property of their owners. MetaMask/Coinbase/Binance use branded variants; OKX uses mono. EIP-6963 supplied icons take precedence and render only through img. No runtime dependency on SingleSparkFront or @web3icons/react.

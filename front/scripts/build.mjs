@@ -1,20 +1,40 @@
 import { mkdir, copyFile, readFile, writeFile, rm, cp } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { join } from 'node:path';
+import { join,relative } from 'node:path';
+import {brotliCompressSync,gzipSync,constants} from 'node:zlib';
 import { createHash } from 'node:crypto';
 import { build } from 'esbuild';
 const root=fileURLToPath(new URL('../',import.meta.url));
 await rm(join(root,'dist'),{recursive:true,force:true});
 await mkdir(join(root,'dist/assets'),{recursive:true});
-await build({entryPoints:[join(root,'src/main.jsx')],outfile:join(root,'dist/app.js'),bundle:true,minify:true,jsx:'automatic',format:'esm',target:['es2022'],loader:{'.woff2':'file','.ttf':'file','.svg':'file','.png':'file','.webp':'file','.jpg':'file'},assetNames:'assets/singlespark/[name]-[hash]',define:{'process.env.NODE_ENV':'"production"'}});
-const version=createHash('sha256').update(await readFile(join(root,'dist/app.js'))).digest('hex').slice(0,12);
-const html=(await readFile(join(root,'src/index.html'),'utf8')).replaceAll('app.js',`app.js?v=${version}`).replaceAll('app.css',`app.css?v=${version}`).replaceAll('style.css',`style.css?v=${version}`);
+const result=await build({entryPoints:{app:join(root,'src/main.jsx')},outdir:join(root,'dist'),entryNames:'[name]-[hash]',chunkNames:'[name]-[hash]',splitting:true,metafile:true,bundle:true,minify:true,jsx:'automatic',format:'esm',target:['es2022'],loader:{'.woff2':'file','.ttf':'file','.svg':'file','.png':'file','.webp':'file','.jpg':'file'},assetNames:'assets/singlespark/[name]-[hash]',define:{'process.env.NODE_ENV':'"production"'}});
+const outputs=result.metafile.outputs;
+const [entry,entryInfo]=Object.entries(outputs).find(([,value])=>value.entryPoint?.endsWith('src/main.jsx'));
+const assetPath=path=>relative(join(root,'dist'),path);
+const style=await readFile(join(root,'src/style.css'));
+const version=createHash('sha256').update(style).digest('hex').slice(0,12);
+const stylePath=`style-${version}.css`;
+await writeFile(join(root,'dist',stylePath),style);
+const eager=new Set();
+function collect(path){if(eager.has(path))return;eager.add(path);for(const item of outputs[path]?.imports||[])if(item.kind==='import-statement'&&outputs[item.path])collect(item.path);}
+collect(entry);
+const preload=[...eager].filter(path=>path!==entry).map(path=>`<link rel="modulepreload" href="${assetPath(path)}">`).join('');
+const html=(await readFile(join(root,'src/index.html'),'utf8')).replace('app.js',assetPath(entry)).replace('app.css',assetPath(entryInfo.cssBundle)).replace('style.css',stylePath).replace('</head>',preload+'</head>');
+for(const [path,info]of Object.entries(outputs))if(/\.(js|css)$/.test(path)){
+ const data=await readFile(path);
+ await writeFile(path+'.br',brotliCompressSync(data,{params:{[constants.BROTLI_PARAM_QUALITY]:6}}));
+ await writeFile(path+'.gz',gzipSync(data));
+}
+await writeFile(join(root,'dist',stylePath+'.br'),brotliCompressSync(style));
+await writeFile(join(root,'dist',stylePath+'.gz'),gzipSync(style));
+const initialJsBytes=[...eager].reduce((sum,path)=>sum+outputs[path].bytes,0);
+await writeFile('/tmp/onhold-front-performance.json',JSON.stringify({initialJsBytes,eager:[...eager],outputs},null,2));
+console.log(`Initial JS: ${initialJsBytes} bytes; wallet and secondary pages load on demand.`);
 for(const file of ['index.html','claim.html','analytics.html','burn.html','docs.html']) await writeFile(join(root,'dist',file),html);
 await copyFile(join(root,'src/assets/claude-token.png'),join(root,'dist/assets/claude-token.png'));
 await mkdir(join(root,'dist/fonts'),{recursive:true});
 for(const name of ['nunito-variable.ttf','OFL.txt']) await copyFile(join(root,'src/fonts',name),join(root,'dist/fonts',name));
 for(const name of ['backers','singlespark','web3','fonts']) await cp(join(root,'components/singlespark/assets',name),join(root,'dist/assets',name),{recursive:true});
-await copyFile(join(root,'src/style.css'),join(root,'dist/style.css'));
 await mkdir(join(root,'dist/assets/guide'),{recursive:true});
 await copyFile(join(root,'src/assets/guide/SOURCE.md'),join(root,'dist/assets/guide/SOURCE.md'));
 console.log('Built React app: 5 pages, 8 languages, $Claude components.');

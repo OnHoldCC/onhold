@@ -30,7 +30,9 @@ if(!adMode&&(await vault.BURN_SINK()).toLowerCase()!=='0x00000000000000000000000
 if(adMode&&await vault.PROTOCOL_ID()!==id('onhold.nft-staking.v4'))throw Error('365-day reinvestment contract required.');
 const swap=new Contract(portal,['function quoteExactInput((address inputToken,address outputToken,uint256 inputAmount)) returns(uint256)'],provider);
 const processor=adMode?null:await feeProcessor(token,vaultAddress,wallet);
-const minimum=BigInt(buybackPolicies['97'].minimum_wei);
+const policyMinimum=BigInt(buybackPolicies['97'].minimum_wei);
+const minimum=mock?await vault.MIN_AD_BUYBACK():policyMinimum;
+if(mock&&minimum!==parseUnits('0.0001','ether')&&minimum!==policyMinimum)throw Error('Invalid Mock reinvestment minimum.');
 const maxRefund=BigInt(buybackPolicies['97'].max_gas_refund_wei);
 if(adMode?await vault.MIN_AD_BUYBACK()!==minimum:await vault.MIN_BUYBACK_BALANCE()!==minimum||await vault.MAX_KEEPER_GAS_REFUND()!==maxRefund)throw Error('Vault minimum or gas compensation does not match policy.');
 const directory=process.env.ONHOLD_KEEPER_DATA_DIR||'backend/data/keeper';

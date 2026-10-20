@@ -15,16 +15,18 @@ test('testnet deploy script journals transactions, checks funding and resumes wi
   const upgradedNonce=await provider.getTransactionCount(result.deployer);await run(env,['--upgrade-buyback']);assert.equal(await provider.getTransactionCount(result.deployer),upgradedNonce);assert.equal(JSON.parse(await readFile(join(directory,'addresses.json'))).previousBuybackVaults.length,1);
   const mockDirectory=await mkdtemp(join(directory,'mock-'));
   await writeFile(join(mockDirectory,'keys.json'),await readFile(join(directory,'keys.json')),{mode:0o600});
-  const mockEnv={...env,ONHOLD_TESTNET_DATA_DIR:mockDirectory};await run(mockEnv,['--mock']);
+  const mockEnv={...env,ONHOLD_TESTNET_DATA_DIR:mockDirectory};await run(mockEnv,['--mock','--repeat-uuid']);
   const mocked=JSON.parse(await readFile(join(mockDirectory,'addresses.json')));
-  assert.equal(mocked.mock,true);assert.equal(mocked.protocol,'nft-staking-v4');assert.equal(Object.keys(mocked.transactions).length,6);
+  assert.equal(mocked.mock,true);assert.equal(mocked.repeatUuid,true);
+  assert.equal(await new Contract(mocked.marketAddress,['function UUID_UNIQUENESS_DISABLED() view returns(bool)'],provider).UUID_UNIQUENESS_DISABLED(),true);assert.equal(mocked.protocol,'nft-staking-v4');assert.equal(Object.keys(mocked.transactions).length,6);
   const mockMarket=new Contract(mocked.marketAddress,artifact.abi,provider);
-  assert.equal(await mockMarket.adKeeper(),mocked.adKeeper);assert.equal(await mockMarket.minimumAdBid(),100000000000000n);
+  assert.equal(await mockMarket.adKeeper(),mocked.adKeeper);assert.equal(await mockMarket.minimumAdBid(),10000000000000n);
   assert.equal(await mockMarket.adBuybackPortal(),mocked.mockPortalAddress);
+  assert.equal(await mockMarket.MIN_AD_BUYBACK(),100000000000000n);assert.equal(await mockMarket.adPriceInterval(),60n);assert.equal(mocked.adPriceIntervalSeconds,60);
   const portalArtifact=JSON.parse(await readFile('contracts/artifacts/MockSwapPortal.json'));
   const mockPortal=new Contract(mocked.mockPortalAddress,portalArtifact.abi,provider);
   assert.equal(await mockPortal.MOCK_ONLY(),true);assert.equal(await mockPortal.token(),mocked.tokenAddress);
-  const mockNonce=await provider.getTransactionCount(result.deployer);await run(mockEnv,['--mock']);assert.equal(await provider.getTransactionCount(result.deployer),mockNonce);
+  const mockNonce=await provider.getTransactionCount(result.deployer);await run(mockEnv,['--mock','--repeat-uuid']);assert.equal(await provider.getTransactionCount(result.deployer),mockNonce);
 
  }finally{provider.destroy();anvil.kill('SIGTERM');await once(anvil,'exit');await rm(directory,{recursive:true,force:true});}
 });

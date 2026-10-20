@@ -1,3 +1,4 @@
+import {readJson} from './read-json.mjs';
 export function extractSession(input){
   if(typeof input!=='string'||input.length>65536)throw Error('invalid_session');
   const text=input.trim();
@@ -12,7 +13,7 @@ export async function claimRequest(path,body){
   const value=await response.json().catch(()=>({error:'service_unavailable'}));
   if(!response.ok){const error=new Error(value.error||'service_unavailable');error.code=value.error;throw error;}return value;
 }
-export async function publicStatus(){try{const response=await fetch('/api/status',{credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(3000)});if(!response.ok)return null;const value=await response.json();return value.chain_id===97&&value.protocol==='nft-staking-v4'?value:null;}catch{return null;}}
+export async function publicStatus(){try{const value=await readJson('/api/status',3000);return value.chain_id===97&&value.protocol==='nft-staking-v4'?value:null;}catch{return null;}}
 export async function verifyRestriction(session){
   const value=await claimRequest('/api/verify',{session_key:extractSession(session)});
   if(value.image!==undefined||value.artwork_ready!==false||value.protocol!=='nft-staking-v4'||typeof value.verification_token!=='string'||!/^([a-f0-9]{64})$/.test(value.verification_token)||!['Pro','Max'].includes(value.plan)||value.tier!==(value.plan==='Pro'?1:2)||value.weight!==(value.tier===1?1:3)||value.standing!=='restricted'||typeof value.minted!=='boolean'||typeof value.reserved!=='boolean'||typeof value.banned_at!=='string'||typeof value.organization_suffix!=='string'||!(value.organization_name===null||typeof value.organization_name==='string')||!(value.ban_category===null||typeof value.ban_category==='string')||!value.record||typeof value.record.account!=='string'||typeof value.record.uuid!=='string'||typeof value.record.bannedAt!=='string'||typeof value.record.plan!=='string'||!Number.isSafeInteger(value.expires_at))throw Error('invalid_provider_response');

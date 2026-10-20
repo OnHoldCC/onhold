@@ -1,36 +1,55 @@
 export const steps = [
   {
-    title: '打开 Claude，登录你的账号',
-    intro: '使用平时登录 Claude 的桌面版 Chrome 浏览器，打开受限页面。',
-    image: 'guide/open-claude.jpg',
-    alt: 'Claude 真实受限页截图，使用 Chrome 翻译显示英文，标题为账号将保持关闭。',
-    instructions: ['点击下方按钮，在新标签页打开 Claude。', '如果出现登录页面，先登录需要验证的账号。', '确认页面显示账号受限，再回到本页继续。'],
-    tip: '仅打开这个地址不代表已经被封禁，最终以服务器验证结果为准。',
+    "title": "打开 Claude，登录你的账号",
+    "intro": "使用平时登录 Claude 的桌面版 Chrome 浏览器，打开受限页面。",
+    "image": "guide/open-claude.jpg",
+    "alt": "Claude 真实受限页截图，使用 Chrome 翻译显示英文，标题为账号将保持关闭。",
+    "instructions": [
+      "点击下方按钮，在新标签页打开 Claude。",
+      "如果出现登录页面，先登录需要验证的账号。",
+      "确认页面显示账号受限，保持 Claude 标签页打开，继续下一步。"
+    ],
+    "tip": "仅打开这个地址不代表已经被封禁，最终以服务器验证结果为准。"
   },
   {
-    title: '找到会话凭证所在的位置',
-    intro: '在 Claude 标签页打开开发者工具，按下方步骤依次定位。',
-    image: 'guide/cookies-redacted.png',
-    alt: 'Chrome 开发者工具 Application 的真实 Cookie 表格，所有 Value 值均已遮挡，名称和域名保持可见。',
-    instructions: ['点击 Chrome 右上角 ⋮ → 更多工具 → 开发者工具。', '点击 Application（应用）。看不到时，点击顶部的 » 找到它。', '展开左侧 Cookies，选择 https://claude.ai，然后在筛选框输入 sessionKey。'],
-    tip: '不要选择 Clear all cookies（清除全部 Cookie），它可能让你退出登录。',
+    "title": "找到 standing 请求并复制 cURL",
+    "intro": "在 Claude 受限页按以下顺序操作，截图编号对应步骤 2、4、5、6。",
+    "image": "guide/network-curl.png",
+    "alt": "真实 Chrome Network 截图：Network 标签、standing 筛选框、standing 请求、Copy 和 Copy as cURL 菜单带编号标记。",
+    "instructions": [
+      "按 F12 打开开发者工具；部分键盘需 Fn + F12。Mac 可按 ⌥⌘I。",
+      "选择 Network（网络）面板，不是 Console（控制台）。",
+      "保持开发者工具打开，按 F5 刷新 Claude 页面；Mac 按 ⌘R。",
+      "在 Network 的筛选框输入 standing，找到 Name 为 standing 的请求。",
+      "在这条 standing 请求上单击鼠标右键，打开菜单。",
+      "依次选择 Copy（复制）→ Copy as cURL（复制为 cURL），不要选 Copy URL。"
+    ],
+    "tip": "没有出现 standing 时，先确认已选择 Network，再刷新页面；浏览器语言不同，菜单名称可能显示中文。"
   },
   {
-    title: '只复制 sessionKey 的值',
-    intro: '找到 sessionKey，不要选择 sessionKeyLC。截图已遮挡值，请在自己的浏览器里复制对应的 Value 单元格。',
-    image: 'guide/cookies-redacted.png',
-    alt: '真实 Cookie 表格，sessionKey 位于 sessionKeyLC 上方；整列 Value 值已遮挡。',
-    instructions: ['确认 Name（名称）一栏写的是 sessionKey。', '双击这一行的 Value（值）单元格，选中完整内容并复制。', '保留 Claude 标签页，回到本网站。不要把凭证发到聊天、群聊或截图中。'],
-    tip: 'sessionKey 是登录凭证。只在确认可信、使用 HTTPS 的验证页面中填写；也可粘贴复制的 cURL，浏览器只提取 sessionKey，并丢弃其他请求头。',
+    "title": "回到本站，粘贴 cURL",
+    "intro": "复制完成后切回 onHold，粘贴刚才的完整 cURL 请求。",
+    "image": "guide/verify.png",
+    "alt": "本站真实验证表单，标有 cURL 输入框与粘贴按钮。",
+    "instructions": [
+      "切回本网站，在 cURL 输入框点击“粘贴”，或使用 Ctrl+V（Mac：⌘V）。",
+      "点击“下一步”，等待服务器核验真实封禁状态。",
+      "成功后核对生成的 NFT 图片和账号信息，再进入铸造。"
+    ],
+    "tip": "不要把 cURL 发到聊天或群里。浏览器只提取其中的 sessionKey 用于核验，不保留其他请求头。"
   },
   {
-    title: '先生成图片，再铸造 NFT',
-    intro: '核对封禁账号信息，再铸造 NFT，质押后开始挖矿。',
-    image: 'guide/verify.png',
-    alt: '本站真实验证表单截图，展示空请求输入框和粘贴按钮。',
-    instructions: ['回到本站，粘贴 cURL 或 sessionKey，点击“下一步”。', '在第二步核对右侧 PNG 卡片、套餐、封禁时间和 UUID：Pro 权重为 1，Max 为 3。', '连接钱包后点击提交，跟随步骤弹框签名并确认铸造；完成后到挖矿页质押。'],
-    tip: '一个已核验的封禁账号只能铸造一次；仅持有 NFT 不产出，质押后才能挖矿。',
-  },
+    "title": "先生成图片，再铸造 NFT",
+    "intro": "核对封禁账号信息，再铸造 NFT，质押后开始挖矿。",
+    "image": "guide/verify.png",
+    "alt": "本站真实验证表单截图，展示空请求输入框和粘贴按钮。",
+    "instructions": [
+      "回到本站，粘贴 cURL 或 sessionKey，点击“下一步”。",
+      "在第二步核对右侧 PNG 卡片、套餐、封禁时间和 UUID：Pro 权重为 1，Max 为 3。",
+      "连接钱包后点击提交，跟随步骤弹框签名并确认铸造；完成后到挖矿页质押。"
+    ],
+    "tip": "一个已核验的封禁账号只能铸造一次；仅持有 NFT 不产出，质押后才能挖矿。"
+  }
 ];
 
 export function instructionsFor(step) {

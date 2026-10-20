@@ -10,7 +10,7 @@ test('every guide step has a real screenshot asset and accessible text', () => {
     assert.ok(bytes.length>10000);
     assert.ok(bytes.subarray(0,3).equals(Buffer.from([0xff,0xd8,0xff])) || bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])));
     assert.ok(step.alt.length > 20);
-    assert.equal(step.instructions.length, 3);
+    assert.ok(step.instructions.length >= 3);
   }
 });
 test('navigation stays inside the guide', () => {
@@ -19,7 +19,10 @@ test('navigation stays inside the guide', () => {
   assert.equal(nextStep(1, 1), 2);
   assert.equal(nextStep(2, -1), 1);
 });
-test('instructions use one Chrome menu path on every operating system', () => {
-  assert.match(instructionsFor(steps[1])[0], /Chrome.*更多工具.*开发者工具/);
+test('instructions name shortcuts, Network refresh and Copy as cURL', () => {
+  assert.match(instructionsFor(steps[1])[0], /F12.*开发者工具/);
+  assert.match(instructionsFor(steps[1])[1], /Network/);
+  assert.match(instructionsFor(steps[1])[2], /F5/);
+  assert.match(instructionsFor(steps[1])[5], /Copy as cURL/);
   assert.ok(!instructionsFor(steps[1]).join('').includes('{shortcut}'));
 });

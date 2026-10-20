@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM node:24-bookworm-slim AS js-deps
+FROM --platform=$BUILDPLATFORM docker.1ms.run/library/node:24-bookworm-slim AS js-deps
 WORKDIR /build
 COPY package.json package-lock.json ./
 COPY front/package.json ./front/package.json
@@ -13,7 +13,7 @@ FROM contracts-build AS web-build
 COPY front ./front
 RUN node front/scripts/build.mjs
 
-FROM --platform=$BUILDPLATFORM rust:1.94-bookworm AS rust-build
+FROM --platform=$BUILDPLATFORM docker.1ms.run/library/rust:1.94-bookworm AS rust-build
 WORKDIR /app
 RUN sed -i 's|http://deb.debian.org|https://deb.debian.org|g' /etc/apt/sources.list.d/debian.sources \
     && apt-get -o Acquire::Retries=1 -o Acquire::https::Timeout=30 update \
@@ -33,7 +33,7 @@ COPY front/src/fonts/nunito-variable.ttf ./front/src/fonts/nunito-variable.ttf
 COPY contracts/buyback-policy.json ./contracts/buyback-policy.json
 RUN cargo build --locked --release --manifest-path backend/Cargo.toml --target x86_64-unknown-linux-gnu --jobs 2
 
-FROM node:24-bookworm-slim AS keeper
+FROM docker.1ms.run/library/node:24-bookworm-slim AS keeper
 WORKDIR /app
 ENV NODE_ENV=production ONHOLD_KEEPER_DATA_DIR=/data/keeper
 COPY package.json package-lock.json ./
@@ -46,7 +46,7 @@ USER node
 VOLUME ["/data"]
 CMD ["node", "backend/scripts/buyback-keeper.mjs"]
 
-FROM debian:bookworm-slim AS api
+FROM docker.1ms.run/library/debian:bookworm-slim AS api
 COPY --from=rust-build /etc/ssl/certs /etc/ssl/certs
 RUN mkdir /data && chown 10001:10001 /data
 WORKDIR /app

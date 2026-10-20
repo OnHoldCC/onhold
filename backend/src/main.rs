@@ -3,6 +3,7 @@ mod artwork;
 mod burn;
 mod chain_stream;
 mod claims;
+mod referrals;
 mod crypto;
 mod mining;
 mod pg;
@@ -151,6 +152,9 @@ fn init_db(connection: &Connection) -> rusqlite::Result<()> {
         CREATE TABLE IF NOT EXISTS nft_artwork(record_hash TEXT PRIMARY KEY,image TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS verified_nft_records(token_hash TEXT PRIMARY KEY,record TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS claims(nullifier TEXT PRIMARY KEY,wallet TEXT NOT NULL UNIQUE,tier INTEGER NOT NULL,base_tokens INTEGER NOT NULL,referrer TEXT NOT NULL,deadline INTEGER NOT NULL,status TEXT NOT NULL CHECK(status IN ('authorized','confirmed')),tx_hash TEXT UNIQUE);
+        CREATE TABLE IF NOT EXISTS wallet_referrals(market TEXT NOT NULL,wallet TEXT NOT NULL,referrer TEXT NOT NULL,bound_at INTEGER NOT NULL,PRIMARY KEY(market,wallet));
+        CREATE TABLE IF NOT EXISTS referral_challenges(nonce TEXT PRIMARY KEY,market TEXT NOT NULL,wallet TEXT NOT NULL,referrer TEXT NOT NULL,expires_at INTEGER NOT NULL);
+        CREATE INDEX IF NOT EXISTS referral_challenges_expiry ON referral_challenges(expires_at);
         CREATE TABLE IF NOT EXISTS invites(code TEXT PRIMARY KEY,wallet TEXT NOT NULL UNIQUE);
         CREATE TABLE IF NOT EXISTS nft_mints(nullifier TEXT PRIMARY KEY,wallet TEXT NOT NULL,tier INTEGER NOT NULL,referrer TEXT NOT NULL,deadline INTEGER NOT NULL,status TEXT NOT NULL CHECK(status IN ('authorized','confirmed')),tx_hash TEXT UNIQUE,token_id TEXT);
         CREATE TABLE IF NOT EXISTS chain_snapshots(market TEXT PRIMARY KEY,snapshot TEXT NOT NULL);
@@ -277,26 +281,64 @@ async fn stats(State(state): State<AppState>) -> Result<impl IntoResponse, ApiEr
         Json(analytics::cached(&state)?.stats.clone()),
     ))
 }
+async fn static_headers(request: axum::extract::Request, next: axum::middleware::Next) -> axum::response::Response {
+    let path = request.uri().path().to_owned();
+    let mut response = next.run(request).await;
+    if !path.starts_with("/api/") && response.status().is_success() {
+        let policy = if path.rsplit_once('.').is_some_and(|(stem,ext)| matches!(ext,"js"|"css") && stem.rsplit_once('-').is_some_and(|(_,hash)| matches!(hash.len(),8|12) && hash.bytes().all(|c| c.is_ascii_alphanumeric()))) {
+            "public, max-age=31536000, immutable"
+        } else if path.ends_with('/') || path.ends_with(".html") {
+            "no-cache"
+        } else {
+            "public, max-age=3600"
+        };
+        response.headers_mut().insert(header::CACHE_CONTROL, policy.parse().unwrap());
+    }
+    response
+}
+async fn health(State(state): State<AppState>) -> Result<Json<Value>, ApiError> {
+    let mut chain = mining::health(&state)?;
+    if state.mining.is_none() {
+        if let Some(tracker) = &state.burn {
+            let store = state.pg.as_ref().ok_or_else(pg::error)?;
+            let client = store.read.get().await.map_err(|_| pg::error())?;
+            let row = client.query_opt("SELECT data FROM buyback_state WHERE vault=$1", &[&tracker.vault]).await.map_err(|_| pg::error())?;
+            let data = row.map(|r| r.get::<_, Value>(0)).unwrap_or(Value::Null);
+            let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs();
+            chain = json!({"configured":true,"available":data["available"]==true&&data["connected"]==true&&data["syncing"]!=true&&now.saturating_sub(data["seen_at"].as_u64().unwrap_or(0))<60,"confirmed_block":data["confirmed_block"],"last_error":data["last_error"]});
+        }
+    }
+    Ok(Json(json!({"status":if chain["available"]==true{"ok"}else{"degraded"},"chain":chain})))
+}
+async fn ready(state: State<AppState>) -> Result<impl IntoResponse, ApiError> {
+    let Json(value) = health(state).await?;
+    let status = if value["status"]=="ok" { StatusCode::OK } else { StatusCode::SERVICE_UNAVAILABLE };
+    Ok((status, [(header::CACHE_CONTROL,"no-store")], Json(value)))
+}
 fn router(state: AppState, dist: PathBuf) -> Router {
     Router::new()
         .route(
             "/api/health",
-            get(|| async { Json(json!({"status":"ok"})) }),
+            get(health),
         )
+        .route("/api/ready", get(ready))
         .route("/api/events", post(ingest).layer(DefaultBodyLimit::max(4096)))
         .route("/api/uploads/avatar", post(uploads::upload_avatar).layer(DefaultBodyLimit::max(uploads::MAX_IMAGE_BYTES+65536)))
         .route("/api/stats", get(stats))
         .route("/api/burn", get(burn::snapshot))
         .route("/api/chain", get(mining::snapshot))
+        .route("/api/mining-stats", get(mining::network_stats))
         .route("/api/nfts", get(mining::gallery))
         .route("/api/status",get(|State(state):State<AppState>|async move{Json(json!({"uploads_configured":true,"upload_provider":"pons-ipfs","nft_configured":state.claims.is_some(),"protocol":"nft-staking-v4","chain_index_configured":state.mining.is_some(),"market":state.mining.map(|index|index.market).or_else(||state.claims.map(|claim|claim.market)),"chain_id":97}))}))
+        .route("/api/referrals/bind",post(referrals::bind).layer(DefaultBodyLimit::max(4096)))
         .route("/api/invites",post(claims::invite).layer(DefaultBodyLimit::max(1024)))
         .route("/api/verify",post(claims::verify).layer(DefaultBodyLimit::max(4096)))
         .route("/api/nft/create",post(artwork::upload).layer(DefaultBodyLimit::max(uploads::MAX_IMAGE_BYTES+65536)))
         .route("/api/nft/quote",post(claims::quote).layer(DefaultBodyLimit::max(4096)))
         .route("/api/nft/authorize",post(claims::authorize).layer(DefaultBodyLimit::max(4096)))
         .route("/api/nft/receipt",post(claims::receipt).layer(DefaultBodyLimit::max(4096)))
-        .fallback_service(ServeDir::new(dist))
+        .fallback_service(ServeDir::new(dist).precompressed_br().precompressed_gzip())
+        .layer(axum::middleware::from_fn(static_headers))
         .with_state(state)
 }
 #[tokio::main]
@@ -352,6 +394,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map_err(|_| "Unable to aggregate analytics")?;
     tokio::spawn(analytics::run(state.clone()));
     tokio::spawn(chain_stream::run(state.clone()));
+    tokio::spawn(mining::run_stats(state.clone()));
     let listener = tokio::net::TcpListener::bind(&address).await?;
     println!("ONHOLD Rust API + React: http://{address}");
     axum::serve(
@@ -387,6 +430,25 @@ mod tests {
             ConnectInfo("127.0.0.1:1234".parse::<SocketAddr>().unwrap()),
         ));
         (app, state)
+    }
+    #[tokio::test]
+    async fn static_assets_are_versioned_and_compressed_without_caching_api_responses() {
+        let directory=std::env::temp_dir().join(format!("onhold-static-{}",uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(directory.join("assets/build")).unwrap();
+        std::fs::write(directory.join("index.html"),"<div id=root></div>").unwrap();
+        std::fs::write(directory.join("app-ABCDEFGH.js"),"export default 1").unwrap();
+        std::fs::write(directory.join("app-ABCDEFGH.js.br"),b"precompressed").unwrap();
+        let (_,state)=app_with_state();let app=router(state,directory.clone());
+        let html=app.clone().oneshot(Request::get("/").body(Body::empty()).unwrap()).await.unwrap();
+        assert_eq!(html.headers()[header::CACHE_CONTROL],"no-cache");
+        let asset=app.clone().oneshot(Request::get("/app-ABCDEFGH.js").header(header::ACCEPT_ENCODING,"br").body(Body::empty()).unwrap()).await.unwrap();
+        assert_eq!(asset.status(),StatusCode::OK);
+        assert_eq!(asset.headers()[header::CACHE_CONTROL],"public, max-age=31536000, immutable");
+        assert_eq!(asset.headers()[header::CONTENT_ENCODING],"br");
+        assert!(asset.headers()[header::CONTENT_TYPE].to_str().unwrap().contains("javascript"));
+        let api=app.oneshot(Request::get("/api/health").body(Body::empty()).unwrap()).await.unwrap();
+        assert!(api.headers().get(header::CACHE_CONTROL).is_none());
+        std::fs::remove_dir_all(directory).unwrap();
     }
     #[tokio::test]
     async fn nft_artwork_requires_origin_live_verification_and_only_image_fields() {

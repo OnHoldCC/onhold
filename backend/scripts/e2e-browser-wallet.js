@@ -1,5 +1,6 @@
 // Local test harness only; private keys remain in the loopback bridge process.
 (()=>{
+ const config=document.currentScript.dataset;
  const listeners=new Map();let selected='user';
  const rpc=async(method,params=[])=>{
   const response=await fetch('/__e2e/wallet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method,params,role:selected})});
@@ -17,16 +18,16 @@
    dialog.append(title,details,cancel,confirm);document.body.append(dialog);dialog.showModal();
   });
  }
- window.ethereum={isOnholdTestWallet:true,request:async({method,params=[]})=>{
+ window.ethereum={isOnholdTestWallet:true,onholdTestMarket:config.market,request:async({method,params=[]})=>{
   if(['eth_requestAccounts','personal_sign','eth_sendTransaction'].includes(method))await approve(method,params);
   return rpc(method,params);
  },on:(event,handler)=>{if(!listeners.has(event))listeners.set(event,new Set());listeners.get(event).add(handler);},removeListener:(event,handler)=>listeners.get(event)?.delete(handler)};
  document.addEventListener('DOMContentLoaded',()=>{
   const bar=document.createElement('aside');bar.style.cssText='position:fixed;bottom:0;left:0;right:0;padding:8px;background:#ffdf9e;color:#111;z-index:2147483600;text-align:center;font:13px sans-serif';
-  const text=document.createElement('span');text.textContent='MOCK E2E · Real BNB testnet transactions · Synthetic account / Mock swap pricing · Wallet: ';
+  const text=document.createElement('span');text.textContent=`TEST ONLY · ${config.realStanding==='true'?'Real Claude verification':'Synthetic account'} · ${config.repeatUuid==='true'?'Repeat UUID enabled · ':''}Mock swap pricing · Wallet: `;
   const select=document.createElement('select');select.setAttribute('aria-label','Test wallet account');for(const role of ['user','inviter']){const option=document.createElement('option');option.value=role;option.textContent=role;select.append(option);}
   select.onchange=async()=>{selected=select.value;const accounts=await rpc('eth_requestAccounts');for(const fn of listeners.get('accountsChanged')||[])fn(accounts);};
-  const fixture=document.createElement('code');fixture.textContent=' · Fixture session: sk-ant-sid-onhold-mock-browser-pro-20261020';
+  const fixture=document.createElement('code');fixture.textContent=config.realStanding==='true'?' · Enter your real sessionKey in the form; do not post it in chat.':' · Fixture session: sk-ant-sid-onhold-mock-browser-pro-20261020';
   bar.append(text,select,fixture);document.body.append(bar);
  });
 })();

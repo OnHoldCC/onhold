@@ -46,6 +46,7 @@ for(const flapLive of [false,true])test(`Burn WS (${flapLive?'Flap processor':'s
   const start=()=>{backend=spawn('backend/target/debug/onhold-api',[],{env,stdio:['ignore','ignore','pipe']});backend.stderr.on('data',chunk=>process.stderr.write(chunk));};
   const read=()=>fetch(api+'/api/burn').then(r=>r.json());start();await until(async()=>{const v=await read();return v.available&&v.connected;});if(flapLive)assert.equal((await read()).totals.unsettled_creator_fees,'0.000400000000000000');
   const initialCalls=calls;
+  assert.equal((await fetch(api+'/api/ready')).status,200);
   await (await owner.sendTransaction({to:vaultAddress,value:parseEther('0.002')})).wait();await mine();
   const funded=await until(async()=>{const v=await read();return v.available&&v.totals.received==='0.002000000000000000'?v:null;});
   assert.equal(funded.totals.pending,'0.002000000000000000');assert.equal(calls,initialCalls,'WS revenue and block confirmations must not poll HTTP RPC');
@@ -54,13 +55,16 @@ for(const flapLive of [false,true])test(`Burn WS (${flapLive?'Flap processor':'s
   const burned=await until(async()=>{const v=await read();return v.available&&v.events.length===1?v:null;});
   assert.equal(sql('SELECT count(*) FROM buyback_events'),'1');assert.equal(burned.events[0].tx_hash,execute.hash);assert.equal(parseEther(burned.totals.spent),await vault.totalSpent());assert.equal(parseEther(burned.totals.burned),await vault.totalBurned());assert.equal(parseEther(burned.totals.gas_refunded),await vault.totalGasRefunded());assert.equal(parseEther(burned.totals.pending),await provider.getBalance(vaultAddress));assert.equal(burned.events[0].gas_refunded,burned.totals.gas_refunded);if(flapLive)assert.equal(burned.totals.unsettled_creator_fees,'0.000000000000000000');else assert.equal(calls,initialCalls,'duplicate WS notifications must not trigger backfill');
   const beforeReads=calls;for(let i=0;i<20;i++)assert.equal((await read()).events.length,1);assert.equal(calls,beforeReads,'page reads must use PG only');
-  proxy.blocked=true;proxy.disconnect();await until(async()=>!(await read()).available);
+  proxy.blocked=true;proxy.disconnect();
+  const offline=await until(async()=>{const v=await read();return !v.connected&&v.stale?v:null;});
+  assert.equal(offline.available,true);assert.deepEqual(offline.totals,burned.totals);assert.deepEqual(offline.events,burned.events);
+  assert.equal((await fetch(api+'/api/ready')).status,503);
   await (await owner.sendTransaction({to:vaultAddress,value:parseEther('0.0005')})).wait();await mine();proxy.blocked=false;
   const recovered=await until(async()=>{const v=await read();return v.available&&v.totals.received===(flapLive?'0.002900000000000000':'0.002500000000000000')?v:null;});assert.ok(calls>initialCalls);assert.equal(recovered.events.length,1);assert.equal(sql('SELECT count(*) FROM buyback_events'),'1');
-  await stop();const beforeRestart=calls;start();await until(async()=>{const v=await read();return v.available&&calls>beforeRestart;});assert.equal(sql('SELECT count(*) FROM buyback_events'),'1','restart replay must remain idempotent');
+  await stop();const beforeRestart=calls;start();await until(async()=>{const v=await read();return v.available&&!v.stale&&calls>beforeRestart;});assert.equal(sql('SELECT count(*) FROM buyback_events'),'1','restart replay must remain idempotent');
   assert.equal(await provider.send('evm_revert',[rewind]),true);await mine();
   await until(async()=>{const v=await read();return v.available&&v.events.length===0&&v.totals.received==='0.000000000000000000';});assert.equal(sql('SELECT count(*) FROM buyback_events'),'0');
   if(flapLive){await stop();await (await processor.setRecipient(address)).wait();await mine();sql('DELETE FROM buyback_state');start();await until(async()=>{const v=await read();return !v.available&&v.status==='unavailable'&&v.last_error;});assert.equal(sql('SELECT count(*) FROM buyback_events'),'0');}
-  proxy.failRpc=true;proxy.disconnect();await until(async()=>{const v=await read();return !v.available&&v.last_error;});const failureCalls=calls;await read();assert.equal(calls,failureCalls,'an unavailable API must still avoid RPC');
+  proxy.failRpc=true;proxy.disconnect();await until(async()=>{const v=await read();return v.stale&&v.last_error;});const failureCalls=calls;await read();assert.equal(calls,failureCalls,'an unavailable API must still avoid RPC');
  }finally{await stop();provider?.destroy();await proxy?.close();if(anvil&&!anvil.killed){anvil.kill('SIGTERM');await once(anvil,'exit');}if(postgres&&!postgres.killed){postgres.kill('SIGTERM');await once(postgres,'exit');}await rm(directory,{recursive:true,force:true});}
 });

@@ -13,6 +13,7 @@ export declare const defaultWalletOptions: SingleSparkWalletData[];
 export interface SingleSparkWalletButtonProps extends SingleSparkButtonProps {
     address?: string;
     connecting?: boolean;
+    walletIcon?: ReactNode;
 }
 export interface SingleSparkWalletOptionProps {
     wallet?: SingleSparkWalletData;
@@ -34,6 +35,7 @@ export interface SingleSparkWalletStatusProps {
     wallet?: string;
     address?: string;
     message?: ReactNode;
+    walletIcon?: ReactNode;
     onDisconnect?: () => void;
     onRetry?: () => void;
     className?: string;

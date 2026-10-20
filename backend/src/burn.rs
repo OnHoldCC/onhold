@@ -81,15 +81,10 @@ pub async fn snapshot(
             .map(|r| r.get::<_, Value>(0))
             .collect::<Vec<_>>());
         tx.commit().await.map_err(|_| pg::error())?;
-        if now().saturating_sub(
-            value["seen_at"]
-                .as_u64()
-                .or(value["checked_at"].as_u64())
-                .unwrap_or(0),
-        ) > 60
-        {
-            value["available"] = json!(false);
-        }
+        value["stale"] = json!(value["connected"] != true || value["syncing"] == true || now().saturating_sub(
+            value["seen_at"].as_u64().or(value["checked_at"].as_u64()).unwrap_or(0),
+        ) >= 60);
+        value["available"] = json!(block > 0 && value["totals"].is_object());
         value["vault"] = json!(tracker.vault);
         value
     } else {

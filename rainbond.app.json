@@ -50,16 +50,16 @@
     {
       "name": "api",
       "role": "service",
-      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261020-static-permissions",
+      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261020-wallet-referral-v3",
       "port": 8080,
       "env": {
         "ONHOLD_ORIGIN": "https://onhold.cc",
-        "ONHOLD_MARKET_ADDRESS": "0x4b48656Dab017f9eE369Fc7d5873F5f911386241",
-        "ONHOLD_MARKET_FROM_BLOCK": "137843424",
+        "ONHOLD_MARKET_ADDRESS": "0xa007D8a37C2ff82CBFf81900cE174D26945167AF",
+        "ONHOLD_MARKET_FROM_BLOCK": "137853544",
         "ONHOLD_CHAIN_RPC_URL": "https://bsc-testnet-rpc.publicnode.com",
         "ONHOLD_CHAIN_WS_URL": "wss://bsc-testnet-rpc.publicnode.com",
-        "ONHOLD_BUYBACK_VAULT": "0x1c59592F3fd8c27AAc41cEDB50eaBE3F42b68850",
-        "ONHOLD_BUYBACK_FROM_BLOCK": "137843516",
+        "ONHOLD_BUYBACK_VAULT": "0xCf8bAa44aF89f3BDd5EEf2312305d7512C5De156",
+        "ONHOLD_BUYBACK_FROM_BLOCK": "137853633",
         "ONHOLD_BUYBACK_FLAP_LIVE": "false"
       },
       "depends_on": [
@@ -69,6 +69,26 @@
       "storage": [
         {
           "volume_name": "api-data",
+          "volume_type": "share-file",
+          "volume_path": "/data"
+        }
+      ]
+    },
+    {
+      "name": "keeper",
+      "role": "worker",
+      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261020-ads-keeper-v4",
+      "command": "node backend/scripts/buyback-keeper.mjs --ads --mock",
+      "env": {
+        "ONHOLD_CHAIN_RPC_URL": "https://bsc-testnet-rpc.publicnode.com",
+        "ONHOLD_AD_REINVEST_MARKET": "0xa007D8a37C2ff82CBFf81900cE174D26945167AF",
+        "ONHOLD_KEEPER_MAX_GAS_PRICE_GWEI": "1",
+        "ONHOLD_KEEPER_SLIPPAGE_BPS": "100",
+        "ONHOLD_KEEPER_DATA_DIR": "/data/keeper"
+      },
+      "storage": [
+        {
+          "volume_name": "keeper-data",
           "volume_type": "share-file",
           "volume_path": "/data"
         }

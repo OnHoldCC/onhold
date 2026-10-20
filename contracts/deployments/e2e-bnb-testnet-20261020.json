@@ -1,0 +1,103 @@
+{
+  "verifiedAt": "2026-10-20T07:19:27.180Z",
+  "chainId": 97,
+  "mock": true,
+  "scope": "Browser UI actions with server-side test wallet; real public testnet settlement, synthetic Claude standing and Mock swap pricing",
+  "market": "0x4b48656Dab017f9eE369Fc7d5873F5f911386241",
+  "token": "0xbF987ffBdd19255555A279542575115da57230bD",
+  "transactions": [
+    {
+      "at": "2026-10-20T07:03:43.476Z",
+      "source": "browser",
+      "role": "user",
+      "action": "mintPass",
+      "value": "0",
+      "hash": "0xa5139a043a40d02801f9fb6127a86a20d473998162c0da954a04090d0163f662",
+      "block": 137844577,
+      "gasUsed": "486922",
+      "status": 1
+    },
+    {
+      "at": "2026-10-20T07:08:29.282Z",
+      "source": "browser",
+      "role": "user",
+      "action": "stake",
+      "value": "0",
+      "hash": "0x28ef1454d88a851f810b8e85b92f768a69b53b6f15539380add80cc890286541",
+      "block": 137845194,
+      "gasUsed": "407585",
+      "status": 1
+    },
+    {
+      "at": "2026-10-20T07:11:23.271Z",
+      "source": "browser",
+      "role": "user",
+      "action": "bid",
+      "value": "2000000000000000",
+      "hash": "0x04048a40e41aa8fc72899fc4b9e51c0f6dd69da3efec09d0814075ccf9a8f7dd",
+      "block": 137845568,
+      "gasUsed": "349272",
+      "status": 1
+    },
+    {
+      "at": "2026-10-20T07:14:30.229Z",
+      "source": "browser",
+      "role": "user",
+      "action": "getReward",
+      "value": "0",
+      "hash": "0x6f65c98d04bcaccd84ef0348f766ac85fc19a3f49c7df460e5b1be1833b72685",
+      "block": 137845973,
+      "gasUsed": "314445",
+      "status": 1
+    },
+    {
+      "at": "2026-10-20T07:18:08.652Z",
+      "source": "browser",
+      "role": "inviter",
+      "action": "claimReferralRewards",
+      "value": "0",
+      "hash": "0x795dc2dbe4337bc921b87a7437b764a87aac824c85729f7c0c3a489d2f5a558f",
+      "block": 137846448,
+      "gasUsed": "117841",
+      "status": 1
+    }
+  ],
+  "keeper": {
+    "hash": "0x183ba70a2bcaa8da05b3b30d5aff6200d4f38825c3c617a39b4284ee3ebb34a8",
+    "from": "0xdd8A393d142dcdC1EBe8710F7945067e53796a92",
+    "block": 137845660,
+    "spent": "0.00001",
+    "tokensAdded": "1000.0"
+  },
+  "accounting": {
+    "adPaid": "0.002",
+    "team": "0.001",
+    "originalReserve": "0.001",
+    "reserveAfterRefund": "0.00099",
+    "baseBudget": "86957391.304347826086956521",
+    "referralBudget": "13043608.695652173913043479",
+    "poolBudget": "100001000.0",
+    "baseRewardPaid": "995.415729187158292175",
+    "referralPaid": "149.312359378073743826",
+    "referralPercent": 15,
+    "dailyEmission": "238239.428247407652130866",
+    "start": 1792480125,
+    "end": 1824016125,
+    "durationDays": 365,
+    "stakedWeight": 1,
+    "tokenBacking": "99999855.271911434767963999",
+    "totalClaimed": "1144.728088565232036001"
+  },
+  "checks": [
+    "Every economic user action originated in the browser UI",
+    "All receipts succeeded with at least 3 confirmations",
+    "Ad team/reserve split exactly 50/50",
+    "Keeper independently executed ad-funded buyback and pool top-up",
+    "Swap refund remains in the reserve",
+    "Invitee receives full base rewards and inviter receives an additional 15%",
+    "Claiming preserves NFT stake",
+    "Pool fully backed after both reward payments",
+    "Mining end unchanged at first stake + 365 days",
+    "PG cache amounts equal on-chain accounting"
+  ]
+}

@@ -1,9 +1,19 @@
 import {miningCopy} from './mining-copy.mjs';
 import {localeMessages} from './locales.mjs';
+import {welcomeCopy} from './welcome-copy.mjs';
+export const supportedLocales=['en','zh','ja','ko','es','fr','de','pt'];
+export function initialLocale(saved,languages=[]){
+  if(supportedLocales.includes(saved))return saved;
+  for(const language of languages){
+    const base=typeof language==='string'?language.toLowerCase().split(/[-_]/)[0]:'';
+    if(supportedLocales.includes(base))return base;
+  }
+  return 'en';
+}
 export const messages = {
   "zh": {
-    "home": "Home",
-    "claim": "Claim",
+    "home": "首页",
+    "claim": "领取",
     "analytics": "数据详情",
     "connect": "连接钱包",
     "connected": "已连接",
@@ -95,7 +105,7 @@ export const messages = {
     "review": "重新查看",
     "openClaude": "打开 Claude 受限页面",
     "zoom": "点击放大图片",
-    "imageNote": "真实页面截图 · Cookie 值已遮挡。Claude 受限页通过 Chrome 翻译显示英文；Cookie 图来自你提供的截图。",
+    "imageNote": "真实 Chrome 截图；编号对应操作步骤。请勿分享包含登录凭证的请求。",
     "session": "会话凭证",
     "sessionPlaceholder": "粘贴你的 sessionKey",
     "verifyButton": "验证封禁状态",
@@ -108,8 +118,8 @@ export const messages = {
     "org": "被封组织",
     "fieldsNote": "此前套餐不代表当前订阅；组织 ID 不是个人用户 ID。接口不包含完整账单或封禁历史。",
     "faq": "常见问题",
-    "faqQ1": "找不到 Application（应用）标签？",
-    "faqA1": "点击开发者工具顶部的 »，或者拉宽工具面板后查找。",
+    "faqQ1": "找不到 standing 请求？",
+    "faqA1": "先打开 Network（网络）面板，再按 F5 刷新 Claude 页面；在筛选框输入 standing。Mac 使用 ⌘R 刷新。",
     "faqQ2": "找不到 sessionKey，或验证失败？",
     "faqA2": "确认已登录且选择 claude.ai 的 Cookie。会话可能过期；网络错误、403 或验证码不等于账号被封禁。",
     "faqQ3": "封禁截图可以直接领币吗？",
@@ -140,7 +150,7 @@ export const messages = {
     "resumeRecords": "继续领取记录滚动",
     "os": "操作系统",
     "liveTelemetry": "实时统计已连接",
-    "liveClicks": "网站点击埋点",
+    "liveClicks": "网站点击量",
     "liveViews": "页面访问",
     "liveTrend": "来自 Rust 埋点 · 按北京时间汇总",
     "liveRanking": "官网点击按广告位累计，非独立访客或结算凭证。",
@@ -260,7 +270,7 @@ export const messages = {
     "api.service_unavailable": "后端服务暂不可用。",
     "api.confirmation_pending": "等待链上确认。",
     "api.invalid_claim_proof": "领取凭证与当前钱包或合约不匹配。",
-    "burn": "Burn",
+    "burn": "销毁",
     "burnTitle": "回购，销毁，循环。",
     "burnIntro": "创作者费用用于回购 $Claude。",
     "buyTax": "买入税",
@@ -385,7 +395,7 @@ export const messages = {
     "review": "Start over",
     "openClaude": "Open Claude restriction page",
     "zoom": "Enlarge screenshot",
-    "imageNote": "Real screenshots · Cookie values hidden. The Claude page uses Chrome Translate for English; the cookie image is a redacted user-provided screenshot.",
+    "imageNote": "Real Chrome screenshot; numbered markers match the instructions. Do not share requests containing login credentials.",
     "session": "Session credential",
     "sessionPlaceholder": "Paste your sessionKey",
     "verifyButton": "Verify account restriction",
@@ -398,8 +408,8 @@ export const messages = {
     "org": "Restricted organization",
     "fieldsNote": "A previous plan is not an active subscription. An organization ID is not a personal user ID. The response does not include full billing or restriction history.",
     "faq": "Common questions",
-    "faqQ1": "Cannot find the Application tab?",
-    "faqA1": "Open the » menu in DevTools, or widen the panel to reveal hidden tabs.",
+    "faqQ1": "Cannot find the standing request?",
+    "faqA1": "Open Network first, then press F5 to refresh Claude and filter by standing. On Mac refresh with ⌘R.",
     "faqQ2": "No sessionKey, or verification failed?",
     "faqA2": "Make sure you are signed in and viewing claude.ai cookies. The session may have expired. Network errors, 403 responses and captchas are not proof of a ban.",
     "faqQ3": "Can a screenshot qualify for compensation?",
@@ -584,6 +594,10 @@ export const messages = {
 };
 Object.assign(messages,Object.fromEntries(Object.entries(localeMessages).map(([locale,copy])=>[locale,{...messages.en,...copy}])));
 for(const [lang,copy] of Object.entries(miningCopy))Object.assign(messages[lang],copy);
+for(const [lang,copy] of Object.entries({"en": ["Loading data…", "Unavailable", "Retry"], "zh": ["数据加载中…", "暂无数据", "重试"], "ja": ["データを読み込み中…", "データなし", "再試行"], "ko": ["데이터 로딩 중…", "데이터 없음", "다시 시도"], "es": ["Cargando datos…", "No disponible", "Reintentar"], "fr": ["Chargement…", "Indisponible", "Réessayer"], "de": ["Daten werden geladen…", "Nicht verfügbar", "Erneut versuchen"], "pt": ["Carregando dados…", "Indisponível", "Tentar novamente"]}))Object.assign(messages[lang],Object.fromEntries(["loadingData","notAvailable","retry"].map((key,i)=>[key,copy[i]])));
+for(const [lang,copy] of Object.entries({en:['Browser wallet','Wallet disconnected from this site.'],zh:['浏览器钱包','已断开本站钱包连接。'],ja:['ブラウザーウォレット','このサイトからウォレットを切断しました。'],ko:['브라우저 지갑','이 사이트에서 지갑 연결을 해제했습니다.'],es:['Billetera del navegador','Billetera desconectada de este sitio.'],fr:['Portefeuille du navigateur','Portefeuille déconnecté de ce site.'],de:['Browser-Wallet','Wallet von dieser Website getrennt.'],pt:['Carteira do navegador','Carteira desconectada deste site.']}))Object.assign(messages[lang],{browserWallet:copy[0],walletDisconnected:copy[1]});
+for(const [lang,noClaimRecords] of Object.entries({en:'No claim records yet',zh:'暂无领取记录',ja:'受け取り履歴はまだありません',ko:'아직 수령 내역이 없습니다',es:'Aún no hay registros de reclamación',fr:'Aucun historique de réclamation',de:'Noch keine Auszahlungsbelege',pt:'Ainda não há registros de resgate'}))messages[lang].noClaimRecords=noClaimRecords;
+for(const [lang,copy] of Object.entries(welcomeCopy))Object.assign(messages[lang],copy);
 export function translate(lang,key) { return (messages[lang] || messages.en)[key] ?? messages.en[key] ?? key; }
 const errors = {
   '请输入正数，最多保留 18 位小数。':'Enter a positive number with up to 18 decimal places.',
@@ -603,3 +617,18 @@ const errors = {
 };
 export function translateError(error,lang) { return lang==='en' ? errors[error.message] || translate(lang,'genericError') : error.message; }
 export const categoryLabels={en:{'开发工具':'Developer tools','社区':'Community','创作者':'Creators'},zh:{'开发工具':'开发工具','社区':'社区','创作者':'创作者'}};
+
+for(const [lang,copy]of Object.entries({en:['Continue in your wallet; another request is already open.','Switch to BNB Testnet'],zh:['请在钱包中完成已打开的连接请求。','切换到 BNB 测试网'],ja:['ウォレットで保留中の接続を完了してください。','BNB テストネットに切り替え'],ko:['지갑에서 대기 중인 연결을 완료하세요.','BNB 테스트넷으로 전환'],es:['Completa la conexión pendiente en tu billetera.','Cambiar a BNB Testnet'],fr:['Terminez la connexion en attente dans votre portefeuille.','Passer à BNB Testnet'],de:['Schließe die offene Anfrage in deiner Wallet ab.','Zu BNB Testnet wechseln'],pt:['Conclua a conexão pendente na sua carteira.','Mudar para BNB Testnet']}))Object.assign(messages[lang],{walletPending:copy[0],switchWalletNetwork:copy[1]});
+
+for(const [lang,copy]of Object.entries({
+en:['Fixed invitation source','No inviter','Connect and sign to fix the invitation source.','Confirm the permanent invitation binding in your wallet.','Connect the wallet and sign the invitation binding first.','Invitation binding expired. Reconnect and sign again.','This wallet already has a fixed inviter.'],
+zh:['已固定的邀请来源','无邀请人','连接钱包并签名后固定邀请来源。','请在钱包中签名，永久固定邀请关系。','请先连接钱包并签名固定邀请关系。','邀请绑定已过期，请重新连接并签名。','此钱包已固定邀请人，无法修改。'],
+ja:['固定された招待元','招待者なし','ウォレットに接続し署名して招待元を固定。','ウォレットで招待関係の固定に署名してください。','先に接続して招待関係に署名してください。','有効期限切れ。再接続して署名してください。','紹介者はすでに固定されています。'],
+ko:['고정된 초대 경로','초대자 없음','지갑 연결 후 서명하여 초대 경로를 고정하세요.','지갑에서 영구 초대 관계에 서명하세요.','먼저 지갑을 연결하고 초대 관계에 서명하세요.','만료되었습니다. 다시 연결하고 서명하세요.','이 지갑의 초대자는 이미 고정되었습니다.'],
+es:['Origen de invitación fijo','Sin invitador','Conecta y firma para fijar la invitación.','Confirma la vinculación permanente en tu billetera.','Primero conecta y firma la vinculación.','Vinculación caducada. Conecta y firma de nuevo.','Esta billetera ya tiene un invitador fijo.'],
+fr:['Invitation fixée','Aucun parrain','Connectez et signez pour fixer le parrainage.','Signez le parrainage permanent dans votre portefeuille.','Connectez et signez d’abord le parrainage.','Délai expiré. Reconnectez et signez.','Le parrain de ce portefeuille est déjà fixé.'],
+de:['Feste Einladungsquelle','Kein Einladender','Wallet verbinden und Einladung signieren.','Bestätige die dauerhafte Bindung in deiner Wallet.','Verbinde und signiere zuerst die Einladung.','Abgelaufen. Erneut verbinden und signieren.','Der Einladende dieser Wallet steht bereits fest.'],
+pt:['Origem de convite fixa','Sem indicador','Conecte e assine para fixar o convite.','Confirme o vínculo permanente na carteira.','Primeiro conecte e assine o vínculo.','Vínculo expirado. Reconecte e assine.','Esta carteira já tem um indicador fixo.']
+}))Object.assign(messages[lang],{inviter:copy[0],noInviter:copy[1],referralNotBound:copy[2],bindingReferral:copy[3],'api.referral_binding_required':copy[4],'api.referral_challenge_expired':copy[5],'api.referrer_already_bound':copy[6],'api.invalid_referral_challenge':copy[5]});
+
+for(const [lang,text]of Object.entries({en:'Mint your first NFT before staking a transferred NFT, so your fixed inviter is recorded on-chain.',zh:'请先铸造首个 NFT，将已固定的邀请人写入合约，再质押转入的 NFT。',ja:'紹介者を記録するため、受領NFTをステークする前に初回NFTを発行してください。',ko:'초대자를 체인에 기록하려면 전송받은 NFT 예치 전에 첫 NFT를 발행하세요.',es:'Acuña tu primer NFT antes de depositar uno transferido para registrar el invitador.',fr:'Créez votre premier NFT avant de déposer un NFT reçu pour inscrire le parrain.',de:'Präge zuerst dein erstes NFT, bevor du ein übertragenes NFT stakst, um den Einladenden einzutragen.',pt:'Crie seu primeiro NFT antes de depositar um NFT recebido para registrar o indicador.'}))messages[lang]['api.referral_mint_required']=text;

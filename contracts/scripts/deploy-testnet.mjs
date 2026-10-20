@@ -20,6 +20,8 @@ function save(){const temporary=journalPath+'.tmp';writeFileSync(temporary,JSON.
 const artifact=name=>JSON.parse(readFileSync(join(root,'contracts/artifacts',name+'.json')));
 const upgradeBuyback=process.argv.includes('--upgrade-buyback');
 const mock=process.argv.includes('--mock');
+const repeatUuid=process.argv.includes('--repeat-uuid');
+if(repeatUuid&&!mock)throw Error('Repeat UUID is restricted to explicit Mock testnet deployments');
 if(mock&&!keys.adKeeperPrivateKey){keys.adKeeperPrivateKey=Wallet.createRandom().privateKey;writeFileSync(keysPath,JSON.stringify(keys),{mode:0o600});}
 const adKeeper=mock?new Wallet(keys.adKeeperPrivateKey):deployer;
 async function send(name,request){
@@ -42,7 +44,7 @@ try{
  if((await provider.getNetwork()).chainId!==97n)throw Error('BNB testnet chain 97 required; refusing to sign');
  const balance=await provider.getBalance(deployer.address),fees=await provider.getFeeData();
  console.log(JSON.stringify({chainId:97,deployer:deployer.address,verifier:verifier.address,balance:formatEther(balance),gasPriceGwei:fees.gasPrice?Number(fees.gasPrice)/1e9:null}));
- const coreArtifact=artifact(mock?'MockTestDeployment':'TestDeployment'),factoryArtifact=artifact('FlapBuybackFactory'),vaultArtifact=artifact('FlapBuyback');
+ const coreArtifact=artifact(repeatUuid?'RepeatUuidMockTestDeployment':mock?'MockTestDeployment':'TestDeployment'),factoryArtifact=artifact('FlapBuybackFactory'),vaultArtifact=artifact('FlapBuyback');
  const coreRequest=await new ContractFactory(coreArtifact.abi,coreArtifact.bytecode,deployer).getDeployTransaction();
  if(process.argv.includes('--status')||balance===0n){
   // eth_estimateGas may reject an unfunded sender; use zero gas price for the read-only estimate.
@@ -63,8 +65,9 @@ try{
   const vaultStep=await send(upgradeBuyback?'standaloneBuybackGasV2':'standaloneBuyback',await new ContractFactory(vaultArtifact.abi,vaultArtifact.bytecode,deployer).getDeployTransaction(tokenAddress,deployer.address));
   const vault=new Contract(vaultStep.address,vaultArtifact.abi,provider);
   if(await vault.MIN_BUYBACK_BALANCE()!==parseEther('0.001')||await vault.MAX_KEEPER_GAS_REFUND()!==parseEther('0.0001'))throw Error('Buyback policy verification failed');
+  if(repeatUuid&&!await new Contract(marketAddress,['function UUID_UNIQUENESS_DISABLED() view returns(bool)'],provider).UUID_UNIQUENESS_DISABLED())throw Error('Repeat UUID marker missing');
   const rendererAddress=await market.renderer();for(const address of [marketAddress,tokenAddress,rendererAddress,factoryStep.address,vaultStep.address])if(await provider.getCode(address)==='0x')throw Error('Missing deployed bytecode');
-  const result={chainId:97,protocol:'nft-staking-v4',mock,adKeeper:adKeeper.address,mockPortalAddress:mock?await core.portal():null,deployer:deployer.address,verifier:verifier.address,keeper:deployer.address,marketAddress,tokenAddress,rendererAddress,buybackFactoryAddress:factoryStep.address,buybackVaultAddress:vaultStep.address,marketFromBlock:coreStep.block,buybackFromBlock:vaultStep.block,buybackMode:'standalone-test-token',flapLive:false,transactions:Object.fromEntries(Object.entries(journal.steps).map(([name,step])=>[name,step.hash]))};
+  const result={chainId:97,protocol:'nft-staking-v4',mock,repeatUuid,adPriceIntervalSeconds:Number(await market.adPriceInterval()),adMinimumBidBNB:formatEther(await market.minimumAdBid()),adKeeperMinimumBNB:formatEther(await market.MIN_AD_BUYBACK()),adKeeper:adKeeper.address,mockPortalAddress:mock?await core.portal():null,deployer:deployer.address,verifier:verifier.address,keeper:deployer.address,marketAddress,tokenAddress,rendererAddress,buybackFactoryAddress:factoryStep.address,buybackVaultAddress:vaultStep.address,marketFromBlock:coreStep.block,buybackFromBlock:vaultStep.block,buybackMode:'standalone-test-token',flapLive:false,transactions:Object.fromEntries(Object.entries(journal.steps).map(([name,step])=>[name,step.hash]))};
   result.buybackMinimumBNB='0.001';result.maxKeeperGasRefundBNB='0.0001';
   result.previousBuybackVaults=previous?.previousBuybackVaults||[];
   if(previous&&previous.buybackVaultAddress!==vaultStep.address)result.previousBuybackVaults.push({vault:previous.buybackVaultAddress,factory:previous.buybackFactoryAddress,fromBlock:previous.buybackFromBlock});
