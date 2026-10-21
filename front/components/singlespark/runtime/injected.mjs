@@ -25,8 +25,8 @@ function kindFromRdns(rdns) {
   return null;
 }
 function kindFromFlags(provider) {
-  if (provider.isOkxWallet || provider.isOKExWallet) return "OKX Wallet";
-  if (provider.isBinance || provider.isBinanceWallet || provider.isBinanceChain) return "Binance Wallet";
+  if (provider.isOkxWallet || provider.isOKExWallet || provider === window.okxwallet) return "OKX Wallet";
+  if (provider.isBinance || provider.isBinanceWallet || provider.isBinanceChain || provider === window.BinanceChain || provider === window.binancew3w?.ethereum) return "Binance Wallet";
   if (provider.isCoinbaseWallet) return "Coinbase Wallet";
   if (provider.isMetaMask) return "MetaMask";
   return "Browser Wallet";
@@ -63,9 +63,9 @@ function subscribeInjectedWallets(listener) {
   return () => discoveryListeners.delete(listener);
 }
 function legacyProviders() {
-  if (typeof window === "undefined" || !window.ethereum) return [];
-  const providers = Array.isArray(window.ethereum.providers) && window.ethereum.providers.length ? window.ethereum.providers : [window.ethereum];
-  return providers.filter((provider) => typeof provider?.request === "function");
+  if (typeof window === "undefined") return [];
+  const providers = Array.isArray(window.ethereum?.providers) && window.ethereum.providers.length ? window.ethereum.providers : [window.ethereum];
+  return [...providers, window.okxwallet, window.BinanceChain, window.binancew3w?.ethereum].filter((provider) => typeof provider?.request === "function");
 }
 function listInjectedWallets() {
   if (typeof window === "undefined") return [];

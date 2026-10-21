@@ -31,7 +31,7 @@ async function advance(time){await provider.send('evm_setNextBlockTimestamp',[ti
 const types={MintPass:[{name:'recipient',type:'address'},{name:'nullifier',type:'bytes32'},{name:'tier',type:'uint8'},{name:'referrer',type:'address'},{name:'deadline',type:'uint256'},{name:'recordHash',type:'bytes32'}]};
 async function signed(market,recipient,{nullifier,tier=1,referrer=ZeroAddress,deadline,domain,record}={}){
   deadline??=await timestamp()+3600;
-  record??={account:'Example "Organization" <test>',uuid:crypto.randomUUID(),bannedAt:'2026-09-01T12:41:20.292985Z',plan:tier===2?'claude_max':'claude_pro'};
+  record??={account:'Example "Organization" <test>',uuid:crypto.randomUUID(),bannedAt:'2026-09-01T12:41:20.292985Z',plan:tier===2?'claude_max':tier===1?'claude_pro':'free'};
   nullifier??=id(`ONHOLD:restricted-consumer-org:v1:${record.uuid}`);
   const recordHash=keccak256(AbiCoder.defaultAbiCoder().encode(['bytes32','bytes32','bytes32','bytes32'],Object.values(record).map(value=>keccak256(toUtf8Bytes(value)))));
   const value={recipient,nullifier,tier,referrer,deadline,recordHash};
@@ -40,13 +40,13 @@ async function signed(market,recipient,{nullifier,tier=1,referrer=ZeroAddress,de
 }
 // Anvil advances timestamps between estimate and mining; execution tests reserve checkpoint gas.
 const close=(actual,expected,tolerance=10n)=>assert.ok(actual>=expected-tolerance&&actual<=expected+tolerance,`${actual} differs from ${expected}`);
-test('ad price and the 0.01 BNB payment minimum are independent',async()=>{
+test('ad price and the 0.001 BNB payment minimum are independent',async()=>{
   const {market}=await fixture();assert.equal(await market.adPriceInterval(),86400n);await (await market.bid(0,0,...listing,{value:parseEther('0.08')})).wait();
   const start=Number((await market.ads(0)).startedAt);
   await advance(start+86399);assert.equal(await market.currentPrice(0),parseEther('0.08'));
   await advance(start+86400);assert.equal(await market.currentPrice(0),parseEther('0.04'));
   await advance(start+86400*5);assert.equal(await market.currentPrice(0),parseEther('0.0025'));
-  await assert.rejects(market.bid(0,1,...listing,{value:parseEther('0.009')}),/Minimum bid/);
+  await assert.rejects(market.bid(0,1,...listing,{value:parseEther('0.0009')}),/Minimum bid/);
   await (await market.bid(0,1,...listing,{value:parseEther('0.01')})).wait();
 });
 test('Mock ads halve every 60 seconds without transactions, floor at 1 wei and reset on replacement',async()=>{
@@ -56,30 +56,32 @@ test('Mock ads halve every 60 seconds without transactions, floor at 1 wei and r
   assert.equal(await market.adPriceInterval(),60n);
   assert.equal(await market.minimumAdBid(),parseEther('0.00001'));
   assert.equal(await market.MIN_AD_BUYBACK(),parseEther('0.0001'));
-  await (await market.bid(0,0,...listing,{value:parseEther('0.0008')})).wait();
+  await (await market.bid(0,0,...listing,{value:parseEther('0.08')})).wait();
   const start=Number((await market.ads(0)).startedAt),version=(await market.ads(0)).version;
   const nonce=await provider.getTransactionCount(await owner.getAddress());
-  await advance(start+59);assert.equal(await market.currentPrice(0),parseEther('0.0008'));
-  await advance(start+60);assert.equal(await market.currentPrice(0),parseEther('0.0004'));
-  assert.equal(await market.requiredBid(0),parseEther('0.00044'));
-  await advance(start+120);assert.equal(await market.currentPrice(0),parseEther('0.0002'));
+  await advance(start+59);assert.equal(await market.currentPrice(0),parseEther('0.08'));
+  await advance(start+60);assert.equal(await market.currentPrice(0),parseEther('0.04'));
+  assert.equal(await market.requiredBid(0),parseEther('0.044'));
+  await advance(start+120);assert.equal(await market.currentPrice(0),parseEther('0.02'));
   assert.equal(await provider.getTransactionCount(await owner.getAddress()),nonce);
   assert.equal((await market.ads(0)).version,version);
-  await (await market.bid(0,version,...listing,{value:parseEther('0.00022')})).wait();
+  await (await market.bid(0,version,...listing,{value:parseEther('0.022')})).wait();
   const reset=Number((await market.ads(0)).startedAt);assert.ok(reset>start);
-  await advance(reset+59);assert.equal(await market.currentPrice(0),parseEther('0.00022'));
-  await advance(reset+60);assert.equal(await market.currentPrice(0),parseEther('0.00011'));
+  await advance(reset+59);assert.equal(await market.currentPrice(0),parseEther('0.022'));
+  await advance(reset+60);assert.equal(await market.currentPrice(0),parseEther('0.011'));
   await advance(reset+60*256);assert.equal(await market.currentPrice(0),1n);
   assert.equal(await market.requiredBid(0),await market.minimumAdBid());
 });
-test('strict bids, versions, UTF8 tag totals, URLs and revenue ownership',async()=>{
+test('strict bids, versions, per-tag UTF8 limits, URLs and revenue ownership',async()=>{
   const {market}=await fixture();await (await market.bid(0,0,...listing,{value:parseEther('0.08')})).wait();
   await assert.rejects(market.connect(user).bid(0,1,...listing,{value:parseEther('0.08')}),/Bid too low/);
   await (await market.connect(user).bid(0,1,...listing,{value:parseEther('0.088')})).wait();
   assert.equal((await market.ads(0)).advertiser,await user.getAddress());
   await assert.rejects(market.bid(0,1,...listing,{value:parseEther('1')}),/Listing changed/);
   await assert.rejects(market.bid(1,0,'javascript:alert(1)','Test','',[],{value:parseEther('0.01')}),/HTTPS required/);
-  await assert.rejects(market.bid(1,0,listing[0],'Test','',['123456','12345'],{value:parseEther('0.01')}),/Tags exceed/);
+  await assert.rejects(market.bid(1,0,listing[0],'Test','',['12345678901'],{value:parseEther('0.01')}),/Invalid tags/);
+  await assert.rejects(market.bid(1,0,listing[0],'Test','',Array.from({length:11},(_,i)=>String(i)),{value:parseEther('0.01')}),/Invalid tags/);
+  assert.equal(await market.MAX_TAGS(),10n);assert.equal(await market.MAX_TAG_CHARACTERS(),10n);
   await assert.rejects(market.bid(1,0,listing[0],'Test','',['API','API'],{value:parseEther('0.01')}),/Duplicate tag/);
   await (await market.bid(1,0,listing[0],'😀'.repeat(80),'',['😀'.repeat(10)],{value:parseEther('0.01')})).wait();
   assert.deepEqual(Array.from(await market.adTags(1)),['😀'.repeat(10)]);
@@ -91,6 +93,7 @@ test('strict bids, versions, UTF8 tag totals, URLs and revenue ownership',async(
   await (await market.withdrawRevenue(await owner.getAddress(),parseEther('0.089'))).wait();
   assert.equal(await market.teamRevenue(),0n);assert.equal(await provider.getBalance(await market.getAddress()),parseEther('0.089'));
 });
+test('ten separate ten-character Unicode tags can be published and read back',async()=>{const {market}=await fixture();const tags=Array.from({length:10},(_,i)=>`${i}😀😀😀😀😀😀😀😀😀`);await (await market.bid(0,0,listing[0],'Test','',tags,{value:parseEther('0.01')})).wait();assert.deepEqual(Array.from(await market.adTags(0)),tags);});
 test('each organization mints once; a wallet can mint multiple NFTs and holding earns nothing',async()=>{
   const {market,token}=await fixture();const recipient=await user.getAddress(),referrer=await other.getAddress();
   const args=await signed(market,recipient,{referrer});
@@ -478,4 +481,20 @@ test('repeat-UUID deployment permits separately signed attempts, rejects replay 
  await assert.rejects(standard.connect(user).mintPass(...await signed(standard,recipient,{record,nullifier:first[1]})),/Record UUID mismatch/);
  await(await standard.connect(user).mintPass(...await signed(standard,recipient,{record}))).wait();
  await assert.rejects(standard.connect(user).mintPass(...await signed(standard,recipient,{record})),/Account already minted/);
+});
+
+test('Free cards stake and unstake with zero weight and never create mining or referral rewards',async()=>{
+ const {market,token}=await fixture(),recipient=await user.getAddress(),inviter=await other.getAddress();
+ await (await market.connect(user).mintPass(...await signed(market,recipient,{tier:0,referrer:inviter}))).wait();
+ assert.equal(await market.passWeight(1),0n);
+ const metadata=JSON.parse(Buffer.from((await market.tokenURI(1)).split(',')[1],'base64').toString());assert.match(metadata.name,/Free/);assert.match(Buffer.from(metadata.image.split(',')[1],'base64').toString(),/WEIGHT 0/);
+ await (await market.connect(user).stake(1,{gasLimit:1000000})).wait();
+ assert.equal(await market.stakedBalanceOf(recipient),1n);assert.equal(await market.stakingWeightOf(recipient),0n);assert.equal(await market.totalStakingWeight(),0n);assert.equal(await market.miningStartedAt(),0n);
+ await advance(await timestamp()+86400);await (await market.connect(user).getReward({gasLimit:1000000})).wait();
+ assert.equal(await market.earned(recipient),0n);assert.equal(await token.balanceOf(recipient),0n);assert.equal(await market.referralRewards(inviter),0n);
+ await (await market.connect(user).mintPass(...await signed(market,recipient,{tier:1,referrer:inviter}))).wait();await (await market.connect(user).stake(2,{gasLimit:1000000})).wait();
+ assert.equal(await market.stakedBalanceOf(recipient),2n);assert.equal(await market.stakingWeightOf(recipient),1n);assert.ok(await market.miningStartedAt()>0n);
+ await advance(await timestamp()+3600);assert.ok(await market.earned(recipient)>0n);
+ await (await market.connect(user).unstake(1,{gasLimit:1000000})).wait();assert.equal(await market.ownerOf(1),recipient);assert.equal(await market.stakingWeightOf(recipient),1n);
+ await (await market.connect(user).getReward({gasLimit:1000000})).wait();assert.ok(await token.balanceOf(recipient)>0n);assert.equal(await market.stakedBalanceOf(recipient),1n);
 });

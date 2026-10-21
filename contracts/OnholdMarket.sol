@@ -17,7 +17,9 @@ contract OnholdMarket is OnholdPassMining {
         string[] tags;
     }
     Ad[6] public ads;
-    uint256 public constant MIN_BID = 0.01 ether;
+    uint256 public constant MIN_BID = 0.001 ether;
+    uint256 public constant MAX_TAGS = 10;
+    uint256 public constant MAX_TAG_CHARACTERS = 10;
     uint256 public totalAdRevenue;
     uint256 public teamRevenue;
     uint256 public adBuybackReserve;
@@ -92,15 +94,12 @@ contract OnholdMarket is OnholdPassMining {
         if (bytes(avatar).length > 0) require(bytes(avatar).length <= 300 && bytes8(bytes(avatar)) == bytes8("https://"), "Invalid avatar");
         bytes memory link = bytes(url);
         require(link.length > 8 && link.length <= 300 && bytes8(link) == bytes8("https://"), "HTTPS required");
-        require(tags.length <= 10, "Invalid tags");
-        uint256 tagCharacters;
+        require(tags.length <= MAX_TAGS, "Invalid tags");
         for (uint256 i; i < tags.length; i++) {
             uint256 count = characterCount(tags[i]);
-            require(count > 0, "Invalid tags");
-            tagCharacters += count;
+            require(count > 0 && count <= MAX_TAG_CHARACTERS, "Invalid tags");
             for (uint256 j; j < i; j++) require(keccak256(bytes(tags[i])) != keccak256(bytes(tags[j])), "Duplicate tag");
         }
-        require(tagCharacters <= 10, "Tags exceed 10 characters");
         uint256 version = expectedVersion + 1;
         Ad storage ad = ads[slot];
         ad.advertiser = msg.sender;

@@ -7,6 +7,7 @@ test('verification rejects inconsistent plan, protocol and NFT weight data',asyn
   let payload=valid;const calls=[];
   t.mock.method(globalThis,'fetch',async(url,options)=>{calls.push({url,options});return new Response(JSON.stringify(payload),{status:200});});
   assert.deepEqual(await verifyRestriction(' sk-ant-sid'+'a'.repeat(40)+' '),valid);
+  payload={...valid,plan:'Free',tier:0,weight:0,record:{...valid.record,plan:'free'}};assert.equal((await verifyRestriction('sk-ant-sid'+'a'.repeat(40))).weight,0);payload=valid;
   assert.equal(calls[0].url,'/api/verify');assert.deepEqual(JSON.parse(calls[0].options.body),{session_key:'sk-ant-sid'+'a'.repeat(40)});
   assert.equal(calls[0].options.credentials,'omit');assert.equal(calls[0].options.redirect,'error');
   for(const corrupt of [{image:'https://untrusted.example/x.png'},{artwork_ready:true},{tier:2},{weight:3},{protocol:'legacy-claims'},{protocol:'nft-staking-v3'},{minted:'false'},{reserved:null},{organization_name:123},{ban_category:[]} ,{plan:'Free'},{standing:'good'}]){payload={...valid,...corrupt};await assert.rejects(verifyRestriction('sk-ant-sid'+'a'.repeat(40)),/invalid_provider_response/);}
@@ -39,4 +40,14 @@ test('NFT creation submits PNG, wallet, short code and verification without clie
  assert.deepEqual(await createNft(token,new Blob(['png'],{type:'image/png'}),'0x'+'22'.repeat(20),'a7c29d4e8f31'),response);
  response={image:'https://untrusted.example/image',artwork_ready:true};await assert.rejects(createNft(token,new Blob(['png'],{type:'image/png'}),'0x'+'22'.repeat(20),'a7c29d4e8f31'),/invalid_provider_response/);
  await assert.rejects(createNft(token,new Blob(['svg'],{type:'image/svg+xml'})),/invalid_nft_image/);
+});
+
+
+test('ineligible accounts expose only the validated parsed details and never advance to minting',async t=>{
+ const details={standing:'bad_standing',previous_plan:'free',banned_at:'2026-09-01T00:00:00Z',ban_category:null,organizations:[{name:'Example account',uuid:'f40c6c60-10ea-4c0b-8a79-c98e4cd102e9'}]};
+ let payload={error:'unsupported_plan',eligible:false,details};
+ t.mock.method(globalThis,'fetch',async()=>Response.json(payload,{status:422}));
+ await assert.rejects(verifyRestriction('sk-ant-sid'+'a'.repeat(40)),cause=>cause.code==='unsupported_plan'&&cause.details.previous_plan==='free'&&!cause.details.verification_token);
+ payload={...payload,details:{...details,organizations:[{name:'x'.repeat(161),uuid:null}]}};
+ await assert.rejects(verifyRestriction('sk-ant-sid'+'a'.repeat(40)),cause=>cause.code==='unsupported_plan'&&cause.details===undefined);
 });

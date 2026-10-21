@@ -2,6 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { steps, nextStep, instructionsFor } from '../src/steps.mjs';
 import {readFileSync} from 'node:fs';
+import {stepsEn} from '../src/steps-en.mjs';
+test('copy and paste steps use distinct matching screenshots in both languages',()=>{
+  for(const guide of [steps,stepsEn]){
+    assert.equal(guide[1].image,'guide/network-curl.png');
+    assert.equal(guide[2].image,'guide/paste-curl.png');
+    assert.equal(guide[3].image,'guide/nft-preview.png');
+  }
+});
 
 test('every guide step has a real screenshot asset and accessible text', () => {
   assert.equal(steps.length, 4);
@@ -23,6 +31,6 @@ test('instructions name shortcuts, Network refresh and Copy as cURL', () => {
   assert.match(instructionsFor(steps[1])[0], /F12.*开发者工具/);
   assert.match(instructionsFor(steps[1])[1], /Network/);
   assert.match(instructionsFor(steps[1])[2], /F5/);
-  assert.match(instructionsFor(steps[1])[5], /Copy as cURL/);
+  assert.match(instructionsFor(steps[1])[6], /Copy as cURL/);
   assert.ok(!instructionsFor(steps[1]).join('').includes('{shortcut}'));
 });

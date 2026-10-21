@@ -21,7 +21,7 @@ export function Notice({children,error=false,onClose,closeLabel,className=''}){
   return <div className={`u-business onhold-notice ${error?'onhold-notice--error':''} ${className}`} role={error?'alert':'status'}><NotificationFrame variant="toast" onClose={onClose} closeLabel={closeLabel}>{children}</NotificationFrame></div>;
 }
 export function TokenUnit({unit,size=18}){
-  return unit==='BNB'||unit==='$Claude'?<SingleSparkTokenIcon symbol={unit} src={unit==='$Claude'?'assets/claude-token.png':undefined} size={size}/>:unit;
+  return unit==='BNB'?<SingleSparkTokenIcon symbol={unit} size={size}/>:unit==='$Claude'?<span className="platform-token-unit">$Claude</span>:unit;
 }
 export function DataValue({value,loading=false,t,unit='',digits=4,lang='en'}){
   if(loading&&value==null)return <SingleSparkSkeleton variant="input" width="7ch" height="1.2em" className="value-skeleton" label={t('loadingData')}/>;

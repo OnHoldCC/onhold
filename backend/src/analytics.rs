@@ -2,6 +2,7 @@ use crate::{crypto, database, internal, pg, ApiError, AppState, DayCount, Stats}
 use axum::http::{HeaderMap, StatusCode};
 use rusqlite::Connection;
 use serde_json::{json, Value};
+use serde::{Serialize, Deserialize};
 use std::{
     collections::BTreeMap,
     net::IpAddr,
@@ -12,7 +13,7 @@ use std::{
 pub const REFRESH_INTERVAL: Duration = Duration::from_secs(15 * 60);
 pub type Cache = Arc<Mutex<Option<Arc<Snapshot>>>>;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Serialize, Deserialize)]
 pub struct Counts {
     pub clicks: u64,
     pub uv: u64,
@@ -129,34 +130,48 @@ pub fn sqlite_snapshot(db: &Connection) -> rusqlite::Result<Snapshot> {
     Ok(Snapshot {
         stats: Stats {
             page_views: count("page_view")?,
+            page_uv: db.query_row("SELECT COUNT(DISTINCT visitor_id) FROM events WHERE kind='page_view'", [], |r| r.get(0))?,
             ad_clicks: count("ad_click")?,
             wallet_connections: count("wallet_connect")?,
             clicks_by_site,
             uv_by_site,
             daily_clicks,
             updated_at: now(),
-            timezone: "Asia/Shanghai",
+            timezone: "Asia/Shanghai".into(),
             financial: json!({"symbol":"$Claude","confirmed":false,"claimed_count":null,"claimed_total":null,"burned_total":null}),
         },
         campaigns,
     })
 }
 
+pub async fn read(state: &AppState) -> Result<(Arc<Snapshot>, &'static str), ApiError> {
+    if let Some(store) = &state.pg {
+        if let Some(snapshot) = crate::analytics_cache::read(store).await {
+            return Ok((Arc::new(snapshot), "redis"));
+        }
+        return Ok((Arc::new(pg::stats(store).await?), "postgresql"));
+    }
+    Ok((cached(state)?, "memory"))
+}
+
 pub async fn refresh(state: &AppState) -> Result<(), ApiError> {
-    let snapshot = if let Some(store) = &state.pg {
-        pg::stats(store).await?
+    if let Some(store) = &state.pg {
+        if crate::analytics_cache::sync(store).await.is_err() {
+            eprintln!("Analytics Redis sync deferred; database events retained for replay");
+        }
+    }
+    let snapshot = if state.pg.is_some() {
+        read(state).await?.0
     } else {
-        database(state.clone(), sqlite_snapshot).await?
+        Arc::new(database(state.clone(), sqlite_snapshot).await?)
     };
-    *state.analytics.lock().map_err(|_| internal())? = Some(Arc::new(snapshot));
+    *state.analytics.lock().map_err(|_| internal())? = Some(snapshot);
     Ok(())
 }
 
 pub async fn run(state: AppState) {
-    let mut timer = tokio::time::interval_at(
-        tokio::time::Instant::now() + REFRESH_INTERVAL,
-        REFRESH_INTERVAL,
-    );
+    let interval = if state.pg.as_ref().is_some_and(|s|s.redis.is_some()) { Duration::from_secs(2) } else { REFRESH_INTERVAL };
+    let mut timer = tokio::time::interval_at(tokio::time::Instant::now() + interval, interval);
     timer.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
     loop {
         timer.tick().await;

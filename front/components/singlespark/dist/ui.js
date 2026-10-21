@@ -1730,7 +1730,7 @@ function ComingSoonOverlay({ title, description, children }) {
 
 // react/components/ui/ProcessSteps.tsx
 import { Fragment as Fragment5, jsx as jsx33, jsxs as jsxs29 } from "react/jsx-runtime";
-function ProcessSteps({ steps, label }) {
+function ProcessSteps({ steps, label, statusLabels = {} }) {
   const states = { pending: "Not started", active: "In progress", complete: "Completed", error: "Stopped" };
   return /* @__PURE__ */ jsx33("ol", { className: "process-steps", "aria-label": label, "aria-busy": steps.some((step) => step.status === "active"), children: steps.map((step, index) => /* @__PURE__ */ jsxs29(
     "li",
@@ -1744,7 +1744,7 @@ function ProcessSteps({ steps, label }) {
           step.description && /* @__PURE__ */ jsx33("small", { children: step.description })
         ] }),
         /* @__PURE__ */ jsxs29("small", { children: [
-          states[step.status],
+          statusLabels[step.status] ?? states[step.status],
           step.elapsed && /* @__PURE__ */ jsxs29(Fragment5, { children: [
             " \xB7 ",
             /* @__PURE__ */ jsx33("span", { "aria-label": "Elapsed time", children: step.elapsed })
@@ -1758,13 +1758,13 @@ function ProcessSteps({ steps, label }) {
 
 // react/components/ui/TransactionProgressDialog.tsx
 import { jsx as jsx34, jsxs as jsxs30 } from "react/jsx-runtime";
-function TransactionProgressDialog({ status, steps, elapsed, children, ...dialog }) {
+function TransactionProgressDialog({ status, steps, elapsed, children, labels = {}, ...dialog }) {
   return /* @__PURE__ */ jsxs30(DetailDialog, { ...dialog, children: [
     /* @__PURE__ */ jsx34("p", { role: "status", "aria-live": "polite", style: { overflowWrap: "anywhere" }, children: status }),
-    /* @__PURE__ */ jsx34(ProcessSteps, { steps, label: "Transaction steps" }),
+    /* @__PURE__ */ jsx34(ProcessSteps, { steps, label: labels.steps ?? "Transaction steps", statusLabels: labels }),
     /* @__PURE__ */ jsxs30("p", { children: [
-      "Total elapsed: ",
-      /* @__PURE__ */ jsx34("span", { "aria-label": "Total elapsed time", children: elapsed })
+      (labels.elapsed ?? "Total elapsed") + ": ",
+      /* @__PURE__ */ jsx34("span", { "aria-label": labels.elapsed ?? "Total elapsed time", children: elapsed })
     ] }),
     children
   ] });

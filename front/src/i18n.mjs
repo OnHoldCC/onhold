@@ -14,7 +14,7 @@ export const messages = {
   "zh": {
     "home": "首页",
     "claim": "领取",
-    "analytics": "数据详情",
+    "analytics": "分析",
     "connect": "连接钱包",
     "connected": "已连接",
     "connecting": "连接中…",
@@ -69,7 +69,7 @@ export const messages = {
     "genericError": "操作未完成，请重试。",
     "analyticsTitle": "每一次点击，都算数。",
     "analyticsIntro": "网站点击、领取统计与 $Claude 销毁。",
-    "back": "返回中转站",
+    "back": "返回首页",
     "chart": "浏览点击趋势",
     "period7": "最近 7 天",
     "period30": "最近 30 天",
@@ -203,9 +203,9 @@ export const messages = {
     "addTag": "添加",
     "removeTag": "移除标签",
     "tagLength": "每个标签最多 10 个字。",
-    "tagLimit": "所选标签合计最多 10 个字。",
+    "tagLimit": "最多 10 个标签，每个标签最多 10 个字。",
     "siteDescription": "官网简介",
-    "minimumBid": "最低出价 0.01 BNB，且须高于当前竞价。",
+    "minimumBid": "最低出价 0.001 BNB，且须高于当前竞价。",
     "uploadHint": "方形图片 · PNG、JPG 或 WebP · 最大 5 MB",
     "create.media.selectImage": "上传官网头像",
     "create.media.authenticate": "连接后上传",
@@ -359,7 +359,7 @@ export const messages = {
     "genericError": "Something went wrong. Please try again.",
     "analyticsTitle": "Every visit counts.",
     "analyticsIntro": "Website clicks, claim totals and $Claude burns.",
-    "back": "Back to relay sites",
+    "back": "Back to home",
     "chart": "Click trends",
     "period7": "Last 7 days",
     "period30": "Last 30 days",
@@ -493,9 +493,9 @@ export const messages = {
     "addTag": "Add",
     "removeTag": "Remove tag",
     "tagLength": "A tag can contain up to 10 characters.",
-    "tagLimit": "Selected tags can contain up to 10 characters in total.",
+    "tagLimit": "Up to 10 tags, with up to 10 characters each.",
     "siteDescription": "Description",
-    "minimumBid": "Minimum bid: 0.01 BNB. Your bid must also exceed the current price.",
+    "minimumBid": "Minimum bid: 0.001 BNB. Your bid must also exceed the current price.",
     "uploadHint": "Square image · PNG, JPG or WebP · up to 5 MB",
     "create.media.selectImage": "Upload website avatar",
     "create.media.authenticate": "Connect to upload",
@@ -603,14 +603,15 @@ const errors = {
   '请输入正数，最多保留 18 位小数。':'Enter a positive number with up to 18 decimal places.',
   '出价必须大于 0。':'Your bid must be greater than zero.',
   '项目名称须为 1–32 个字符。':'The site name must be 1–32 characters.',
-  '特点标签合计最多 10 个字。':'Selected tags can contain up to 10 characters in total.',
-  '最低出价为 0.01 BNB。':'The minimum bid is 0.01 BNB.',
+  '最多 10 个标签，每个标签最多 10 个字。':'Up to 10 tags, with up to 10 characters each.',
+  '最低出价为 0.001 BNB。':'The minimum bid is 0.001 BNB.',
   '项目介绍须为 1–80 个字符。':'The description must be 1–80 characters.',
   '特点标签须为 1–10 个字。':'The feature tag must be 1–10 characters.',
   '后端技术须为 1–24 个字符。':'Backend technology must be 1–24 characters.',
   '头像须为不含用户名或密码的 HTTPS 图片地址。':'Use an HTTPS avatar URL without embedded credentials.',
   '请填写不含用户名或密码的完整 HTTPS 主页地址。':'Enter a complete HTTPS URL without embedded credentials.',
   '请选择项目分类。':'Choose a site category.',
+  '当前广告合约尚未升级为 10 个标签，请等待合约更新后再提交。':'The advertising contract needs the 10-tag upgrade before this listing can be submitted.',
   '广告位不存在，请刷新重试。':'This slot does not exist. Refresh and try again.',
   '出价必须至少高于当前广告位价格 10%。':'Your bid must be at least the current price plus 10%.',
   '出价必须高于当前广告位价格。':'Your bid must be higher than the current price.',
@@ -632,3 +633,36 @@ pt:['Origem de convite fixa','Sem indicador','Conecte e assine para fixar o conv
 }))Object.assign(messages[lang],{inviter:copy[0],noInviter:copy[1],referralNotBound:copy[2],bindingReferral:copy[3],'api.referral_binding_required':copy[4],'api.referral_challenge_expired':copy[5],'api.referrer_already_bound':copy[6],'api.invalid_referral_challenge':copy[5]});
 
 for(const [lang,text]of Object.entries({en:'Mint your first NFT before staking a transferred NFT, so your fixed inviter is recorded on-chain.',zh:'请先铸造首个 NFT，将已固定的邀请人写入合约，再质押转入的 NFT。',ja:'紹介者を記録するため、受領NFTをステークする前に初回NFTを発行してください。',ko:'초대자를 체인에 기록하려면 전송받은 NFT 예치 전에 첫 NFT를 발행하세요.',es:'Acuña tu primer NFT antes de depositar uno transferido para registrar el invitador.',fr:'Créez votre premier NFT avant de déposer un NFT reçu pour inscrire le parrain.',de:'Präge zuerst dein erstes NFT, bevor du ein übertragenes NFT stakst, um den Einladenden einzutragen.',pt:'Crie seu primeiro NFT antes de depositar um NFT recebido para registrar o indicador.'}))messages[lang]['api.referral_mint_required']=text;
+
+for(const [lang,label] of Object.entries({en:"Amount",zh:"领取数量",ja:"受取数量",ko:"수령 수량",es:"Cantidad",fr:"Montant",de:"Betrag",pt:"Quantidade"}))messages[lang].claimRecordAmount=label;
+
+for(const [lang,label]of Object.entries({en:"Place a bid",zh:"参与竞价",ja:"入札する",ko:"입찰하기",es:"Pujar",fr:"Enchérir",de:"Gebot abgeben",pt:"Fazer uma oferta"}))messages[lang].participateBid=label;
+
+for(const [lang,copy] of Object.entries({en:{tagsInput:"Choose or type a tag",tagCountUnit:"tags"},zh:{tagsInput:"选择或输入标签",tagCountUnit:"个标签"},ja:{tagsInput:"タグを選択または入力",tagCountUnit:"タグ"},ko:{tagsInput:"태그 선택 또는 입력",tagCountUnit:"태그"},es:{tagsInput:"Elige o escribe una etiqueta",tagCountUnit:"etiquetas"},fr:{tagsInput:"Choisir ou saisir une étiquette",tagCountUnit:"étiquettes"},de:{tagsInput:"Tag auswählen oder eingeben",tagCountUnit:"Tags"},pt:{tagsInput:"Escolha ou digite uma tag",tagCountUnit:"tags"}}))Object.assign(messages[lang],copy);
+
+for(const [lang,labels]of Object.entries({en:["Invites","FAQ"],zh:["邀请","答疑"],ja:["招待","よくある質問"],ko:["초대","자주 묻는 질문"],es:["Invitaciones","Preguntas"],fr:["Invitations","FAQ"],de:["Einladungen","FAQ"],pt:["Convites","Dúvidas"]}))Object.assign(messages[lang],{inviteTab:labels[0],faqTab:labels[1]});
+
+for(const [lang,label]of Object.entries({en:"Mining rules",zh:"挖矿说明",ja:"マイニングの仕組み",ko:"채굴 안내",es:"Reglas de minería",fr:"Règles de minage",de:"Mining-Regeln",pt:"Regras de mineração"}))messages[lang].miningRules=label;
+
+for(const [lang,label]of Object.entries({en:"My NFTs",zh:"我的 NFT",ja:"マイ NFT",ko:"내 NFT",es:"Mis NFT",fr:"Mes NFT",de:"Meine NFTs",pt:"Meus NFTs"}))messages[lang].myNfts=label;
+
+for(const [lang,labels]of Object.entries({en:["Spotlight","Mining pool"],zh:["聚光灯","矿池"],ja:["スポットライト","マイニングプール"],ko:["스포트라이트","채굴 풀"],es:["Escaparate","Fondo de minería"],fr:["À la une","Réserve de minage"],de:["Spotlight","Mining-Pool"],pt:["Destaque","Fundo de mineração"]}))Object.assign(messages[lang],{spotlightTab:labels[0],poolTab:labels[1]});
+
+for(const [lang,label]of Object.entries({en:"Promoted websites",zh:"投流官网",ja:"掲載サイト",ko:"광고 웹사이트",es:"Sitios promocionados",fr:"Sites promus",de:"Beworbene Websites",pt:"Sites promovidos"}))messages[lang].promotedSites=label;
+
+for(const [lang,copy]of Object.entries({
+ en:["No wallet detected","Open OnHold in your wallet’s browser, or use a desktop browser with a wallet extension.","Claude bans you. OnHold pays you. Verify your restricted account, mint an NFT, and stake to mine $Claude."],
+ zh:["未检测到钱包","请在钱包内置浏览器中打开 OnHold，或使用已安装钱包插件的桌面浏览器。","Claude 封你，OnHold 赔付你。核验封禁账号，铸造 NFT，质押挖取 $Claude。"],
+ ja:["ウォレットが見つかりません","ウォレット内ブラウザー、またはウォレット拡張機能を入れたデスクトップブラウザーで OnHold を開いてください。","Claude がアカウントを停止したら、OnHold で補償を。停止を確認し、NFT を発行してステークし、$Claude を採掘できます。"],
+ ko:["지갑을 찾을 수 없습니다","지갑 내장 브라우저 또는 지갑 확장 프로그램이 설치된 데스크톱 브라우저에서 OnHold를 여세요.","Claude 계정이 정지되면 OnHold에서 보상받으세요. 정지된 계정을 확인하고 NFT를 발행한 뒤 스테이킹하여 $Claude를 채굴하세요."],
+ es:["No se detectó una billetera","Abre OnHold en el navegador de tu billetera o en un navegador de escritorio con una extensión de billetera.","Claude te bloquea. OnHold te compensa. Verifica tu cuenta restringida, crea un NFT y haz staking para minar $Claude."],
+ fr:["Aucun portefeuille détecté","Ouvrez OnHold dans le navigateur de votre portefeuille ou dans un navigateur de bureau avec une extension de portefeuille.","Claude vous bloque. OnHold vous indemnise. Vérifiez votre compte restreint, créez un NFT et stakez-le pour miner des $Claude."],
+ de:["Keine Wallet erkannt","Öffne OnHold im Browser deiner Wallet oder in einem Desktop-Browser mit Wallet-Erweiterung.","Claude sperrt dich. OnHold entschädigt dich. Bestätige dein gesperrtes Konto, präge ein NFT und stake es, um $Claude zu minen."],
+ pt:["Nenhuma carteira detectada","Abra o OnHold no navegador da sua carteira ou em um navegador de computador com uma extensão de carteira.","Claude bloqueia você. OnHold compensa você. Verifique sua conta restrita, crie um NFT e faça staking para minerar $Claude."]
+}))Object.assign(messages[lang],{noWalletDetected:copy[0],walletBrowserHint:copy[1],onholdDescription:copy[2]});
+
+for(const [lang,label]of Object.entries({en:"Invitation link",zh:"邀请链接",ja:"招待リンク",ko:"초대 링크",es:"Enlace de invitación",fr:"Lien d’invitation",de:"Einladungslink",pt:"Link de convite"}))messages[lang].inviteLink=label;
+
+for(const [lang,label]of Object.entries({en:"On-chain details",zh:"链上详情",ja:"オンチェーン詳細",ko:"온체인 상세",es:"Detalles en cadena",fr:"Détails sur la chaîne",de:"On-Chain-Details",pt:"Detalhes na blockchain"}))messages[lang].onchainDetails=label;
+
+for(const [lang,copy]of Object.entries({en:['Staked NFTs','Add stake','No staked NFTs yet','No NFTs available to stake'],zh:['已质押 NFT','添加质押','暂无已质押 NFT','暂无可质押 NFT'],ja:['ステーク済みNFT','ステークを追加','ステーク済みNFTはありません','ステーク可能なNFTはありません'],ko:['예치된 NFT','예치 추가','예치된 NFT가 없습니다','예치 가능한 NFT가 없습니다'],es:['NFT depositados','Añadir depósito','No hay NFT depositados','No hay NFT disponibles'],fr:['NFT déposés','Ajouter un dépôt','Aucun NFT déposé','Aucun NFT disponible'],de:['Gestakte NFTs','NFT staken','Keine gestakten NFTs','Keine verfügbaren NFTs'],pt:['NFTs em staking','Adicionar staking','Nenhum NFT em staking','Nenhum NFT disponível']})){['stakedNfts','addStake','noStakedNfts','noAvailableNfts'].forEach((key,index)=>messages[lang][key]=copy[index]);}

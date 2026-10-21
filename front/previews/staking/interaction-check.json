@@ -1,0 +1,15 @@
+{
+  "mode": "isolated local fixture",
+  "initialStakedCount": 61,
+  "lastPageObserved": "6 / 6",
+  "unstakedId": "1",
+  "remainingPagesObserved": "5 / 5",
+  "addedStakeId": "64",
+  "walletBOnlyObserved": "200",
+  "walletAReturnObserved": [
+    "64",
+    "61",
+    "60"
+  ],
+  "walletBroadcast": false
+}

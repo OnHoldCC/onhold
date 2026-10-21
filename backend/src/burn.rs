@@ -362,16 +362,18 @@ pub async fn backfill(state: &AppState, tracker: &Tracker, head: u64) -> Result<
         .await
         .map_err(|_| pg::error())?;
     drop(client);
-    let (mut from, hash, replay) = saved
+    let (mut from, hash, replay, saved_data) = saved
         .map(|r| {
+            let data:Value=r.get(2);
             (
                 r.get::<_, i64>(0) as u64,
                 r.get::<_, Option<String>>(1),
-                r.get::<_, Value>(2)["replay"] == true,
+                data["replay"] == true,
+                Some(data),
             )
         })
-        .unwrap_or((tracker.start, None, false));
-    let reset = if replay || from > latest + 1 {
+        .unwrap_or((tracker.start, None, false, None));
+    let reset = if replay || from > latest + 1 || hash.is_none() {
         true
     } else if let Some(hash) = hash {
         block_at(state, from - 1).await?["hash"] != hash
@@ -408,7 +410,15 @@ pub async fn backfill(state: &AppState, tracker: &Tracker, head: u64) -> Result<
             return Err(internal());
         }
     }
-    let mut p = Projection {
+    let mut p = if confirmed < latest {
+        // Replay intermediate ranges from events; verify balances at the fresh final checkpoint.
+        let mut p=if reset {Projection::default()} else {saved_data.as_ref().map(Projection::read).transpose()?.unwrap_or_default()};
+        for log in logs {
+            let block=block_at(state,quantity(&log["blockNumber"])?).await?;
+            p.apply(log,quantity(&block["timestamp"])? )?;
+        }
+        p
+    } else { Projection {
         received: units_checked(&call(state, &tracker.vault, "totalReceived()", &tag).await?)?,
         spent: units_checked(&call(state, &tracker.vault, "totalSpent()", &tag).await?)?,
         burned: units_checked(&call(state, &tracker.vault, "totalBurned()", &tag).await?)?,
@@ -417,8 +427,8 @@ pub async fn backfill(state: &AppState, tracker: &Tracker, head: u64) -> Result<
             .try_into()
             .map_err(|_| internal())?,
         ..Default::default()
-    };
-    balances(state, tracker, &mut p, &tag, false).await?;
+    }};
+    if confirmed == latest { balances(state, tracker, &mut p, &tag, false).await?; }
     if block_at(state, confirmed).await?["hash"] != header["hash"] {
         return Err(internal());
     }

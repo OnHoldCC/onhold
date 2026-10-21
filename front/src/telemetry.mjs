@@ -18,7 +18,7 @@ export async function trackEvent(kind,page,siteId,campaign) {
 export async function readStats() {
   try {
     const data=await readJson('/api/stats',3000);
-    if(!Number.isSafeInteger(data.page_views)||!Number.isSafeInteger(data.ad_clicks)||!Array.isArray(data.clicks_by_site)||data.clicks_by_site.length!==6||!data.clicks_by_site.every(value=>Number.isSafeInteger(value)&&value>=0)) return null;
+    if(!Number.isSafeInteger(data.page_views)||!Number.isSafeInteger(data.page_uv)||data.page_uv<0||!Number.isSafeInteger(data.ad_clicks)||!Array.isArray(data.clicks_by_site)||data.clicks_by_site.length!==6||!data.clicks_by_site.every(value=>Number.isSafeInteger(value)&&value>=0)) return null;
     if(!Array.isArray(data.uv_by_site)||data.uv_by_site.length!==6||!data.uv_by_site.every(value=>Number.isSafeInteger(value)&&value>=0)||!Number.isSafeInteger(data.updated_at)||data.updated_at<0) return null;
     if(!Array.isArray(data.daily_clicks)||data.daily_clicks.length!==30||!data.daily_clicks.every(row=>/^\d{4}-\d{2}-\d{2}$/.test(row.date)&&Number.isSafeInteger(row.clicks)&&row.clicks>=0)) return null;
     return data;

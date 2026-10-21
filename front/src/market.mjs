@@ -1,5 +1,6 @@
+import {validTags} from './tags.mjs';
 export const categories = ['开发工具','社区','创作者'];
-export const MIN_BID = 10000000000000000n;
+export const MIN_BID = 1000000000000000n;
 const key = 'onhold.market.v1';
 export function escapeHtml(value) { return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
 export function safeUrl(value) { try { const url = new URL(value); return url.protocol === 'https:' && !url.username && !url.password && value.length <= 300; } catch { return false; } }
@@ -43,7 +44,7 @@ export function auctionCurve(ad, now = Date.now()) {
   return {price:currentPrice(ad,now),nextPrice:currentPrice(ad,ad.startedAt+(period+1)*interval),nextAt:ad.startedAt+(period+1)*interval,progress:(elapsed%interval)/interval,startDay,intervalSeconds:interval/1000,position:(elapsed/interval-startDay)/4,levels:Array.from({length:5},(_,i)=>currentPrice(ad,ad.startedAt+(startDay+i)*interval))};
 }
 function validAd(ad,index) {
-  return ad && (ad.priceIntervalSeconds===undefined||[60,86400].includes(ad.priceIntervalSeconds)) && ad.id === index && typeof ad.title === 'string' && ad.title.length > 0 && ad.title.length <= 253 && typeof ad.description === 'string' && Array.from(ad.description).length <= 80 && categories.includes(ad.category) && typeof ad.bid === 'string' && /^\d{1,24}$/.test(ad.bid) && BigInt(ad.bid) > 0n && Number.isSafeInteger(ad.startedAt) && ad.startedAt > 0 && Number.isSafeInteger(ad.clicks) && ad.clicks >= 0 && ad.clicks < 1e9 && safeUrl(ad.url) && (ad.tags === undefined || (Array.isArray(ad.tags) && new Set(ad.tags).size === ad.tags.length && ad.tags.every(tag=>typeof tag==='string'&&tag.trim()===tag&&tag.length>0) && Array.from(ad.tags.join('')).length<=10)) && (ad.avatar === undefined || ad.avatar === '' || safeUrl(ad.avatar)) && (ad.technology === undefined || (typeof ad.technology === 'string' && Array.from(ad.technology).length <= 24)) && typeof ad.tagline === 'string' && ad.tagline.length <= 80 && ['loop','mint','chapter','openkit','pixel','made'].includes(ad.cover);
+  return ad && (ad.priceIntervalSeconds===undefined||[60,86400].includes(ad.priceIntervalSeconds)) && ad.id === index && typeof ad.title === 'string' && ad.title.length > 0 && ad.title.length <= 253 && typeof ad.description === 'string' && Array.from(ad.description).length <= 80 && categories.includes(ad.category) && typeof ad.bid === 'string' && /^\d{1,24}$/.test(ad.bid) && BigInt(ad.bid) > 0n && Number.isSafeInteger(ad.startedAt) && ad.startedAt > 0 && Number.isSafeInteger(ad.clicks) && ad.clicks >= 0 && ad.clicks < 1e9 && safeUrl(ad.url) && (ad.tags === undefined || validTags(ad.tags)) && (ad.avatar === undefined || ad.avatar === '' || safeUrl(ad.avatar)) && (ad.technology === undefined || (typeof ad.technology === 'string' && Array.from(ad.technology).length <= 24)) && typeof ad.tagline === 'string' && ad.tagline.length <= 80 && ['loop','mint','chapter','openkit','pixel','made'].includes(ad.cover);
 }
 export function loadMarket(storage) {
   try {
@@ -62,7 +63,7 @@ export function placeBid(state,slot,form,now = Date.now()) {
   const title=new URL(url).hostname;
   if (!description || Array.from(description).length>80) throw new Error('项目介绍须为 1–80 个字符。');
   const tags=form.tags??[];
-  if (!Array.isArray(tags)||Array.from(tags.join('')).length>10||new Set(tags).size!==tags.length||tags.some(tag=>typeof tag!=='string'||!tag.trim()||tag!==tag.trim()||Array.from(tag).length>10)) throw new Error('特点标签合计最多 10 个字。');
+  if (!validTags(tags)) throw new Error('最多 10 个标签，每个标签最多 10 个字。');
   const technology=(form.technology||'').trim(),avatar=(form.avatar||'').trim();
   if (Array.from(technology).length>24) throw new Error('后端技术须为 1–24 个字符。');
   if (avatar && !safeUrl(avatar)) throw new Error('头像须为不含用户名或密码的 HTTPS 图片地址。');

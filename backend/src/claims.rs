@@ -2,6 +2,7 @@ use crate::{crypto, database, uploads, ApiError, AppState};
 use axum::{
     extract::State,
     http::{HeaderMap, StatusCode},
+    response::{IntoResponse, Response},
     Json,
 };
 use k256::ecdsa::SigningKey;
@@ -135,6 +136,7 @@ fn parse_standing(value: &Value) -> Result<Standing, ApiError> {
         .unwrap_or("")
         .to_ascii_lowercase();
     let tier = match (plan.contains("pro"), plan.contains("max")) {
+        (false, false) if plan == "free" || plan == "claude_free" => 0,
         (true, false) => 1,
         (false, true) => 2,
         _ => return Err(error(StatusCode::UNPROCESSABLE_ENTITY, "unsupported_plan")),
@@ -202,11 +204,19 @@ fn verification_nullifier(account: &Standing, token: &str, repeat_uuid: bool) ->
         account.nullifier.clone()
     }
 }
+fn account_details(value: &Value) -> Value {
+    let text=|v:&Value,max:usize|v.as_str().filter(|s|s.chars().count()<=max).map(str::to_owned);
+    let organizations=value["banned_orgs"].as_array().into_iter().flatten().take(5).map(|org|json!({
+        "uuid":org["uuid"].as_str().and_then(|s|uuid::Uuid::parse_str(s).ok()).filter(|v|!v.is_nil()).map(|v|v.to_string()),
+        "name":text(&org["name"],160)
+    })).collect::<Vec<_>>();
+    json!({"standing":text(&value["standing"],80),"previous_plan":text(&value["prev_plan_tier"],80),"banned_at":text(&value["banned_at"],64),"ban_category":text(&value["ban_category"],80),"organizations":organizations})
+}
 pub async fn verify(
     State(state): State<AppState>,
     headers: HeaderMap,
     Json(request): Json<VerifyRequest>,
-) -> Result<Json<Value>, ApiError> {
+) -> Result<Response, ApiError> {
     uploads::origin(&state, &headers)?;
     if !(32..=512).contains(&request.session_key.len())
         || !request
@@ -286,7 +296,11 @@ pub async fn verify(
     }
     let value: Value = serde_json::from_slice(&body)
         .map_err(|_| error(StatusCode::BAD_GATEWAY, "invalid_provider_response"))?;
-    let account = parse_standing(&value)?;
+    let details=account_details(&value);
+    let account = match parse_standing(&value) {
+        Ok(account)=>account,
+        Err(ApiError(status,code))=>return Ok((status,Json(json!({"error":code,"eligible":false,"details":details}))).into_response()),
+    };
     let token = format!(
         "{}{}",
         uuid::Uuid::new_v4().simple(),
@@ -300,18 +314,19 @@ pub async fn verify(
     let public_record = account.record.clone();
     let record_json = serde_json::to_string(&public_record)
         .map_err(|_| error(StatusCode::INTERNAL_SERVER_ERROR, "storage_unavailable"))?;
+    let checked_market=state.claims.as_ref().map(|signer|signer.market.clone()).unwrap_or_default();
     let (minted,reserved)=database(state.clone(),move|db|{
   db.execute("INSERT INTO verified_accounts(nullifier,tier,base_tokens,banned_at) VALUES(?1,?2,0,?3) ON CONFLICT(nullifier) DO UPDATE SET tier=excluded.tier,banned_at=excluded.banned_at",params![nullifier,tier,banned_at])?;
   db.execute("DELETE FROM verified_nft_records WHERE token_hash IN (SELECT token_hash FROM verification_sessions WHERE expires_at < unixepoch())",[])?;
   db.execute("DELETE FROM verification_sessions WHERE expires_at < unixepoch()",[])?;
   db.execute("INSERT INTO verification_sessions(token_hash,nullifier,expires_at) VALUES(?1,?2,?3)",params![token_hash,nullifier,expires])?;
   db.execute("INSERT INTO verified_nft_records(token_hash,record) VALUES(?1,?2)",params![token_hash,record_json])?;
-  let status:Option<String>=db.query_row("SELECT status FROM nft_mints WHERE nullifier=?1",[nullifier],|row|row.get(0)).optional()?;
+  let status:Option<String>=db.query_row("SELECT status FROM nft_mints WHERE nullifier=?1 AND market=?2",params![nullifier,checked_market],|row|row.get(0)).optional()?;
   Ok((status.as_deref()==Some("confirmed"),status.is_some()))
  }).await?;
     Ok(Json(
-        json!({"protocol":"nft-staking-v4","verification_token":token,"expires_at":expires,"standing":"restricted","plan":if tier==1{"Pro"}else{"Max"},"tier":tier,"weight":if tier==1{1}else{3},"record":public_record,"artwork_ready":false,"banned_at":account.banned_at,"organization_suffix":account.organization_suffix,"organization_name":account.organization_name,"ban_category":account.ban_category,"minted":minted,"reserved":reserved}),
-    ))
+        json!({"protocol":"nft-staking-v4","verification_token":token,"expires_at":expires,"standing":"restricted","plan":if tier==1{"Pro"}else if tier==2{"Max"}else{"Free"},"tier":tier,"weight":if tier==1{1}else if tier==2{3}else{0},"record":public_record,"artwork_ready":false,"banned_at":account.banned_at,"organization_suffix":account.organization_suffix,"organization_name":account.organization_name,"ban_category":account.ban_category,"minted":minted,"reserved":reserved,"details":details}),
+    ).into_response())
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -357,7 +372,7 @@ async fn quote_data(state: AppState, request: &MintRequest) -> Result<Quote, Api
     let checked_market=signer.market.clone();
     let record=database(state.clone(),move|db|{
   let record=db.query_row("SELECT a.nullifier,a.tier,s.expires_at,r.record,r.image FROM verification_sessions s JOIN verified_accounts a ON s.nullifier=a.nullifier JOIN verified_nft_records r ON s.token_hash=r.token_hash WHERE s.token_hash=?1 AND s.expires_at>=unixepoch()",[token_hash],|row|Ok((row.get::<_,String>(0)?,row.get::<_,u8>(1)?,row.get::<_,u64>(2)?,row.get::<_,String>(3)?,row.get::<_,Option<String>>(4)?))).optional()?;
-  let existing:Option<(String,String,String)>=db.query_row("SELECT nullifier,wallet,status FROM nft_mints WHERE nullifier=?1",params![record.as_ref().map(|r|r.0.as_str())],|row|Ok((row.get(0)?,row.get(1)?,row.get(2)?))).optional()?;
+  let existing:Option<(String,String,String)>=db.query_row("SELECT nullifier,wallet,status FROM nft_mints WHERE nullifier=?1 AND market=?2",params![record.as_ref().map(|r|r.0.as_str()),checked_market],|row|Ok((row.get(0)?,row.get(1)?,row.get(2)?))).optional()?;
   let bound=crate::referrals::bound(db,&checked_market,&checked_wallet)?;
   Ok((record,existing,bound))
  }).await?;
@@ -418,7 +433,7 @@ pub async fn quote(
     uploads::origin(&state, &headers)?;
     let q = quote_data(state, &request).await?;
     Ok(Json(
-        json!({"message":q.message,"tier":q.tier,"weight":if q.tier==1{1}else{3},"invited":q.referrer!=ZERO,"expires_at":q.expires}),
+        json!({"message":q.message,"tier":q.tier,"weight":if q.tier==1{1}else if q.tier==2{3}else{0},"invited":q.referrer!=ZERO,"expires_at":q.expires}),
     ))
 }
 pub(super) async fn rpc(state: &AppState, method: &str, params: Value) -> Result<Value, ApiError> {
@@ -541,10 +556,11 @@ pub async fn authorize(
     let q_wallet = q.wallet.clone();
     let q_ref = q.referrer.clone();
     let q_tier = q.tier;
+    let q_market=signer.market.clone();
     let bound=database(state.clone(),move|db|{
-  db.execute("INSERT OR IGNORE INTO nft_mints(nullifier,wallet,tier,referrer,deadline,status) VALUES(?1,?2,?3,?4,?5,'authorized')",params![q_id,q_wallet,q_tier,q_ref,deadline])?;
-  let record:Option<(String,String,String)>=db.query_row("SELECT wallet,referrer,status FROM nft_mints WHERE nullifier=?1",[&q_id],|row|Ok((row.get(0)?,row.get(1)?,row.get(2)?))).optional()?;
-  if record.as_ref().is_some_and(|r|r.0==q_wallet&&r.1==q_ref&&r.2=="authorized"){db.execute("UPDATE nft_mints SET deadline=?1 WHERE nullifier=?2",params![deadline,q_id])?;Ok(true)}else{Ok(false)}
+  db.execute("INSERT OR IGNORE INTO nft_mints(nullifier,wallet,tier,referrer,deadline,status,market) VALUES(?1,?2,?3,?4,?5,'authorized',?6)",params![q_id,q_wallet,q_tier,q_ref,deadline,q_market])?;
+  let record:Option<(String,String,String)>=db.query_row("SELECT wallet,referrer,status FROM nft_mints WHERE nullifier=?1 AND market=?2",params![q_id,q_market],|row|Ok((row.get(0)?,row.get(1)?,row.get(2)?))).optional()?;
+  if record.as_ref().is_some_and(|r|r.0==q_wallet&&r.1==q_ref&&r.2=="authorized"){db.execute("UPDATE nft_mints SET deadline=?1 WHERE nullifier=?2 AND market=?3",params![deadline,q_id,q_market])?;Ok(true)}else{Ok(false)}
  }).await?;
     if !bound {
         return Err(error(StatusCode::CONFLICT, "mint_already_reserved"));
@@ -646,10 +662,11 @@ pub async fn receipt(
             "invalid_mint_receipt",
         ))?
         .to_string();
+    let checked_market=signer.market.clone();
     let updated = database(state, move |db| {
         db.execute(
-            "UPDATE nft_mints SET status='confirmed',tx_hash=?1,token_id=?4 WHERE nullifier=?2 AND wallet=?3",
-            params![request.tx_hash, request.nullifier, recipient,token_id],
+            "UPDATE nft_mints SET status='confirmed',tx_hash=?1,token_id=?4 WHERE nullifier=?2 AND wallet=?3 AND market=?5",
+            params![request.tx_hash, request.nullifier, recipient,token_id,checked_market],
         )
     })
     .await?;
@@ -825,7 +842,7 @@ mod tests {
         request.referral_code = None;
         {
             let db = state.db.lock().unwrap();
-            db.execute("INSERT INTO nft_mints(nullifier,wallet,tier,referrer,deadline,status) VALUES(?1,?2,1,?3,?4,'authorized')",params![nullifier,inviter,ZERO,now()+600]).unwrap();
+            db.execute("INSERT INTO nft_mints(nullifier,wallet,tier,referrer,deadline,status,market) VALUES(?1,?2,1,?3,?4,'authorized',?5)",params![nullifier,inviter,ZERO,now()+600,state.claims.as_ref().unwrap().market]).unwrap();
         }
         assert_eq!(
             quote_data(state.clone(), &request).await.err().unwrap().1,
@@ -877,8 +894,20 @@ mod tests {
         assert!(parse_standing(&value).is_err());
     }
     #[test]
+    fn rejected_plan_details_are_bounded_and_exclude_credentials() {
+        let mut value=standing();
+        value["prev_plan_tier"]=json!("free");value["sessionKey"]=json!("private");value["cookie"]=json!("private");
+        value["banned_orgs"][0]["name"]=json!("Example Account");
+        let details=account_details(&value);
+        assert_eq!(details["previous_plan"],"free");assert_eq!(details["organizations"][0]["name"],"Example Account");
+        assert!(!details.to_string().contains("private"));assert_eq!(parse_standing(&value).unwrap().tier,0);
+        value["prev_plan_tier"]=json!("x".repeat(81));assert!(account_details(&value)["previous_plan"].is_null());
+    }
+    #[test]
     fn plans_match_pro_or_max_case_insensitively_and_never_both() {
         for (plan, tier) in [
+            ("free", 0),
+            ("CLAUDE_FREE", 0),
             ("claude_pro", 1),
             ("CLAUDE_PRO", 1),
             ("claude_pro_annual", 1),
@@ -891,7 +920,7 @@ mod tests {
             value["prev_plan_tier"] = json!(plan);
             assert_eq!(parse_standing(&value).unwrap().tier, tier);
         }
-        for plan in ["free", "", "claude_pro_max"] {
+        for plan in ["unknown", "", "claude_pro_max"] {
             let mut value = standing();
             value["prev_plan_tier"] = json!(plan);
             assert!(parse_standing(&value).is_err());
@@ -913,7 +942,7 @@ mod tests {
         for (key, bad) in [
             ("standing", json!("good_standing")),
             ("has_active_org", json!(true)),
-            ("prev_plan_tier", json!("free")),
+            ("prev_plan_tier", json!("unknown")),
             ("banned_at", Value::Null),
             ("banned_orgs", json!([])),
         ] {

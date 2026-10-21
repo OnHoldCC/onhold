@@ -32,7 +32,7 @@ COMMENT ON COLUMN chain_wallets.data IS '包含 weight、paid、pending、referr
 CREATE TABLE IF NOT EXISTS chain_nfts (
     market        TEXT     NOT NULL,  -- NFT／挖矿合约地址
     token_id      BIGINT   NOT NULL,  -- NFT 编号，与 market 组成唯一标识
-    tier          SMALLINT NOT NULL,  -- 1 = Pro（权重 1）；2 = Max（权重 3）
+    tier          SMALLINT NOT NULL,  -- 0 = Free（权重 0）；1 = Pro（权重 1）；2 = Max（权重 3）
     owner         TEXT     NOT NULL,  -- NFT 当前所有者地址
     staker        TEXT,               -- 质押钱包地址；NULL 表示未质押
     metadata_hash TEXT,               -- 账号记录与图片的内容哈希，用于缓存校验
@@ -57,10 +57,10 @@ CREATE INDEX IF NOT EXISTS chain_nfts_metadata
 CREATE INDEX IF NOT EXISTS chain_nfts_tier_page
     ON chain_nfts (market, tier, token_id DESC);
 
-COMMENT ON TABLE chain_nfts IS '封禁账号纪念 NFT 的链上投影；用于 NFT 列表、Pro／Max 筛选分页、钱包持有与质押查询。';
+COMMENT ON TABLE chain_nfts IS '封禁账号纪念 NFT 的链上投影；用于 NFT 列表、Free／Pro／Max 筛选分页、钱包持有与质押查询。';
 COMMENT ON COLUMN chain_nfts.market IS '发行 NFT 的市场／挖矿合约地址。';
 COMMENT ON COLUMN chain_nfts.token_id IS '合约内的 NFT 编号；与 market 共同确定一张 NFT。';
-COMMENT ON COLUMN chain_nfts.tier IS '套餐等级：1 = Pro，挖矿权重 1；2 = Max，挖矿权重 3。';
+COMMENT ON COLUMN chain_nfts.tier IS '套餐等级：0 = Free，挖矿权重 0；1 = Pro，挖矿权重 1；2 = Max，挖矿权重 3。';
 COMMENT ON COLUMN chain_nfts.owner IS '最近已索引区块中的 NFT 所有者地址。';
 COMMENT ON COLUMN chain_nfts.staker IS '当前质押钱包地址；NULL 表示未质押。';
 COMMENT ON COLUMN chain_nfts.metadata_hash IS '账号记录与图片组合内容的 Keccak 哈希，用于 Redis 元数据缓存及内容校验。';
@@ -135,12 +135,18 @@ CREATE TABLE IF NOT EXISTS analytics_events (
     market           TEXT,                  -- 广告投放所属合约；旧数据可为空
     campaign_version BIGINT,                -- 广告投放版本；与 market、site_id 关联广告
     created_at       BIGINT   NOT NULL,     -- 服务端记录的 Unix 时间戳，单位秒
-    visitor_id       TEXT                   -- 广告点击来源 IP 的加盐哈希，用于 UV 去重
+    visitor_id       TEXT                   -- 访问／点击来源 IP 的加盐哈希，用于 UV 去重
 );
 
 -- 兼容早期没有访客标识的埋点表；不为历史记录虚构 UV。
 ALTER TABLE analytics_events
     ADD COLUMN IF NOT EXISTS visitor_id TEXT;
+
+-- Durable Redis outbox flag: Redis failures never discard accepted events.
+ALTER TABLE analytics_events ADD COLUMN IF NOT EXISTS redis_pending BOOLEAN NOT NULL DEFAULT true;
+CREATE INDEX IF NOT EXISTS analytics_events_redis_pending
+    ON analytics_events (created_at,event_id) WHERE redis_pending;
+COMMENT ON COLUMN analytics_events.redis_pending IS 'Redis 统计投影待同步标记；缓存故障后重试，确认同步成功才清除。';
 
 CREATE INDEX IF NOT EXISTS analytics_events_kind_site
     ON analytics_events (kind, site_id);

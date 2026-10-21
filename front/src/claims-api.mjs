@@ -11,12 +11,17 @@ export function extractSession(input){
 export async function claimRequest(path,body){
   const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),credentials:'omit',cache:'no-store',redirect:'error',referrerPolicy:'no-referrer',signal:AbortSignal.timeout(path==='/api/verify'?60000:25000)});
   const value=await response.json().catch(()=>({error:'service_unavailable'}));
-  if(!response.ok){const error=new Error(value.error||'service_unavailable');error.code=value.error;throw error;}return value;
+  if(!response.ok){const error=new Error(value.error||'service_unavailable');error.code=value.error;if(path==='/api/verify'&&validDetails(value.details))error.details=value.details;throw error;}return value;
 }
 export async function publicStatus(){try{const value=await readJson('/api/status',3000);return value.chain_id===97&&value.protocol==='nft-staking-v4'?value:null;}catch{return null;}}
+function validDetails(value){
+  const text=(v,max)=>v===null||typeof v==='string'&&Array.from(v).length<=max;
+  return value&&text(value.standing,80)&&text(value.previous_plan,80)&&text(value.banned_at,64)&&text(value.ban_category,80)&&Array.isArray(value.organizations)&&value.organizations.length<=5&&value.organizations.every(org=>text(org.name,160)&&(org.uuid===null||/^[0-9a-f-]{36}$/i.test(org.uuid)));
+}
 export async function verifyRestriction(session){
   const value=await claimRequest('/api/verify',{session_key:extractSession(session)});
-  if(value.image!==undefined||value.artwork_ready!==false||value.protocol!=='nft-staking-v4'||typeof value.verification_token!=='string'||!/^([a-f0-9]{64})$/.test(value.verification_token)||!['Pro','Max'].includes(value.plan)||value.tier!==(value.plan==='Pro'?1:2)||value.weight!==(value.tier===1?1:3)||value.standing!=='restricted'||typeof value.minted!=='boolean'||typeof value.reserved!=='boolean'||typeof value.banned_at!=='string'||typeof value.organization_suffix!=='string'||!(value.organization_name===null||typeof value.organization_name==='string')||!(value.ban_category===null||typeof value.ban_category==='string')||!value.record||typeof value.record.account!=='string'||typeof value.record.uuid!=='string'||typeof value.record.bannedAt!=='string'||typeof value.record.plan!=='string'||!Number.isSafeInteger(value.expires_at))throw Error('invalid_provider_response');
+  if(value.image!==undefined||value.artwork_ready!==false||value.protocol!=='nft-staking-v4'||typeof value.verification_token!=='string'||!/^([a-f0-9]{64})$/.test(value.verification_token)||!['Free','Pro','Max'].includes(value.plan)||value.tier!==(value.plan==='Pro'?1:value.plan==='Max'?2:0)||value.weight!==(value.tier===1?1:value.tier===2?3:0)||value.standing!=='restricted'||typeof value.minted!=='boolean'||typeof value.reserved!=='boolean'||typeof value.banned_at!=='string'||typeof value.organization_suffix!=='string'||!(value.organization_name===null||typeof value.organization_name==='string')||!(value.ban_category===null||typeof value.ban_category==='string')||!value.record||typeof value.record.account!=='string'||typeof value.record.uuid!=='string'||typeof value.record.bannedAt!=='string'||typeof value.record.plan!=='string'||!Number.isSafeInteger(value.expires_at))throw Error('invalid_provider_response');
+  if(value.details!==undefined&&!validDetails(value.details))throw Error('invalid_provider_response');
   return value;
 }
 

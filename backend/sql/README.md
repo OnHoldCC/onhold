@@ -62,3 +62,11 @@ psql -h /Users/nat/Documents/ChatGPT/onholdcc/onhold/backend/data/testnet-v4-moc
 `claims`、`chain_snapshots`、`burn_cursor`、`burn_events`、`nft_artwork`（旧后端渲染图片缓存）是旧版兼容表，当前生产代码没有业务查询；阅读当前流程时可以忽略。保留已有数据，后续如要清理，应单独做迁移。
 
 SQLite 不支持 PostgreSQL 的 `COMMENT ON TABLE/COLUMN` 语法，因此这里列明其用途和位置。
+
+## UV／点击双写与查询
+
+事件先按 `event_id` 去重写入 `analytics_events`，同一行的 `redis_pending` 默认为 true；服务同步 Redis 成功后才清除。Redis 在一个 Hash 内原子维护计数、匿名访客去重及待确认事件去重，数据库确认失败时可重放而不重复计数。后台每 2 秒补写未完成事件。
+
+`/api/stats`、广告排行与广告投影的点击／UV 优先读取 Redis；Redis 故障时统计从 PostgreSQL 汇总，数据不丢弃。缓存缺失或损坏时按数据库分批重建，重建完成前不对外展示不完整计数。`/api/stats` 的 `X-Analytics-Source` 响应头显示实际来源。
+
+页面 PV、匿名访客 UV 和广告点击是不同指标。历史页面没有保存访客标识的记录保留 PV，但不虚构历史 UV。现有合约、挖矿与财务数据仍从原有已确认链上投影读取。

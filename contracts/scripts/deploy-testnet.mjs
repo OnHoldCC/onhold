@@ -24,13 +24,17 @@ const repeatUuid=process.argv.includes('--repeat-uuid');
 if(repeatUuid&&!mock)throw Error('Repeat UUID is restricted to explicit Mock testnet deployments');
 if(mock&&!keys.adKeeperPrivateKey){keys.adKeeperPrivateKey=Wallet.createRandom().privateKey;writeFileSync(keysPath,JSON.stringify(keys),{mode:0o600});}
 const adKeeper=mock?new Wallet(keys.adKeeperPrivateKey):deployer;
+const deploymentBudget=parseEther(process.env.ONHOLD_TESTNET_BUDGET_BNB||'0.1');
+if(deploymentBudget<=0n||deploymentBudget>parseEther('0.1'))throw Error('Invalid testnet deployment budget');
 async function send(name,request){
  let step=journal.steps[name];const binding=keccak256(request.data);
  if(step&&(step.binding!==binding||Transaction.from(step.raw).to!==(request.to||null)||Transaction.from(step.raw).value!==(request.value||0n)))throw Error(`Artifact or arguments changed for ${name}; preserve this deployment and use a new test data directory`);
  if(!step){const nonce=await provider.getTransactionCount(deployer.address,'pending');const estimate=await provider.estimateGas({...request,from:deployer.address});const fees=await provider.getFeeData();const gasPrice=fees.gasPrice;
   if(!gasPrice||gasPrice>5_000_000_000n)throw Error('Testnet gas price exceeds 5 gwei');
   const gasLimit=estimate*125n/100n;
-  if(gasLimit*gasPrice>parseEther('0.1')||await provider.getBalance(deployer.address)<gasLimit*gasPrice+(request.value||0n))throw Error('More test BNB required');
+  const reserved=Object.values(journal.steps).reduce((sum,entry)=>{const tx=Transaction.from(entry.raw);return sum+tx.gasLimit*tx.gasPrice+tx.value;},0n);
+  if(reserved+gasLimit*gasPrice+(request.value||0n)>deploymentBudget)throw Error('Testnet deployment budget exceeded');
+  if(await provider.getBalance(deployer.address)<gasLimit*gasPrice+(request.value||0n))throw Error('More test BNB required');
   const raw=await deployer.signTransaction({...request,nonce,gasLimit,gasPrice,type:0,chainId:97,value:request.value||0n});
   step=journal.steps[name]={binding,hash:keccak256(raw),raw,address:request.to||getCreateAddress({from:deployer.address,nonce})};save();
  }
@@ -49,7 +53,7 @@ try{
  if(process.argv.includes('--status')||balance===0n){
   // eth_estimateGas may reject an unfunded sender; use zero gas price for the read-only estimate.
   const gas=await provider.estimateGas({...coreRequest,from:deployer.address,gasPrice:0});
-  console.log(JSON.stringify({status:balance===0n?'needs_test_bnb':'ready',coreGas:gas.toString(),coreGasBudgetBNB:formatEther(gas*125n/100n*(fees.gasPrice||1_000_000_000n)),recommendedTestBNB:'0.1',deployedSteps:Object.keys(journal.steps)}));
+  console.log(JSON.stringify({status:balance===0n?'needs_test_bnb':'ready',coreGas:gas.toString(),coreGasBudgetBNB:formatEther(gas*125n/100n*(fees.gasPrice||1_000_000_000n)),recommendedTestBNB:formatEther(deploymentBudget),deployedSteps:Object.keys(journal.steps)}));
  }else{
   const coreStep=upgradeBuyback?journal.steps.core:await send('core',coreRequest);
   if(!coreStep?.block)throw Error('A confirmed core deployment is required before replacing the test vault');
@@ -66,8 +70,16 @@ try{
   const vault=new Contract(vaultStep.address,vaultArtifact.abi,provider);
   if(await vault.MIN_BUYBACK_BALANCE()!==parseEther('0.001')||await vault.MAX_KEEPER_GAS_REFUND()!==parseEther('0.0001'))throw Error('Buyback policy verification failed');
   if(repeatUuid&&!await new Contract(marketAddress,['function UUID_UNIQUENESS_DISABLED() view returns(bool)'],provider).UUID_UNIQUENESS_DISABLED())throw Error('Repeat UUID marker missing');
+  let freePasses=false;
+  try {
+   const preview=await market.previewPass(0,{account:'Free deployment check',uuid:'11111111-1111-4111-8111-111111111111',bannedAt:'2026-10-21T00:00:00Z',plan:'free'});
+   const metadata=JSON.parse(Buffer.from(preview.split(',')[1],'base64').toString());
+   freePasses=metadata.name.includes('Free')&&Buffer.from(metadata.image.split(',')[1],'base64').toString().includes('WEIGHT 0');
+  }catch(error){if(!upgradeBuyback)throw error;}
+  if(!upgradeBuyback&&!freePasses)throw Error('Free pass preview verification failed');
   const rendererAddress=await market.renderer();for(const address of [marketAddress,tokenAddress,rendererAddress,factoryStep.address,vaultStep.address])if(await provider.getCode(address)==='0x')throw Error('Missing deployed bytecode');
   const result={chainId:97,protocol:'nft-staking-v4',mock,repeatUuid,adPriceIntervalSeconds:Number(await market.adPriceInterval()),adMinimumBidBNB:formatEther(await market.minimumAdBid()),adKeeperMinimumBNB:formatEther(await market.MIN_AD_BUYBACK()),adKeeper:adKeeper.address,mockPortalAddress:mock?await core.portal():null,deployer:deployer.address,verifier:verifier.address,keeper:deployer.address,marketAddress,tokenAddress,rendererAddress,buybackFactoryAddress:factoryStep.address,buybackVaultAddress:vaultStep.address,marketFromBlock:coreStep.block,buybackFromBlock:vaultStep.block,buybackMode:'standalone-test-token',flapLive:false,transactions:Object.fromEntries(Object.entries(journal.steps).map(([name,step])=>[name,step.hash]))};
+  result.freePasses=freePasses;
   result.buybackMinimumBNB='0.001';result.maxKeeperGasRefundBNB='0.0001';
   result.previousBuybackVaults=previous?.previousBuybackVaults||[];
   if(previous&&previous.buybackVaultAddress!==vaultStep.address)result.previousBuybackVaults.push({vault:previous.buybackVaultAddress,factory:previous.buybackFactoryAddress,fromBlock:previous.buybackFromBlock});

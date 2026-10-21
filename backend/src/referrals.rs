@@ -40,8 +40,8 @@ pub fn bound(
         return Ok(saved);
     }
     db.query_row(
-        "SELECT referrer FROM nft_mints WHERE wallet=?1 ORDER BY rowid LIMIT 1",
-        [wallet],
+        "SELECT referrer FROM nft_mints WHERE wallet=?1 AND market=?2 ORDER BY rowid LIMIT 1",
+        params![wallet,market],
         |r| r.get(0),
     )
     .optional()
@@ -351,7 +351,7 @@ mod tests {
         let market = format!("0x{}", "11".repeat(20));
         let wallet = format!("0x{}", "22".repeat(20));
         let referrer = format!("0x{}", "33".repeat(20));
-        db.execute("INSERT INTO nft_mints(nullifier,wallet,tier,referrer,deadline,status) VALUES('existing',?1,1,?2,0,'confirmed')",params![wallet,referrer]).unwrap();
+        db.execute("INSERT INTO nft_mints(nullifier,wallet,tier,referrer,deadline,status,market) VALUES('existing',?1,1,?2,0,'confirmed',?3)",params![wallet,referrer,market]).unwrap();
         assert_eq!(
             bound(&db, &market, &wallet).unwrap(),
             Some(referrer.clone())

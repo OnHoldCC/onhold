@@ -7,7 +7,7 @@
 | `onhold/App.jsx` | 应用主组件，包含导航、首页、Claim、Analytics、Burn 和弹窗 |
 | `onhold/Docs.jsx`、`onhold/OutlineCurve.jsx`、`onhold/docs.css` | Docs 页面和目录动画 |
 | `onhold/BanPassCard.jsx` | NFT 卡片 |
-| `onhold/NftMining.jsx`、`onhold/NftGallery.jsx` | NFT 质押和列表 |
+| `onhold/NftMining.jsx`、`onhold/NftStaking.jsx` | 挖矿收益、质押 NFT 卡片和添加质押弹窗 |
 | `onhold/TokenMediaUpload.tsx` | 图片上传组件 |
 | `singlespark/` | 项目实际使用的 SingleSpark 共享组件库，通过 `@singlespark/component-atlas` 导入 |
 

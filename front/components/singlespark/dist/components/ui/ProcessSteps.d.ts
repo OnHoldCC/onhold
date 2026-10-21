@@ -7,7 +7,8 @@ export interface ProcessStep {
     elapsed?: string;
 }
 /** Read-only steps; the caller supplies progress from its own operation. */
-export declare function ProcessSteps({ steps, label }: {
+export declare function ProcessSteps({ steps, label, statusLabels }: {
     steps: readonly ProcessStep[];
+    statusLabels?: Partial<Record<ProcessStep['status'],string>>;
     label: string;
 }): import("react").JSX.Element;

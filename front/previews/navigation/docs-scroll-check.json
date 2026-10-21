@@ -1,0 +1,15 @@
+{
+  "before": {
+    "offset": "500.284",
+    "top": "2.5%"
+  },
+  "after": {
+    "offset": "321.912",
+    "top": "36.529%"
+  },
+  "end": {
+    "offset": "0",
+    "top": "97.5%"
+  },
+  "passed": true
+}

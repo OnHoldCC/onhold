@@ -4,6 +4,7 @@ import {getAddress} from 'ethers/address';
 import config from './chain-config.json';
 import {confirmMint,recordMint} from './mint-receipt.mjs';
 import {parseEth,safeUrl} from './market.mjs';
+import {pendingMining,rememberMining,confirmMining} from './mining-receipt.mjs';
 export const chain={id:97,hexId:'0x61',name:'BNB Smart Chain Testnet',rpc:'https://bsc-testnet-dataseed.bnbchain.org',explorer:'https://testnet.bscscan.com'};
 export function storedMarket() {
   try {const address=(window.ethereum?.isOnholdTestWallet?window.ethereum.onholdTestMarket:null)||(config.protocol==='nft-staking-v4'?config.marketAddress:null)||JSON.parse(localStorage.getItem('onhold.nftcontract.v4'))?.marketAddress;return address?getAddress(address):null;}catch{return null;}
@@ -42,6 +43,10 @@ export async function readMarket(address){
 export async function placeChainBid(address,slot,version,form) {
   const [{Contract},{abi},account]=await Promise.all([import('ethers'),import('./market-abi.mjs'),signer()]);const market=new Contract(address,abi,account);
   await checkWallet(account);
+  if(Array.from((form.tags||[]).join('')).length>10){
+    try{if(await market.MAX_TAGS()<BigInt(form.tags.length))throw Error();}catch{throw Error('当前广告合约尚未升级为 10 个标签，请等待合约更新后再提交。');}
+    await checkWallet(account);
+  }
   const transaction=await market.bid(slot,version,form.url.trim(),form.description.trim(),form.avatar.trim(),form.tags||[],{value:parseEth(form.amount)});
   await transaction.wait();return transaction.hash;
 }
@@ -90,22 +95,36 @@ export async function readMining(address,wallet){
   const value=await chainSnapshot(address,wallet);
   return {...value.mining,confirmedBlock:value.confirmed_block,asOf:value.as_of,stale:value.stale,estimated:true};
 }
-export async function miningAction(address,wallet,action,tokenId,expectedReferrer){
+export async function miningAction(address,wallet,action,tokenId,expectedReferrer,onProgress=()=>{}){
   if(!['stake','unstake','getReward','claimReferralRewards'].includes(action))throw Error('invalid_transaction');
-  const account=await signer();
-  if(getAddress(await account.getAddress())!==getAddress(wallet))throw Error('wallet_changed');
-  const [{Contract},{abi}]=await Promise.all([import('ethers'),import('./market-abi.mjs')]);
-  const contract=new Contract(address,abi,account);
-  if(action==='stake'){
-    if(!/^0x[0-9a-fA-F]{40}$/.test(expectedReferrer||''))throw Error('referral_binding_required');
-    if(expectedReferrer!=='0x0000000000000000000000000000000000000000'){
-      if(!await contract.referralBound(wallet))throw Error('referral_mint_required');
-      if(getAddress(await contract.referrerOf(wallet))!==getAddress(expectedReferrer))throw Error('referrer_already_bound');
+  const pending=pendingMining(address,wallet);if(pending){const cause=Error('mining_confirmation_pending');cause.pending=pending;throw cause;}
+  onProgress({stage:0});
+  let timer;
+  const {request,estimated,selected}=await Promise.race([(async()=>{
+    const account=await signer();
+    if(getAddress(await account.getAddress())!==getAddress(wallet))throw Error('wallet_changed');
+    const [{Contract},{abi}]=await Promise.all([import('ethers'),import('./market-abi.mjs')]);
+    const contract=new Contract(address,abi,account);
+    if(action==='stake'){
+      if(!/^0x[0-9a-fA-F]{40}$/.test(expectedReferrer||''))throw Error('referral_binding_required');
+      // shortcut: pre-mint stakes cannot preserve a nonzero inviter with the current entrypoint.
+      if(expectedReferrer!=='0x0000000000000000000000000000000000000000'){
+        if(!await contract.referralBound(wallet))throw Error('referral_mint_required');
+        if(getAddress(await contract.referrerOf(wallet))!==getAddress(expectedReferrer))throw Error('referrer_already_bound');
+      }
     }
-  }
-  const args=['getReward','claimReferralRewards'].includes(action)?[]:[tokenId];
-  const estimated=await contract[action].estimateGas(...args);
-  await checkWallet(account);
-  const tx=await contract[action](...args,{gasLimit:estimated*125n/100n});
-  await tx.wait(3);return tx.hash;
+    const args=['getReward','claimReferralRewards'].includes(action)?[]:[tokenId];
+    const estimated=await contract[action].estimateGas(...args);
+    const request=await contract[action].populateTransaction(...args);
+    await checkWallet(account);
+    return {request,estimated,selected:getWalletProvider()};
+  })(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('mining_prepare_timeout')),20000);})]).finally(()=>clearTimeout(timer));
+  if(selected!==getWalletProvider())throw Error('wallet_changed');
+  onProgress({stage:1});
+  // Capture the hash directly; BrowserProvider.sendTransaction also polls the wallet for it.
+  const hash=await selected.request({method:'eth_sendTransaction',params:[{from:wallet,to:address,data:request.data,gas:'0x'+(estimated*125n/100n).toString(16)}]});
+  if(!/^0x[0-9a-f]{64}$/i.test(hash))throw Error('invalid_transaction_receipt');
+  const sent={hash,market:address,wallet,action,tokenId,chainId:97,started:Date.now()};
+  rememberMining(sent);
+  return confirmMining(sent,onProgress);
 }

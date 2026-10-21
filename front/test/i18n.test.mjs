@@ -63,8 +63,27 @@ test('navigation labels are translated in every non-English locale',()=>{
 
 test('cURL guide names every required action in order',()=>{
  for(const guide of [steps,stepsEn]){
-  const flow=guide[1].instructions.join(' ');let last=-1;
+  assert.equal(guide[1].instructions.length,7);const flow=guide[1].instructions.join(' ');let last=-1;
   for(const action of ['F12','Network','F5','standing','Copy','Copy as cURL']){const index=flow.indexOf(action,last+1);assert.ok(index>last,action);last=index;}
-  assert.equal(guide[1].image,'guide/network-curl.png');assert.equal(guide[2].image,'guide/verify.png');
+  assert.equal(guide[1].image,'guide/network-curl.png');assert.equal(guide[2].image,'guide/paste-curl.png');
  }
 });
+
+test("NFT power labels use the requested terminology",()=>{assert.equal(translate("zh","nftWeight"),"挖矿算力");assert.equal(translate("en","nftWeight"),"Mining power");});
+
+test('claim tabs and mining tip are localized in every language',()=>{
+  for(const lang of supportedLocales)for(const key of ['mintTab','miningTab','inviteTab','faqTab','miningRules','myNfts'])assert.notEqual(translate(lang,key),key);
+  assert.deepEqual(['mintTab','miningTab','myNfts','inviteTab','faqTab'].map(key=>translate('zh',key)),['铸造 NFT','挖矿','我的 NFT','邀请','答疑']);
+});
+
+test('wallet guidance and official site description are localized',()=>{
+ for(const lang of supportedLocales)for(const key of ['noWalletDetected','walletBrowserHint','onholdDescription'])assert.notEqual(translate(lang,key),key);
+ assert.match(translate('en','onholdDescription'),/OnHold/);assert.match(translate('zh','onholdDescription'),/NFT/);
+});
+
+ test('account verification copy names no storage provider in any locale',()=>{
+   for(const lang of ['en','zh','ja','ko','es','fr','de','pt']){
+     assert.doesNotMatch(translate(lang,'sessionUse'),/Pons|IPFS|SingleSpark/i);
+     assert.doesNotMatch(translate(lang,'api.artwork_unavailable'),/Pons|IPFS|SingleSpark/i);
+   }
+ });

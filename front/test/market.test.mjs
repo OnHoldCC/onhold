@@ -52,18 +52,19 @@ test('curve uses exact auction boundaries, handles clock skew and the 1 wei floo
   assert.equal(after.price,400n);assert.equal(after.progress,0);assert.deepEqual(after.levels,[800n,400n,200n,100n,50n]);
   const late=auctionCurve(ad,now+86400000*400);assert.equal(late.price,1n);assert.equal(late.nextPrice,1n);assert.ok(late.position>=0&&late.position<=1);
 });
-test('ten Unicode tag characters in total, minimum bid and safe avatar metadata',()=>{
+test('up to ten tags with ten Unicode characters each, minimum bid and safe avatar metadata',()=>{
   const state=seedMarket(now);
   for(const tag of ['一二三四五六七八九十','😀'.repeat(10),'Claude API']) assert.deepEqual(placeBid(state,0,{...form,tags:[tag]},now).ads[0].tags,[tag]);
-  for(const tags of [['一二三四五六七八九十多'],['😀'.repeat(11)],['Claude','Claude'],[''],['123456','12345']]) assert.throws(()=>placeBid(state,0,{...form,tags},now),/10/);
+  for(const tags of [['一二三四五六七八九十多'],['😀'.repeat(11)],['Claude','Claude'],[''],Array.from({length:11},(_,i)=>String(i))]) assert.throws(()=>placeBid(state,0,{...form,tags},now),/10/);
   assert.throws(()=>placeBid(state,0,{...form,description:'😀'.repeat(81)},now),/1–80/);
   assert.throws(()=>placeBid(state,0,{...form,avatar:'javascript:alert(1)'},now),/头像/);
-  assert.throws(()=>placeBid(state,0,{...form,amount:'0.009'},now),/0.01/);
+  assert.throws(()=>placeBid(state,0,{...form,amount:'0.0009'},now),/0.001/);
   const legacy=seedMarket(now);for(const ad of legacy.ads){delete ad.technology;delete ad.avatar;}
   assert.deepEqual(loadMarket({getItem:()=>JSON.stringify(legacy)}),legacy);
   const valid=placeBid(state,0,{...form,description:'😀'.repeat(80)},now);
   assert.deepEqual(loadMarket({getItem:()=>JSON.stringify(valid)}),valid);
-  const invalid={...valid,ads:valid.ads.map(ad=>({...ad,tags:['123456','78901']}))};
+  const multi=Array.from({length:10},(_,i)=>`${i}😀😀😀😀😀😀😀😀😀`);assert.deepEqual(placeBid(state,0,{...form,tags:multi},now).ads[0].tags,multi);assert.deepEqual(placeBid(state,0,{...form,tags:['Claude','Gemini']},now).ads[0].tags,['Claude','Gemini']);
+  const invalid={...valid,ads:valid.ads.map(ad=>({...ad,tags:['12345678901']}))};
   assert.equal(loadMarket({getItem:()=>JSON.stringify(invalid)}).ads[0].title,'LOOP');
 });
 
@@ -72,14 +73,14 @@ test('replacement bids include ten percent rounded up, then the minimum floor',(
  const state=seedMarket(now);const required=requiredBid(state.ads[0],now);
  assert.throws(()=>placeBid(state,0,{...form,amount:formatEth(required-1n)},now),/10%/);
  assert.equal(placeBid(state,0,{...form,amount:formatEth(required)},now).ads[0].bid,required.toString());
- assert.equal(requiredBid({bid:'1',startedAt:now},now),10000000000000000n);
+ assert.equal(requiredBid({bid:'1',startedAt:now},now),1000000000000000n);
 });
 
 test('Mock minimum comes from the indexed deployment and does not change the production floor',()=>{
  const ad={bid:'0',startedAt:0};
- assert.equal(requiredBid(ad),10000000000000000n);
+ assert.equal(requiredBid(ad),1000000000000000n);
  assert.equal(requiredBid({...ad,minimumBid:'100000000000000'}),100000000000000n);
- assert.equal(requiredBid({...ad,minimumBid:'invalid'}),10000000000000000n);
+ assert.equal(requiredBid({...ad,minimumBid:'invalid'}),1000000000000000n);
 });
 
 test('testnet 60-second prices, required bids and curve use the contract period',()=>{

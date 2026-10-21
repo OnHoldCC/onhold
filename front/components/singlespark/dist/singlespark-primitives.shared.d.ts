@@ -39,6 +39,7 @@ export interface SingleSparkAccordionProps {
     className?: string;
 }
 export interface SingleSparkListItemProps {
+    children?: ReactNode;
     selected?: boolean;
     disabled?: boolean;
     title?: ReactNode;

@@ -1,0 +1,33 @@
+{
+  "curves": [
+    {
+      "clip": "inset(0px 40.0087% 0px 0px)",
+      "iterations": "infinite",
+      "name": "uh-history-reveal",
+      "path": "M 0 126 C 105 126 105 126 210 126 C 315 126 315 126 420 126"
+    },
+    {
+      "clip": "inset(0px 47.9774% 0px 0px)",
+      "iterations": "infinite",
+      "name": "uh-history-reveal",
+      "path": "M 0 126 C 105 126 105 126 210 126 C 315 126 315 126 420 126"
+    }
+  ],
+  "digits": [
+    {
+      "iterations": "infinite",
+      "name": "onhold-summary-roll",
+      "transform": "matrix(1, 0, 0, 1, 0, 0)"
+    },
+    {
+      "iterations": "infinite",
+      "name": "onhold-summary-roll",
+      "transform": "matrix(1, 0, 0, 1, 0, 0)"
+    }
+  ],
+  "url": "https://onhold.cc/",
+  "values": [
+    "0 $Claude",
+    "0 $Claude"
+  ]
+}

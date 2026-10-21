@@ -1,4 +1,13 @@
 export const miningPeriods=['1h','4h','1d','7d','30d','90d'];
+export function summaryHistory(rows,metric,current){
+  // Old snapshots have no financial totals; never backfill them with invented zeroes.
+  const history=rows.flatMap(row=>{
+    const value=row.financial?.[metric];
+    return typeof value==='string'&&/^\d+\.\d{18}$/.test(value)&&Number.isFinite(Number(value))?[Number(value)]:[];
+  });
+  if(current!=null&&String(current).trim()!==''&&Number.isFinite(Number(current))&&Number(current)>=0&&history.at(-1)!==Number(current))history.push(Number(current));
+  return history;
+}
 export async function loadMiningStats(period,signal){
   if(!miningPeriods.includes(period))throw Error('invalid_period');
   const response=await fetch(`/api/mining-stats?period=${period}`,{cache:'no-store',credentials:'omit',signal:signal?AbortSignal.any([signal,AbortSignal.timeout(5000)]):AbortSignal.timeout(5000)});

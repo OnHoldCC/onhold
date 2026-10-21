@@ -1,6 +1,6 @@
 use crate::{claims::rpc, crypto, pg, ApiError, AppState};
 use axum::{
-    extract::{Query, State},
+    extract::{Path, Query, State},
     http::{header, StatusCode},
     Json,
 };
@@ -156,6 +156,8 @@ struct Ad {
     id: u8,
     version: String,
     advertiser: String,
+    #[serde(default)]
+    tx_hash: Option<String>,
     bid: String,
     started_at: u64,
     ended_at: Option<u64>,
@@ -375,6 +377,7 @@ impl Snapshot {
                 id: slot,
                 version: small(arg(2)?)?.to_string(),
                 advertiser: address(data, 0)?,
+                tx_hash: log["transactionHash"].as_str().map(String::from),
                 bid: decimal(uint(word(data, 1)?)?)?,
                 started_at: started,
                 ended_at: None,
@@ -831,10 +834,59 @@ pub struct ReadRequest {
     market: Option<String>,
     wallet: Option<String>,
 }
+pub async fn transaction_status(State(state):State<AppState>,Path(hash):Path<String>) -> Result<impl axum::response::IntoResponse,ApiError> {
+    if !hash.starts_with("0x") || crypto::bytes(&hash,32).is_err() { return Err(ApiError(StatusCode::BAD_REQUEST,"invalid_transaction")); }
+    let tracker=state.mining.as_ref().ok_or(ApiError(StatusCode::SERVICE_UNAVAILABLE,"chain_not_configured"))?;
+    let confirmed=health(&state)?["confirmed_block"].as_u64().unwrap_or(0);
+    // Confirmed market events survive RPC nodes returning null for old receipts.
+    let topics:Vec<String>=["PassStaked(address,uint256,uint256)","PassUnstaked(address,uint256,uint256)","RewardPaid(address,uint256)","ReferralPaid(address,uint256)"].iter().map(|signature|crypto::hex(&crypto::keccak(signature))).collect();
+    let store=state.pg.as_ref().ok_or_else(pg::error)?;
+    let client=store.read.get().await.map_err(|_|pg::error())?;
+    let indexed=client.query_opt("SELECT block_number,data->'topics'->>1 FROM chain_events WHERE market=$1 AND tx_hash=$2 AND block_number<=$3 AND data->'topics'->>0=ANY($4) ORDER BY log_index LIMIT 1",&[&tracker.market,&hash.to_lowercase(),&(confirmed as i64),&topics]).await.map_err(|_|pg::error())?;
+    drop(client);
+    if let Some(row)=indexed {
+        let actor:String=row.get(1);
+        let from=crypto::address(&format!("0x{}",actor.get(26..).ok_or_else(invalid)?)).map_err(|_|invalid())?;
+        return Ok(([(header::CACHE_CONTROL,"no-store")],Json(json!({"hash":hash,"chainId":97,"market":tracker.market,"status":"confirmed","blockNumber":row.get::<_,i64>(0),"confirmedBlock":confirmed,"from":from}))));
+    }
+    let receipt=tokio::time::timeout(std::time::Duration::from_secs(5),rpc(&state,"eth_getTransactionReceipt",json!([hash]))).await.map_err(|_|ApiError(StatusCode::SERVICE_UNAVAILABLE,"transaction_status_unavailable"))??;
+    let mut value=json!({"hash":hash,"chainId":97,"market":tracker.market,"status":"pending"});
+    if !receipt.is_null() {
+        if receipt["transactionHash"].as_str().map(str::to_lowercase)!=Some(hash.to_lowercase()) || receipt["to"].as_str().map(str::to_lowercase)!=Some(tracker.market.clone()) { return Err(ApiError(StatusCode::BAD_REQUEST,"invalid_transaction")); }
+        let block=quantity(&receipt["blockNumber"])?;
+        let confirmed=health(&state)?["confirmed_block"].as_u64().unwrap_or(0);
+        let status=match receipt["status"].as_str() { Some("0x0")=>"failed",Some("0x1") if confirmed>=block=>"confirmed",Some("0x1")=>"confirming",_=>return Err(invalid()) };
+        value["status"]=json!(status);value["blockNumber"]=json!(block);value["confirmedBlock"]=json!(confirmed);value["from"]=receipt["from"].clone();
+    }
+    Ok(([(header::CACHE_CONTROL,"no-store")],Json(value)))
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AdsQuery { page: Option<u32> }
+pub async fn ads(State(state): State<AppState>, Query(query): Query<AdsQuery>) -> Result<impl axum::response::IntoResponse, ApiError> {
+    let requested=query.page.unwrap_or(1);
+    if requested==0 { return Err(ApiError(StatusCode::BAD_REQUEST,"invalid_page")); }
+    let Some(tracker)=state.mining.as_ref() else { return Ok(([(header::CACHE_CONTROL,"no-store")],Json(json!({"configured":false,"items":[]})))); };
+    let snapshot=crate::analytics::read(&state).await?.0;
+    let counts=json!(snapshot.campaigns.iter().filter(|((market,_,_),_)|market==&tracker.market).map(|((_,slot,version),counts)|json!({"slot":slot,"version":version,"clicks":counts.clicks,"uv":counts.uv})).collect::<Vec<_>>());
+    let store=state.pg.as_ref().ok_or_else(pg::error)?;
+    let mut client=store.read.get().await.map_err(|_|pg::error())?;
+    let tx=client.build_transaction().isolation_level(tokio_postgres::IsolationLevel::RepeatableRead).read_only(true).start().await.map_err(|_|pg::error())?;
+    let total:i64=tx.query_one("SELECT count(*) FROM chain_ads WHERE market=$1",&[&tracker.market]).await.map_err(|_|pg::error())?.get(0);
+    let pages=((total+9)/10).max(1);let page=(requested as i64).min(pages);let offset=(page-1)*10;
+    let signature=crypto::hex(&crypto::keccak("AdPublished(uint8,uint256,address,uint256,uint256,string,string,string,string[])"));
+    // Resolve legacy projections from indexed events; new ads persist their publication hash directly.
+    let rows=tx.query("WITH counts AS (SELECT * FROM jsonb_to_recordset($2) AS c(slot smallint,version bigint,clicks bigint,uv bigint)) SELECT a.data,COALESCE(c.clicks,0),COALESCE(c.uv,0),COALESCE(a.data->>'txHash',(SELECT e.tx_hash FROM chain_events e WHERE e.market=a.market AND e.data->'topics'->>0=$4 AND e.data->'topics'->>1='0x'||lpad(to_hex(a.slot::int),64,'0') AND e.data->'topics'->>2='0x'||lpad(to_hex(a.version),64,'0') ORDER BY e.block_number DESC,e.log_index DESC LIMIT 1)) FROM chain_ads a LEFT JOIN counts c ON c.slot=a.slot AND c.version=a.version WHERE a.market=$1 ORDER BY COALESCE(c.clicks,0) DESC,a.started_at DESC,a.slot,a.version DESC LIMIT 10 OFFSET $3",&[&tracker.market,&counts,&offset,&signature]).await.map_err(|_|pg::error())?;
+    let items=rows.into_iter().map(|row|{let mut ad:Value=row.get(0);ad["clicks"]=json!(row.get::<_,i64>(1));ad["uv"]=json!(row.get::<_,i64>(2));ad["txHash"]=json!(row.get::<_,Option<String>>(3));ad}).collect::<Vec<_>>();
+    tx.commit().await.map_err(|_|pg::error())?;
+    Ok(([(header::CACHE_CONTROL,"no-store")],Json(json!({"configured":true,"market":tracker.market,"page":page,"pages":pages,"pageSize":10,"total":total,"updatedAt":snapshot.stats.updated_at,"items":items}))))
+}
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct GalleryRequest {
     market: Option<String>,
+    wallet: Option<String>,
+    position: Option<String>,
     tier: Option<String>,
     page: Option<u32>,
     page_size: Option<u32>,
@@ -844,11 +896,15 @@ pub async fn gallery(
     Query(query): Query<GalleryRequest>,
 ) -> Result<impl axum::response::IntoResponse, ApiError> {
     let tier: i16 = match query.tier.as_deref().unwrap_or("all") {
-        "all" => 0,
+        "all" => -1,
+        "free" => 0,
         "pro" => 1,
         "max" => 2,
         _ => return Err(ApiError(StatusCode::BAD_REQUEST, "invalid_tier")),
     };
+    let wallet=query.wallet.as_deref().map(crypto::address).transpose().map_err(|_|ApiError(StatusCode::BAD_REQUEST,"invalid_wallet"))?;
+    let position=query.position.as_deref().unwrap_or("");
+    if wallet.is_some()!=query.position.is_some() || !matches!(position,""|"owned"|"staked") {return Err(ApiError(StatusCode::BAD_REQUEST,"invalid_position"));}
     let requested = query.page.unwrap_or(1);
     let size = query.page_size.unwrap_or(12);
     if requested == 0 || size == 0 || size > 24 {
@@ -878,8 +934,8 @@ pub async fn gallery(
         .map_err(|_| pg::error())?;
     let total: i64 = tx
         .query_one(
-            "SELECT count(*) FROM chain_nfts WHERE market=$1 AND ($2::smallint=0 OR tier=$2)",
-            &[&tracker.market, &tier],
+            "SELECT count(*) FROM chain_nfts WHERE market=$1 AND ($2::smallint=-1 OR tier=$2) AND ($3::text IS NULL OR ($4::text='staked' AND staker=$3) OR ($4::text='owned' AND owner=$3 AND staker IS NULL))",
+            &[&tracker.market, &tier, &wallet, &position],
         )
         .await
         .map_err(|_| pg::error())?
@@ -887,8 +943,8 @@ pub async fn gallery(
     let pages = ((total + size as i64 - 1) / size as i64).max(1);
     let page = (requested as i64).min(pages);
     let offset = (page - 1) * size as i64;
-    let rows=tx.query("SELECT token_id,tier,record,image,owner,staker FROM chain_nfts WHERE market=$1 AND ($2::smallint=0 OR tier=$2) ORDER BY token_id DESC LIMIT $3 OFFSET $4",&[&tracker.market,&tier,&(size as i64),&offset]).await.map_err(|_|pg::error())?;
-    let items=rows.into_iter().map(|row|json!({"id":row.get::<_,i64>(0).to_string(),"tier":row.get::<_,i16>(1),"record":row.get::<_,Option<Value>>(2),"image":row.get::<_,Option<String>>(3),"owner":row.get::<_,String>(4),"staked":row.get::<_,Option<String>>(5).is_some()})).collect::<Vec<_>>();
+    let rows=tx.query("SELECT token_id,tier,record,image,owner,staker FROM chain_nfts WHERE market=$1 AND ($2::smallint=-1 OR tier=$2) AND ($3::text IS NULL OR ($4::text='staked' AND staker=$3) OR ($4::text='owned' AND owner=$3 AND staker IS NULL)) ORDER BY token_id DESC LIMIT $5 OFFSET $6",&[&tracker.market,&tier,&wallet,&position,&(size as i64),&offset]).await.map_err(|_|pg::error())?;
+    let items=rows.into_iter().map(|row|json!({"id":row.get::<_,i64>(0).to_string(),"tier":row.get::<_,i16>(1),"record":row.get::<_,Option<Value>>(2),"image":row.get::<_,Option<String>>(3),"owner":row.get::<_,String>(4),"staked":row.get::<_,Option<String>>(5).is_some(),"staker":row.get::<_,Option<String>>(5)})).collect::<Vec<_>>();
     let cursor = tx
         .query_opt(
             "SELECT data FROM chain_state WHERE market=$1",
@@ -902,7 +958,7 @@ pub async fn gallery(
     Ok((
         [(header::CACHE_CONTROL, "no-store")],
         Json(
-            json!({"configured":true,"available":cursor.as_ref().and_then(|v|v["block"].as_u64()).is_some_and(|block|block>=tracker.start),"stale":!cache.connected||cache.syncing||now().saturating_sub(cache.seen)>=60||now().saturating_sub(cursor.as_ref().and_then(|v|v["time"].as_u64()).unwrap_or(0))>=60,"connected":cache.connected,"syncing":cache.syncing,"storage":"postgresql","market":tracker.market,"tier":query.tier.unwrap_or_else(||"all".into()),"page":page,"page_size":size,"total":total,"pages":pages,"confirmed_block":cursor.as_ref().and_then(|v|v["block"].as_u64()),"items":items}),
+            json!({"configured":true,"available":cursor.as_ref().and_then(|v|v["block"].as_u64()).is_some_and(|block|block>=tracker.start),"stale":!cache.connected||cache.syncing||now().saturating_sub(cache.seen)>=60||now().saturating_sub(cursor.as_ref().and_then(|v|v["time"].as_u64()).unwrap_or(0))>=60,"connected":cache.connected,"syncing":cache.syncing,"storage":"postgresql","market":tracker.market,"wallet":wallet,"position":query.position,"tier":query.tier.unwrap_or_else(||"all".into()),"page":page,"page_size":size,"total":total,"pages":pages,"confirmed_block":cursor.as_ref().and_then(|v|v["block"].as_u64()),"items":items}),
         ),
     ))
 }
@@ -955,19 +1011,14 @@ pub async fn snapshot(
     for ad in ads.iter_mut().chain(history.iter_mut()) {
         ad["priceIntervalSeconds"] = json!(data.ad_price_interval.unwrap_or(86400));
     }
-    let telemetry = crate::analytics::cached(&state)?;
+    let telemetry = crate::analytics::read(&state).await?.0;
     crate::analytics::apply_campaigns(&telemetry, &tracker.market, &mut ads);
     crate::analytics::apply_campaigns(&telemetry, &tracker.market, &mut history);
     let mut mining = data.mining(wallet.as_deref())?;
     mining["network"] = cached_network(&state).await.and_then(|v| v.get("latest").cloned()).unwrap_or(Value::Null);
     mining["ownedCount"] = json!(owned);
     mining["stakedCount"] = json!(staked);
-    let burned = if let Some(burn) = &state.burn {
-        let client = store.read.get().await.map_err(|_| pg::error())?;
-        client.query_opt("SELECT data->'totals'->'burned' FROM buyback_state WHERE vault=$1 AND (data->>'confirmed_block')::bigint > 0 AND data->'totals'->'burned' IS NOT NULL", &[&burn.vault]).await.map_err(|_| pg::error())?.map(|row|row.get::<_,Value>(0)).unwrap_or(Value::Null)
-    } else {
-        Value::Null
-    };
+    let burned = burned_total(&state).await?;
     let client = store.read.get().await.map_err(|_| pg::error())?;
     let claim_rows = client.query(
         "SELECT data FROM chain_events WHERE market=$1 AND block_number<=$2 AND data->'topics'->>0 IN ($3,$4) ORDER BY block_number DESC,log_index DESC LIMIT 8",
@@ -1077,7 +1128,8 @@ async fn apply_logs(
             let result = rpc(
                 state,
                 "eth_call",
-                json!([{"to":tracker.market,"data":data},format!("0x{to:x}")]),
+                // Pass metadata is immutable; reading it never needs an archival state node.
+                json!([{"to":tracker.market,"data":data},"latest"]),
             )
             .await?;
             pass.image = Some(crate::artwork::image_from_result(&result)?);
@@ -1137,13 +1189,20 @@ pub async fn check(state: &AppState) -> Result<(), ApiError> {
             return Err(ApiError(StatusCode::BAD_GATEWAY, "protocol_mismatch"));
         }
         // Constructor logs survive state pruning and bind the configured deployment block.
-        let logs = rpc(
+        let mut logs = rpc(
             state,
             "eth_getLogs",
             json!([{"address":tracker.market,"fromBlock":format!("0x{:x}",tracker.start),"toBlock":format!("0x{:x}",tracker.start),"topics":[crypto::hex(&crypto::keccak("OwnershipTransferred(address,address)")),format!("0x{}",zero())]}]),
         )
         .await?;
         let header = rpc(state, "eth_getBlockByNumber", json!([format!("0x{:x}",tracker.start),false])).await?;
+        if logs.as_array().is_some_and(Vec::is_empty) {
+            // Reuse the indexed constructor event, still binding it to a fresh canonical header.
+            let store=state.pg.as_ref().ok_or_else(pg::error)?;
+            let client=store.read.get().await.map_err(|_|pg::error())?;
+            let rows=client.query("SELECT data FROM chain_events WHERE market=$1 AND block_number=$2 AND data->'topics'->>0=$3 AND data->'topics'->>1=$4 ORDER BY log_index",&[&tracker.market,&(tracker.start as i64),&crypto::hex(&crypto::keccak("OwnershipTransferred(address,address)")),&format!("0x{}",zero())]).await.map_err(|_|pg::error())?;
+            logs=json!(rows.iter().map(|row|row.get::<_,Value>(0)).collect::<Vec<_>>());
+        }
         validate_deployment(&logs, &tracker.market, tracker.start, &header)?;
     }
     Ok(())
@@ -1204,9 +1263,16 @@ const NETWORK_PERIODS: [(&str, u64, u64); 6] = [
     ("1h", 3600, 900), ("4h", 14400, 900), ("1d", 86400, 900),
     ("7d", 604800, 3600), ("30d", 2592000, 14400), ("90d", 7776000, 43200),
 ];
+async fn burned_total(state: &AppState) -> Result<Value, ApiError> {
+    let Some(burn) = &state.burn else { return Ok(Value::Null); };
+    let store = state.pg.as_ref().ok_or_else(pg::error)?;
+    let client = store.read.get().await.map_err(|_| pg::error())?;
+    Ok(client.query_opt("SELECT data->'totals'->'burned' FROM buyback_state WHERE vault=$1 AND (data->>'confirmed_block')::bigint > 0 AND data->'totals'->'burned' IS NOT NULL", &[&burn.vault]).await.map_err(|_| pg::error())?.map(|row|row.get::<_,Value>(0)).unwrap_or(Value::Null))
+}
 fn network_sample(model: &Snapshot, at: u64) -> Result<Value, ApiError> {
     let daily = model.daily_emission()?;
     Ok(json!({"sampledAt":at,"asOf":model.time,"block":model.block,"totalWeight":model.total_weight,
+        "financial":{"claimed":amount(uint(&model.claimed)?)?,"burned":null},
         "daily":amount(U256::from_u128(daily))?,
         "perWeightDaily":amount(U256::from_u128(if model.total_weight==0 {0} else {daily/model.total_weight as u128}))?}))
 }
@@ -1258,7 +1324,7 @@ async fn refresh_network(state: &AppState) -> Result<(), ApiError> {
     let Some(tracker) = &state.mining else { return Ok(()); };
     let at = now();
     if let Some(value) = cached_network(state).await {
-        let fresh = at.saturating_sub(value["latest"]["sampledAt"].as_u64().unwrap_or(0)) < 900;
+        let fresh = value["latest"]["financial"].is_object() && at.saturating_sub(value["latest"]["sampledAt"].as_u64().unwrap_or(0)) < 900;
         tracker.cache.lock().map_err(|_| invalid())?.network = Some(value);
         if fresh { return Ok(()); }
     }
@@ -1267,7 +1333,8 @@ async fn refresh_network(state: &AppState) -> Result<(), ApiError> {
         if !cache.connected || cache.syncing || at.saturating_sub(cache.snapshot.time) > 60 { return Ok(()); }
         cache.snapshot.clone()
     };
-    let latest = network_sample(&model, at)?;
+    let mut latest = network_sample(&model, at)?;
+    latest["financial"]["burned"] = burned_total(state).await?;
     let store = state.pg.as_ref().ok_or_else(pg::error)?;
     store.write.lock().await.execute("INSERT INTO mining_samples(market,sampled_at,data) VALUES($1,$2,$3) ON CONFLICT(market,sampled_at) DO UPDATE SET data=excluded.data",
         &[&tracker.market,&(at as i64),&latest]).await.map_err(|_| pg::error())?;
@@ -1334,6 +1401,10 @@ mod tests {
         let account=format!("0x{}", "11".repeat(20));
         let mut wallet=Wallet::default();wallet.weight=1;s.wallets.insert(account.clone(),wallet);
         let sample=network_sample(&s,90000).unwrap();
+        assert_eq!(sample["financial"]["claimed"],"0.000000000000000000");
+        assert!(sample["financial"]["burned"].is_null());
+        s.claimed=hex(U256::from_u128(42_000_000_000_000_000_000));
+        assert_eq!(network_sample(&s,90000).unwrap()["financial"]["claimed"],"42.000000000000000000");
         assert_eq!(sample["totalWeight"],4);
         assert_eq!(sample["daily"],s.mining(Some(&account)).unwrap()["daily"]);
         assert_eq!(sample["perWeightDaily"],amount(U256::from_u128(s.daily_emission().unwrap()/4)).unwrap());

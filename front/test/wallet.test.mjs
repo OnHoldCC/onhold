@@ -63,6 +63,20 @@ test('rejection and malformed provider responses never establish a connection',a
   wallet.request=async()=>['not-an-address'];s.retry();await s.authorize('MetaMask');assert.equal(s.getSnapshot().error,'walletError');assert.equal(getWalletProvider(),null);
   wallet.request=async({method})=>method==='eth_requestAccounts'?[A]:'0x61trailing';s.retry();await s.authorize('MetaMask');assert.equal(getWalletProvider(),null);s.stop();
 });
+test('dedicated OKX and Binance extension providers remain selectable beside MetaMask without requesting other wallets',async()=>{
+  const meta=Object.assign(new Wallet(A),{isMetaMask:true}),okx=new Wallet(B),binance=new Wallet(A);
+  const session=setup(meta);window.okxwallet=okx;window.binancew3w={ethereum:binance};window.BinanceChain=binance;
+  try{
+    session.connect();assert.deepEqual(session.getSnapshot().options.map(x=>x.kind),['MetaMask','OKX Wallet','Binance Wallet']);
+    assert.deepEqual(meta.calls,[]);assert.deepEqual(okx.calls,[]);assert.deepEqual(binance.calls,[]);
+    await session.authorize('OKX Wallet');assert.equal(getWalletProvider(),okx);assert.equal(session.getSnapshot().address,B);assert.deepEqual(meta.calls,[]);assert.deepEqual(binance.calls,[]);
+    session.disconnect();await session.authorize('Binance Wallet');assert.equal(getWalletProvider(),binance);assert.deepEqual(meta.calls,[]);
+    delete window.ethereum;assert.equal(listInjectedWallets().filter(x=>x.kind==='OKX Wallet').length,1);assert.equal(listInjectedWallets().filter(x=>x.kind==='Binance Wallet').length,1);
+  }finally{session.disconnect();session.stop();delete window.okxwallet;delete window.binancew3w;delete window.BinanceChain;}
+});
+test('no injected provider remains unavailable without asking another wallet for accounts',async()=>{
+ const session=setup();session.connect();assert.deepEqual(session.getSnapshot().options,[]);assert.equal(session.getSnapshot().open,true);await session.authorize('Browser Wallet');assert.equal(session.getSnapshot().error,'walletMissing');assert.equal(session.getSnapshot().address,'');session.stop();
+});
 test('EIP-6963 discovery updates after start, deduplicates providers and filters remote/script icons',()=>{
   const s=setup();const wallet=Object.assign(new Wallet(),{isBinance:true});window.ethereum={providers:[wallet]};
   const event=new Event('eip6963:announceProvider');event.detail={provider:wallet,info:{uuid:'wallet-test',rdns:'com.binance.wallet',name:'Binance Wallet',icon:'javascript:alert(1)'}};window.dispatchEvent(event);
@@ -89,4 +103,13 @@ test('network switch adds only unknown chain 4902, switches again, and verifies 
 test('account changed while the binding signature was pending cannot publish a stale connected account',async()=>{
  const wallet=Object.assign(new Wallet(A),{isMetaMask:true});store.clear();clearActiveInjectedWallet();window.ethereum=wallet;
  const session=createWalletSession(async()=>{wallet.address=B;return {referralBound:true,referralCode:'',referrer:'0x0000000000000000000000000000000000000000'};});session.start();await session.authorize('MetaMask');assert.equal(session.getSnapshot().address,'');assert.equal(session.getSnapshot().error,'api.wallet_changed');assert.equal(getWalletProvider(),null);session.stop();
+});
+
+
+test('wallet fallback assets are standalone SVGs that browsers can decode',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ for(const name of ['browser','metamask','okx','binance','coinbase']){
+  const svg=await readFile(new URL('../components/singlespark/assets/singlespark/wallets/'+name+'.svg',import.meta.url),'utf8');
+  assert.match(svg,/<svg[^>]+xmlns="http:\/\/www.w3.org\/2000\/svg"/,name);
+ }
 });

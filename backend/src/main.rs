@@ -1,4 +1,5 @@
 mod analytics;
+mod analytics_cache;
 mod artwork;
 mod burn;
 mod chain_stream;
@@ -115,21 +116,22 @@ impl Event {
         Ok(())
     }
 }
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Deserialize)]
 struct DayCount {
     date: String,
     clicks: u64,
 }
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Deserialize)]
 struct Stats {
     page_views: u64,
+    page_uv: u64,
     ad_clicks: u64,
     wallet_connections: u64,
     clicks_by_site: [u64; 6],
     uv_by_site: [u64; 6],
     updated_at: u64,
     daily_clicks: Vec<DayCount>,
-    timezone: &'static str,
+    timezone: String,
     financial: Value,
 }
 fn init_db(connection: &Connection) -> rusqlite::Result<()> {
@@ -147,7 +149,7 @@ fn init_db(connection: &Connection) -> rusqlite::Result<()> {
         CREATE INDEX IF NOT EXISTS events_created ON events(created_at);
         CREATE TABLE IF NOT EXISTS request_limits(kind TEXT NOT NULL, created_at INTEGER NOT NULL DEFAULT (unixepoch()));
         CREATE INDEX IF NOT EXISTS request_limits_created ON request_limits(created_at);
-        CREATE TABLE IF NOT EXISTS verified_accounts(nullifier TEXT PRIMARY KEY,tier INTEGER NOT NULL CHECK(tier IN (1,2)),base_tokens INTEGER NOT NULL,banned_at TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS verified_accounts(nullifier TEXT PRIMARY KEY,tier INTEGER NOT NULL CHECK(tier IN (0,1,2)),base_tokens INTEGER NOT NULL,banned_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS verification_sessions(token_hash TEXT PRIMARY KEY,nullifier TEXT NOT NULL,expires_at INTEGER NOT NULL);
         CREATE TABLE IF NOT EXISTS nft_artwork(record_hash TEXT PRIMARY KEY,image TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS verified_nft_records(token_hash TEXT PRIMARY KEY,record TEXT NOT NULL);
@@ -156,11 +158,17 @@ fn init_db(connection: &Connection) -> rusqlite::Result<()> {
         CREATE TABLE IF NOT EXISTS referral_challenges(nonce TEXT PRIMARY KEY,market TEXT NOT NULL,wallet TEXT NOT NULL,referrer TEXT NOT NULL,expires_at INTEGER NOT NULL);
         CREATE INDEX IF NOT EXISTS referral_challenges_expiry ON referral_challenges(expires_at);
         CREATE TABLE IF NOT EXISTS invites(code TEXT PRIMARY KEY,wallet TEXT NOT NULL UNIQUE);
-        CREATE TABLE IF NOT EXISTS nft_mints(nullifier TEXT PRIMARY KEY,wallet TEXT NOT NULL,tier INTEGER NOT NULL,referrer TEXT NOT NULL,deadline INTEGER NOT NULL,status TEXT NOT NULL CHECK(status IN ('authorized','confirmed')),tx_hash TEXT UNIQUE,token_id TEXT);
+        CREATE TABLE IF NOT EXISTS nft_mints(nullifier TEXT NOT NULL,wallet TEXT NOT NULL,tier INTEGER NOT NULL,referrer TEXT NOT NULL,deadline INTEGER NOT NULL,status TEXT NOT NULL CHECK(status IN ('authorized','confirmed')),tx_hash TEXT UNIQUE,token_id TEXT,market TEXT NOT NULL DEFAULT '',PRIMARY KEY(market,nullifier));
         CREATE TABLE IF NOT EXISTS chain_snapshots(market TEXT PRIMARY KEY,snapshot TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS burn_cursor(vault TEXT PRIMARY KEY,next_block INTEGER NOT NULL);
         CREATE TABLE IF NOT EXISTS burn_events(vault TEXT NOT NULL,tx_hash TEXT NOT NULL,log_index INTEGER NOT NULL,block INTEGER NOT NULL,spent TEXT NOT NULL,burned TEXT NOT NULL,PRIMARY KEY(vault,tx_hash,log_index));",
     )?;
+    let account_schema:String=connection.query_row("SELECT sql FROM sqlite_master WHERE name='verified_accounts'",[],|row|row.get(0))?;
+    if !account_schema.contains("(0,1,2)") {
+        connection.execute_batch("BEGIN IMMEDIATE; ALTER TABLE verified_accounts RENAME TO old_verified_accounts;
+        CREATE TABLE verified_accounts(nullifier TEXT PRIMARY KEY,tier INTEGER NOT NULL CHECK(tier IN (0,1,2)),base_tokens INTEGER NOT NULL,banned_at TEXT NOT NULL);
+        INSERT INTO verified_accounts SELECT * FROM old_verified_accounts; DROP TABLE old_verified_accounts; COMMIT;")?;
+    }
     let has_artwork: bool = connection.query_row(
         "SELECT COUNT(*)>0 FROM pragma_table_info('verified_nft_records') WHERE name='image'",
         [],
@@ -174,10 +182,12 @@ fn init_db(connection: &Connection) -> rusqlite::Result<()> {
         [],
         |r| r.get(0),
     )?;
-    if mint_schema.contains("wallet TEXT NOT NULL UNIQUE") {
+    if !mint_schema.contains("PRIMARY KEY(market,nullifier)") {
+        let legacy_market=std::env::var("ONHOLD_PREVIOUS_MARKET_ADDRESS").or_else(|_|std::env::var("ONHOLD_MARKET_ADDRESS")).unwrap_or_default().to_lowercase();
         connection.execute_batch("BEGIN IMMEDIATE; ALTER TABLE nft_mints RENAME TO old_nft_mints;
-        CREATE TABLE nft_mints(nullifier TEXT PRIMARY KEY,wallet TEXT NOT NULL,tier INTEGER NOT NULL,referrer TEXT NOT NULL,deadline INTEGER NOT NULL,status TEXT NOT NULL CHECK(status IN ('authorized','confirmed')),tx_hash TEXT UNIQUE,token_id TEXT);
-        INSERT INTO nft_mints SELECT * FROM old_nft_mints; DROP TABLE old_nft_mints; COMMIT;")?;
+        CREATE TABLE nft_mints(nullifier TEXT NOT NULL,wallet TEXT NOT NULL,tier INTEGER NOT NULL,referrer TEXT NOT NULL,deadline INTEGER NOT NULL,status TEXT NOT NULL CHECK(status IN ('authorized','confirmed')),tx_hash TEXT UNIQUE,token_id TEXT,market TEXT NOT NULL DEFAULT '',PRIMARY KEY(market,nullifier));")?;
+        connection.execute("INSERT INTO nft_mints SELECT nullifier,wallet,tier,referrer,deadline,status,tx_hash,token_id,?1 FROM old_nft_mints",[legacy_market])?;
+        connection.execute_batch("DROP TABLE old_nft_mints; COMMIT;")?;
     }
     connection.execute(
         "CREATE INDEX IF NOT EXISTS nft_mints_wallet ON nft_mints(wallet)",
@@ -248,7 +258,7 @@ async fn ingest(
     }
     event.validate()?;
     event.market = event.market.map(|v| v.to_lowercase());
-    let visitor = matches!(event.kind, EventKind::AdClick).then(|| {
+    let visitor = matches!(event.kind, EventKind::AdClick | EventKind::PageView).then(|| {
         analytics::visitor_id(
             peer.ip(),
             &headers,
@@ -259,7 +269,9 @@ async fn ingest(
     if let Some(pg) = &state.pg {
         let client = pg.read.get().await.map_err(|_| pg::error())?;
         let inserted=client.execute("INSERT INTO analytics_events(event_id,kind,page,site_id,market,campaign_version,visitor_id,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,extract(epoch FROM now())::bigint) ON CONFLICT(event_id) DO NOTHING",&[&event.event_id,&event.kind.as_str(),&event.page,&event.site_id.map(|v|v as i16),&event.market,&event.campaign_version.map(|v|v as i64),&visitor]).await.map_err(|_|pg::error())?;
-        return Ok(Json(json!({"accepted":true,"duplicate":inserted==0})));
+        drop(client);
+        let cached = analytics_cache::sync(pg).await.unwrap_or(false);
+        return Ok(Json(json!({"accepted":true,"duplicate":inserted==0,"cached":cached})));
     }
     let inserted = database(state, move |db| {
         db.execute(
@@ -276,18 +288,21 @@ async fn ingest(
     Ok(Json(json!({"accepted": true, "duplicate": inserted == 0})))
 }
 async fn stats(State(state): State<AppState>) -> Result<impl IntoResponse, ApiError> {
+    let (snapshot, source) = analytics::read(&state).await?;
     Ok((
-        [(header::CACHE_CONTROL, "no-store")],
-        Json(analytics::cached(&state)?.stats.clone()),
+        [("cache-control", "no-store"),("x-analytics-source", source)],
+        Json(snapshot.stats.clone()),
     ))
 }
-async fn static_headers(request: axum::extract::Request, next: axum::middleware::Next) -> axum::response::Response {
+async fn static_headers(mut request: axum::extract::Request, next: axum::middleware::Next) -> axum::response::Response {
     let path = request.uri().path().to_owned();
+    let page=matches!(path.as_str(),"/claim"|"/analytics"|"/burn"|"/docs");
+    if page { *request.uri_mut()=axum::http::Uri::from_static("/index.html"); }
     let mut response = next.run(request).await;
     if !path.starts_with("/api/") && response.status().is_success() {
         let policy = if path.rsplit_once('.').is_some_and(|(stem,ext)| matches!(ext,"js"|"css") && stem.rsplit_once('-').is_some_and(|(_,hash)| matches!(hash.len(),8|12) && hash.bytes().all(|c| c.is_ascii_alphanumeric()))) {
             "public, max-age=31536000, immutable"
-        } else if path.ends_with('/') || path.ends_with(".html") {
+        } else if page || path.ends_with('/') || path.ends_with(".html") {
             "no-cache"
         } else {
             "public, max-age=3600"
@@ -327,7 +342,9 @@ fn router(state: AppState, dist: PathBuf) -> Router {
         .route("/api/stats", get(stats))
         .route("/api/burn", get(burn::snapshot))
         .route("/api/chain", get(mining::snapshot))
+        .route("/api/transactions/{hash}", get(mining::transaction_status))
         .route("/api/mining-stats", get(mining::network_stats))
+        .route("/api/ads", get(mining::ads))
         .route("/api/nfts", get(mining::gallery))
         .route("/api/status",get(|State(state):State<AppState>|async move{Json(json!({"uploads_configured":true,"upload_provider":"pons-ipfs","nft_configured":state.claims.is_some(),"protocol":"nft-staking-v4","chain_index_configured":state.mining.is_some(),"market":state.mining.map(|index|index.market).or_else(||state.claims.map(|claim|claim.market)),"chain_id":97}))}))
         .route("/api/referrals/bind",post(referrals::bind).layer(DefaultBodyLimit::max(4096)))
@@ -432,6 +449,18 @@ mod tests {
         (app, state)
     }
     #[tokio::test]
+    async fn nft_wallet_filters_validate_before_reading_state() {
+        let (app,_)=app_with_state();
+        for query in ["wallet=bad&position=staked","position=staked","wallet=0x1111111111111111111111111111111111111111","wallet=0x1111111111111111111111111111111111111111&position=unknown"] {
+            let response=app.clone().oneshot(Request::get(format!("/api/nfts?{query}")).body(Body::empty()).unwrap()).await.unwrap();
+            assert_eq!(response.status(),StatusCode::BAD_REQUEST, "{query}");
+        }
+        for position in ["owned","staked"] {
+            let response=app.clone().oneshot(Request::get(format!("/api/nfts?wallet=0x1111111111111111111111111111111111111111&position={position}")).body(Body::empty()).unwrap()).await.unwrap();
+            assert_eq!(response.status(),StatusCode::OK);
+        }
+    }
+    #[tokio::test]
     async fn static_assets_are_versioned_and_compressed_without_caching_api_responses() {
         let directory=std::env::temp_dir().join(format!("onhold-static-{}",uuid::Uuid::new_v4()));
         std::fs::create_dir_all(directory.join("assets/build")).unwrap();
@@ -441,6 +470,17 @@ mod tests {
         let (_,state)=app_with_state();let app=router(state,directory.clone());
         let html=app.clone().oneshot(Request::get("/").body(Body::empty()).unwrap()).await.unwrap();
         assert_eq!(html.headers()[header::CACHE_CONTROL],"no-cache");
+        for page in ["claim","analytics","burn","docs"] {
+            let clean=app.clone().oneshot(Request::get(format!("/{page}?ref=abcdef123456")).body(Body::empty()).unwrap()).await.unwrap();
+            assert_eq!(clean.status(),StatusCode::OK);
+            assert_eq!(clean.headers()[header::CACHE_CONTROL],"no-cache");
+            assert_eq!(clean.headers()[header::CONTENT_TYPE],"text/html");
+            let old=app.clone().oneshot(Request::get(format!("/{page}.html?ref=abcdef123456")).body(Body::empty()).unwrap()).await.unwrap();
+            assert_eq!(old.status(),StatusCode::NOT_FOUND);
+            assert!(old.headers().get(header::LOCATION).is_none());
+        }
+        let missing=app.clone().oneshot(Request::get("/missing.js").body(Body::empty()).unwrap()).await.unwrap();
+        assert_eq!(missing.status(),StatusCode::NOT_FOUND);
         let asset=app.clone().oneshot(Request::get("/app-ABCDEFGH.js").header(header::ACCEPT_ENCODING,"br").body(Body::empty()).unwrap()).await.unwrap();
         assert_eq!(asset.status(),StatusCode::OK);
         assert_eq!(asset.headers()[header::CACHE_CONTROL],"public, max-age=31536000, immutable");
@@ -580,6 +620,7 @@ mod tests {
         let stats: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(stats["ad_clicks"], 1);
         assert_eq!(stats["page_views"], 1);
+        assert_eq!(stats["page_uv"], 1);
         assert_eq!(stats["clicks_by_site"][2], 1);
         assert_eq!(stats["uv_by_site"][2], 1);
         assert_eq!(stats["daily_clicks"].as_array().unwrap().len(), 30);
@@ -708,6 +749,22 @@ mod tests {
             [],
         )
         .unwrap();
+    }
+    #[test]
+    fn free_tier_and_market_migration_preserve_old_records_and_invites() {
+        let db=Connection::open_in_memory().unwrap();
+        db.execute_batch("CREATE TABLE verified_accounts(nullifier TEXT PRIMARY KEY,tier INTEGER NOT NULL CHECK(tier IN (1,2)),base_tokens INTEGER NOT NULL,banned_at TEXT NOT NULL);
+        INSERT INTO verified_accounts VALUES('old',2,0,'2026-10-21');
+        CREATE TABLE nft_mints(nullifier TEXT PRIMARY KEY,wallet TEXT NOT NULL,tier INTEGER NOT NULL,referrer TEXT NOT NULL,deadline INTEGER NOT NULL,status TEXT NOT NULL,tx_hash TEXT UNIQUE,token_id TEXT);
+        INSERT INTO nft_mints VALUES('old','wallet',2,'referrer',0,'confirmed','tx','1');").unwrap();
+        init_db(&db).unwrap();
+        assert_eq!(db.query_row("SELECT tier FROM verified_accounts WHERE nullifier='old'",[],|r|r.get::<_,u8>(0)).unwrap(),2);
+        db.execute("INSERT INTO verified_accounts VALUES('free',0,0,'2026-10-21')",[]).unwrap();
+        db.execute("INSERT INTO invites VALUES('abcdef123456','wallet')",[]).unwrap();
+        db.execute("INSERT INTO nft_mints(nullifier,wallet,tier,referrer,deadline,status,market) VALUES('old','wallet',0,'referrer',0,'authorized','new-market')",[]).unwrap();
+        init_db(&db).unwrap();
+        assert_eq!(db.query_row("SELECT count(*) FROM nft_mints WHERE nullifier='old'",[],|r|r.get::<_,u8>(0)).unwrap(),2);
+        assert_eq!(db.query_row("SELECT code FROM invites WHERE wallet='wallet'",[],|r|r.get::<_,String>(0)).unwrap(),"abcdef123456");
     }
     #[test]
     fn nft_migration_keeps_legacy_claims_and_allows_many_nfts_per_wallet() {

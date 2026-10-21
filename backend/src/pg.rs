@@ -182,7 +182,7 @@ pub async fn stats(store: &Store) -> Result<crate::analytics::Snapshot, ApiError
         .start()
         .await
         .map_err(|_| error())?;
-    let row=client.query_one("SELECT count(*) FILTER(WHERE kind='page_view'),count(*) FILTER(WHERE kind='ad_click'),count(*) FILTER(WHERE kind='wallet_connect') FROM analytics_events",&[]).await.map_err(|_|error())?;
+    let row=client.query_one("SELECT count(*) FILTER(WHERE kind='page_view'),count(*) FILTER(WHERE kind='ad_click'),count(*) FILTER(WHERE kind='wallet_connect'),count(DISTINCT visitor_id) FILTER(WHERE kind='page_view') FROM analytics_events",&[]).await.map_err(|_|error())?;
     let mut clicks_by_site = [0; 6];
     let mut uv_by_site = [0; 6];
     for r in client.query("SELECT site_id,count(*),count(DISTINCT visitor_id) FROM analytics_events WHERE kind='ad_click' GROUP BY site_id",&[]).await.map_err(|_|error())? {
@@ -200,13 +200,14 @@ pub async fn stats(store: &Store) -> Result<crate::analytics::Snapshot, ApiError
     Ok(crate::analytics::Snapshot {
         stats: crate::Stats {
             page_views: row.get::<_, i64>(0) as u64,
+            page_uv: row.get::<_, i64>(3) as u64,
             ad_clicks: row.get::<_, i64>(1) as u64,
             wallet_connections: row.get::<_, i64>(2) as u64,
             clicks_by_site,
             uv_by_site,
             daily_clicks,
             updated_at: crate::analytics::now(),
-            timezone: "Asia/Shanghai",
+            timezone: "Asia/Shanghai".into(),
             financial: serde_json::json!({"symbol":"$Claude","confirmed":false,"claimed_count":null,"claimed_total":null,"burned_total":null}),
         },
         campaigns,

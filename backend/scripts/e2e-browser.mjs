@@ -69,6 +69,6 @@ if(process.argv[1]&&resolve(process.argv[1])===import.meta.filename){
    });upstream.on('error',()=>send(res,502,{error:'api_not_ready'}));req.pipe(upstream);
   }catch(error){send(res,400,{error:{code:-32603,message:error.shortMessage||error.message}});}
  });
- server.listen(bridgePort,'127.0.0.1',()=>console.log(JSON.stringify({browserE2E:origin+'/claim.html',realStanding,repeatUuid:deployment.repeatUuid===true,market:marketAddress})));
+ server.listen(bridgePort,'127.0.0.1',()=>console.log(JSON.stringify({browserE2E:origin+'/claim',realStanding,repeatUuid:deployment.repeatUuid===true,market:marketAddress})));
  for(const signal of ['SIGTERM','SIGINT'])process.on(signal,()=>{server.close();provider.destroy();});
 }

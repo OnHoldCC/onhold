@@ -69,7 +69,7 @@ contract OnholdPassMining is ERC721Enumerable, Ownable, StakingRewards, EIP712 {
     function mintPass(address recipient, bytes32 nullifier, uint8 tier, address referrer, uint256 deadline, AccountRecord calldata record, bytes calldata signature) external nonReentrant {
         require(recipient == msg.sender && recipient != address(0), "Wrong recipient");
         require(nullifier != bytes32(0) && !claimed[nullifier], "Account already minted");
-        require(tier == 1 || tier == 2, "Invalid tier");
+        require(tier <= 2, "Invalid tier");
         require(block.timestamp <= deadline, "Mint proof expired");
         require(referrer != recipient, "Self referral");
         require(bytes(record.account).length <= 640 && bytes(record.uuid).length == 36 && bytes(record.bannedAt).length > 0 && bytes(record.bannedAt).length <= 64 && bytes(record.plan).length <= 80, "Invalid record");
@@ -96,7 +96,7 @@ contract OnholdPassMining is ERC721Enumerable, Ownable, StakingRewards, EIP712 {
 
     function passWeight(uint256 tokenId) public view returns (uint256) {
         _requireOwned(tokenId);
-        return passTier[tokenId] == 1 ? 1 : 3;
+        return passTier[tokenId] == 1 ? 1 : passTier[tokenId] == 2 ? 3 : 0;
     }
 
     function effectiveWeight(address account) public view returns (uint256) {
@@ -112,7 +112,7 @@ contract OnholdPassMining is ERC721Enumerable, Ownable, StakingRewards, EIP712 {
         require(ownerOf(tokenId) == msg.sender, "Not NFT owner");
         uint256 weight = passWeight(tokenId);
         if (!referralBound[msg.sender]) _bindReferrer(msg.sender, address(0));
-        _stake(weight);
+        if (weight > 0) _stake(weight);
         stakingTransfer = true;
         _transfer(msg.sender, address(this), tokenId);
         stakingTransfer = false;
@@ -126,7 +126,7 @@ contract OnholdPassMining is ERC721Enumerable, Ownable, StakingRewards, EIP712 {
     function unstake(uint256 tokenId) external nonReentrant {
         require(stakerOf[tokenId] == msg.sender, "Not staker");
         uint256 weight = passWeight(tokenId);
-        _withdraw(weight);
+        if (weight > 0) _withdraw(weight);
         stakedWeight[msg.sender] -= weight;
         totalStakedWeight -= weight;
         stakes[msg.sender].remove(tokenId);
@@ -187,7 +187,7 @@ contract OnholdPassMining is ERC721Enumerable, Ownable, StakingRewards, EIP712 {
     }
 
     function previewPass(uint8 tier, AccountRecord calldata record) external view returns (string memory) {
-        require(tier == 1 || tier == 2, "Invalid tier");
+        require(tier <= 2, "Invalid tier");
         require(bytes(record.account).length <= 640 && bytes(record.uuid).length == 36 && bytes(record.bannedAt).length <= 64 && bytes(record.plan).length <= 80, "Invalid record");
         return renderer.tokenURI(0, tier, record.account, record.uuid, record.bannedAt, record.plan);
     }

@@ -128,6 +128,7 @@ export interface SingleSparkTopbarProps extends PreviewProps {
     active?: string;
     actions?: ReactNode;
     brandHref?: string;
+    brandLabel?: string;
     onConnectWallet?: () => void;
     defaultMenuOpen?: boolean;
     search?: SingleSparkGlobalSearchProps;

@@ -7,7 +7,7 @@
     "prebuild": "npm run contracts:build --prefix ..",
     "build": "node scripts/build.mjs",
     "test": "node --test test/*.test.mjs",
-    "preview": "python3 -m http.server 4189 --bind 127.0.0.1 -d dist"
+    "preview": "esbuild --serve=127.0.0.1:4189 --servedir=dist --serve-fallback=dist/index.html"
   },
   "dependencies": {
     "ethers": "^6.17.0",

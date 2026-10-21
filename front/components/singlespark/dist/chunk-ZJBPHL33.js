@@ -1492,6 +1492,7 @@ import { jsx as jsx35, jsxs as jsxs21 } from "react/jsx-runtime";
 function SingleSparkSidebar({
   className,
   brandHref = "/",
+  brandLabel = "SingleSpark",
   brand,
   localLinks = false,
   footer,
@@ -1517,7 +1518,7 @@ function SingleSparkSidebar({
               {
                 path: brandHref,
                 local: localLinks,
-                label: "SingleSpark",
+                label: brandLabel,
                 component: "SingleSparkHero",
                 onNavigate,
                 className: "uh-brand",
