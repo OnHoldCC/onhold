@@ -4,8 +4,13 @@ import {SingleSparkKeyValueList} from '@singlespark/component-atlas/primitives';
 import {SingleSparkTokenIcon} from '@singlespark/component-atlas/assets';
 import {SingleSparkIcon} from '@singlespark/component-atlas/icons';
 
-export function BurnHistory({events=[],amount,t,explorer}) {
+export function BurnHistory({events=[],amount,t,explorer,status,balance,minimum}) {
   return <div className="u-business"><div className="ub-stack">
+    {status&&<SingleSparkKeyValueList entries={[
+      [t('status'),t(status)],
+      [t('buybackBalance'),amount(balance,'BNB')],
+      [t('buybackMinimum'),amount(minimum,'BNB')]
+    ]}/>}
     {events.length?events.map(event=><BurnCard key={`${event.tx_hash}-${event.log_index}`} content={{
       amount:amount(event.spent,'BNB'),
       description:<><span>{t('boughtAndBurned')}</span><strong>{amount(event.burned,'$Claude')}</strong></>,

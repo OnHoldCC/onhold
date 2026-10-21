@@ -1,0 +1,71 @@
+{
+  "chainId": 97,
+  "network": "BNB Smart Chain Testnet",
+  "testOnly": true,
+  "verifiedAt": "2026-10-21T11:57:41.104Z",
+  "name": "OnHold Claude TEST",
+  "symbol": "OHLDTEST",
+  "tokenAddress": "0xCa8Ed130a238763fbbdB6bD7fB35e66c5B9A7777",
+  "buybackVaultAddress": "0xD53efA601e87b0173AE336BbF6f563E6A7B7ADdd",
+  "taxProcessorAddress": "0x183245F654EfD86a1F296DE1639Db95F055Fc2c5",
+  "factoryAddress": "0x8060d0099C8A9342A85a938013A591Ed589418a1",
+  "portalAddress": "0x5bEacaF7ABCbB3aB280e80D007FD31fcE26510e9",
+  "vaultPortalAddress": "0x027e3704fC5C16522e9393d04C60A3ac5c0d775f",
+  "keeper": "0x38fBfdAfF05536b7d80b16688dA6041Bd6338160",
+  "buyTaxBps": 300,
+  "sellTaxBps": 300,
+  "vaultAllocationBps": 10000,
+  "platformShareOfTaxBps": 1000,
+  "taxDurationSeconds": 31536000,
+  "metadata": {
+    "cid": "bafkreibsw3tsi4qeejzcgmjhq57xkmtkgd5wx4rkowmidqzyavyodaycw4",
+    "website": "https://onhold.cc",
+    "twitter": "onholdcc",
+    "image": "bafybeidu5lkdatassarq65x6afsd7vmnc3pdhjiwqmehqiypne24kssn44"
+  },
+  "launch": {
+    "tx": "0xb453326f85df6dd2393ebf9ee5715ba813b9629b2a20725d62eb46bb56e78f76",
+    "block": 138073121,
+    "initialBuyBNB": "0.04",
+    "initialTradeTaxBNB": "0.0012",
+    "vaultReceivedBNB": "0.00108",
+    "gasUsed": "5672036"
+  },
+  "buyback": {
+    "tx": "0x9d0f4c325cc317de9e912d9d26f51135d696c2399294f8e93333b605f00d96f0",
+    "block": 138073639,
+    "confirmations": 205,
+    "automaticKeeper": true,
+    "mock": false,
+    "portal": "0x5bEacaF7ABCbB3aB280e80D007FD31fcE26510e9",
+    "spentBNB": "0.00098",
+    "burnedTokens": "167497.970492817354414814",
+    "burnSink": "0x000000000000000000000000000000000000dEaD",
+    "burnSinkBalance": "167497.970492817354414814",
+    "gasRefundedBNB": "0.00004523",
+    "gasUsed": "422348"
+  },
+  "finalState": {
+    "totalReceivedBNB": "0.00110646",
+    "vaultBNB": "0.00008123",
+    "pendingProcessorBNB": "0.0",
+    "totalSupply": "1000000000.0",
+    "poolState": 0
+  },
+  "checks": [
+    "chain 97 only",
+    "buy and sell tax getters both 300 bps",
+    "on-chain metadata CID matches verified website, X, name, symbol and image",
+    "actual initial buy tax funded vault; no manual funding",
+    "existing production keeper used official Flap Portal with mock=false",
+    "buyback receipt succeeded with at least 3 confirmations",
+    "BuybackBurned event equals actual vault-to-DEAD Transfer and DEAD balance",
+    "vault native balance reconciles with received, spent and gas refunded"
+  ],
+  "limits": [
+    "Bonding-curve buy and buyback verified; separate user sell and migrated DEX trades not exercised",
+    "DEAD-address transfer; ERC20 totalSupply is not reduced",
+    "Isolated test token; existing website NFT and mining-token configuration retained",
+    "Test keeper stopped after confirmed execution; persistent burn service deployment not changed"
+  ]
+}
