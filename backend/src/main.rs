@@ -348,6 +348,7 @@ fn router(state: AppState, dist: PathBuf) -> Router {
         .route("/api/nfts", get(mining::gallery))
         .route("/api/status",get(|State(state):State<AppState>|async move{Json(json!({"uploads_configured":true,"upload_provider":"pons-ipfs","nft_configured":state.claims.is_some(),"protocol":"nft-staking-v4","chain_index_configured":state.mining.is_some(),"market":state.mining.map(|index|index.market).or_else(||state.claims.map(|claim|claim.market)),"chain_id":97}))}))
         .route("/api/referrals/bind",post(referrals::bind).layer(DefaultBodyLimit::max(4096)))
+        .route("/api/referrals",get(referrals::history))
         .route("/api/invites",post(claims::invite).layer(DefaultBodyLimit::max(1024)))
         .route("/api/verify",post(claims::verify).layer(DefaultBodyLimit::max(4096)))
         .route("/api/nft/create",post(artwork::upload).layer(DefaultBodyLimit::max(uploads::MAX_IMAGE_BYTES+65536)))

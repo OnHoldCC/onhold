@@ -28,7 +28,7 @@ fn now() -> u64 {
 fn zero() -> String {
     "0".repeat(64)
 }
-fn uint(s: &str) -> Result<U256, ApiError> {
+pub(crate) fn uint(s: &str) -> Result<U256, ApiError> {
     if s.len() != 64 || !s.bytes().all(|v| v.is_ascii_hexdigit()) {
         return Err(invalid());
     }
@@ -43,7 +43,7 @@ fn small(s: &str) -> Result<u64, ApiError> {
 fn quantity(v: &Value) -> Result<u64, ApiError> {
     small(v.as_str().ok_or_else(invalid)?.trim_start_matches("0x"))
 }
-fn amount(v: U256) -> Result<String, ApiError> {
+pub(crate) fn amount(v: U256) -> Result<String, ApiError> {
     let bytes = v.to_be_bytes();
     if bytes[..16].iter().any(|v| *v != 0) {
         return Err(invalid());
@@ -51,7 +51,7 @@ fn amount(v: U256) -> Result<String, ApiError> {
     let n = u128::from_be_bytes(bytes[16..].try_into().map_err(|_| invalid())?);
     Ok(format!("{}.{:018}", n / 10u128.pow(18), n % 10u128.pow(18)))
 }
-fn word(data: &str, index: usize) -> Result<&str, ApiError> {
+pub(crate) fn word(data: &str, index: usize) -> Result<&str, ApiError> {
     data.get(
         index.checked_mul(64).ok_or_else(invalid)?
             ..index
@@ -62,7 +62,7 @@ fn word(data: &str, index: usize) -> Result<&str, ApiError> {
     .filter(|s| s.bytes().all(|v| v.is_ascii_hexdigit()))
     .ok_or_else(invalid)
 }
-fn address(data: &str, index: usize) -> Result<String, ApiError> {
+pub(crate) fn address(data: &str, index: usize) -> Result<String, ApiError> {
     let w = word(data, index)?;
     if w[..24].bytes().any(|b| b != b'0') {
         return Err(invalid());

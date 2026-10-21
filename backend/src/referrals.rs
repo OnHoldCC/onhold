@@ -1,7 +1,7 @@
-use crate::{claims, crypto, database, uploads, ApiError, AppState};
+use crate::{claims, crypto, database, mining, pg, uploads, ApiError, AppState};
 use axum::{
-    extract::State,
-    http::{HeaderMap, StatusCode},
+    extract::{Query, State},
+    http::{header, HeaderMap, StatusCode},
     Json,
 };
 use rusqlite::{params, OptionalExtension};
@@ -41,7 +41,7 @@ pub fn bound(
     }
     db.query_row(
         "SELECT referrer FROM nft_mints WHERE wallet=?1 AND market=?2 ORDER BY rowid LIMIT 1",
-        params![wallet,market],
+        params![wallet, market],
         |r| r.get(0),
     )
     .optional()
@@ -218,10 +218,213 @@ pub async fn bind(
     ))
 }
 
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct HistoryRequest {
+    wallet: String,
+    market: Option<String>,
+    page: Option<u32>,
+    events_page: Option<u32>,
+}
+fn topic(signature: &str) -> String {
+    crypto::hex(&crypto::keccak(signature))
+}
+fn invalid_history() -> ApiError {
+    ApiError(StatusCode::BAD_GATEWAY, "invalid_referral_history")
+}
+fn decimal_units(raw: &str) -> Result<String, ApiError> {
+    let n = raw.parse::<u128>().map_err(|_| invalid_history())?;
+    mining::amount(k256::elliptic_curve::bigint::U256::from_u128(n))
+}
+fn history_event(log: &Value, block: i64, index: i64) -> Result<Value, ApiError> {
+    let raw = log["data"]
+        .as_str()
+        .and_then(|v| v.strip_prefix("0x"))
+        .ok_or_else(invalid_history)?;
+    let address = |n: usize| {
+        mining::address(
+            log["topics"][n]
+                .as_str()
+                .and_then(|v| v.strip_prefix("0x"))
+                .ok_or_else(invalid_history)?,
+            0,
+        )
+    };
+    let amount = |n| mining::amount(mining::uint(mining::word(raw, n)?)?);
+    let (kind, wallet, base, reward) =
+        if log["topics"][0] == topic("ReferralBound(address,address)") {
+            if !raw.is_empty() {
+                return Err(invalid_history());
+            }
+            ("bound", address(1)?, Value::Null, Value::Null)
+        } else if log["topics"][0] == topic("ReferralAccrued(address,address,uint256,uint256)") {
+            if raw.len() != 128 {
+                return Err(invalid_history());
+            }
+            ("accrued", address(1)?, json!(amount(0)?), json!(amount(1)?))
+        } else if log["topics"][0] == topic("ReferralPaid(address,uint256)") {
+            if raw.len() != 64 {
+                return Err(invalid_history());
+            }
+            ("paid", address(1)?, Value::Null, json!(amount(0)?))
+        } else {
+            return Err(invalid_history());
+        };
+    crypto::bytes(log["transactionHash"].as_str().unwrap_or(""), 32)
+        .map_err(|_| invalid_history())?;
+    Ok(
+        json!({"kind":kind,"wallet":wallet,"baseReward":base,"amount":reward,"txHash":log["transactionHash"],"block":block,"logIndex":index}),
+    )
+}
+
+pub async fn history(
+    State(state): State<AppState>,
+    Query(query): Query<HistoryRequest>,
+) -> Result<impl axum::response::IntoResponse, ApiError> {
+    let wallet = crypto::address(&query.wallet)
+        .map_err(|_| ApiError(StatusCode::BAD_REQUEST, "invalid_wallet"))?;
+    let requested = query.page.unwrap_or(1);
+    let events_requested = query.events_page.unwrap_or(1);
+    if requested == 0 || events_requested == 0 {
+        return Err(ApiError(StatusCode::BAD_REQUEST, "invalid_page"));
+    }
+    let Some(tracker) = &state.mining else {
+        return Ok((
+            [(header::CACHE_CONTROL, "no-store")],
+            Json(json!({"configured":false,"available":false,"items":[],"events":[]})),
+        ));
+    };
+    if query
+        .market
+        .as_deref()
+        .map(crypto::address)
+        .transpose()
+        .map_err(|_| ApiError(StatusCode::BAD_REQUEST, "invalid_market"))?
+        .is_some_and(|v| v != tracker.market)
+    {
+        return Err(ApiError(StatusCode::BAD_REQUEST, "invalid_market"));
+    }
+    let store = state.pg.as_ref().ok_or_else(pg::error)?;
+    let mut client = store.read.get().await.map_err(|_| pg::error())?;
+    let tx = client
+        .build_transaction()
+        .isolation_level(tokio_postgres::IsolationLevel::RepeatableRead)
+        .read_only(true)
+        .start()
+        .await
+        .map_err(|_| pg::error())?;
+    let cursor = tx
+        .query_opt(
+            "SELECT data FROM chain_state WHERE market=$1",
+            &[&tracker.market],
+        )
+        .await
+        .map_err(|_| pg::error())?
+        .map(|r| r.get::<_, Value>(0));
+    let block = cursor
+        .as_ref()
+        .and_then(|v| v["block"].as_i64())
+        .unwrap_or(0);
+    let counts=tx.query_one("SELECT count(*),count(*) FILTER (WHERE (data->>'weight')::bigint>0) FROM chain_wallets WHERE market=$1 AND data->>'referrer'=$2",&[&tracker.market,&wallet]).await.map_err(|_|pg::error())?;
+    let total: i64 = counts.get(0);
+    let active: i64 = counts.get(1);
+    let pages = ((total + 7) / 8).max(1);
+    let page = (requested as i64).min(pages);
+    let offset = (page - 1) * 8;
+    let recipient = format!("0x{}{}", "0".repeat(24), &wallet[2..]);
+    let bound = topic("ReferralBound(address,address)");
+    let accrued = topic("ReferralAccrued(address,address,uint256,uint256)");
+    let paid = topic("ReferralPaid(address,uint256)");
+    let rows=tx.query(r#"
+        WITH people AS (
+          SELECT wallet,(data->>'weight')::bigint AS weight FROM chain_wallets
+          WHERE market=$1 AND data->>'referrer'=$2 ORDER BY wallet LIMIT 8 OFFSET $3
+        ), rewards AS (
+          SELECT e.data->'topics'->>1 AS actor,
+                 sum(onhold_uint256(substr(e.data->>'data',3,64))) AS base,
+                 sum(onhold_uint256(substr(e.data->>'data',67,64))) AS bonus
+          FROM chain_events e JOIN people p ON e.data->'topics'->>1='0x'||repeat('0',24)||substr(p.wallet,3)
+          WHERE e.market=$1 AND e.data->'topics'->>0=$4 AND e.data->'topics'->>2=$5 AND e.block_number<=$6
+          GROUP BY e.data->'topics'->>1
+        )
+        SELECT p.wallet,p.weight,(SELECT count(*) FROM chain_nfts n WHERE n.market=$1 AND n.staker=p.wallet),
+               coalesce(r.base,0)::text,coalesce(r.bonus,0)::text
+        FROM people p LEFT JOIN rewards r ON r.actor='0x'||repeat('0',24)||substr(p.wallet,3) ORDER BY p.wallet
+    "#,&[&tracker.market,&wallet,&offset,&accrued,&recipient,&block]).await.map_err(|_|pg::error())?;
+    let items=rows.into_iter().map(|r|Ok(json!({"wallet":r.get::<_,String>(0),"weight":r.get::<_,i64>(1),"stakedCount":r.get::<_,i64>(2),"baseRewards":decimal_units(&r.get::<_,String>(3))?,"contribution":decimal_units(&r.get::<_,String>(4))?}))).collect::<Result<Vec<Value>,ApiError>>()?;
+    let event_filter="FROM chain_events WHERE market=$1 AND block_number<=$2 AND (((data->'topics'->>0=$3 OR data->'topics'->>0=$4) AND data->'topics'->>2=$6) OR (data->'topics'->>0=$5 AND data->'topics'->>1=$6))";
+    let args: &[&(dyn tokio_postgres::types::ToSql + Sync)] =
+        &[&tracker.market, &block, &bound, &accrued, &paid, &recipient];
+    let events_total: i64 = tx
+        .query_one(&format!("SELECT count(*) {event_filter}"), args)
+        .await
+        .map_err(|_| pg::error())?
+        .get(0);
+    let events_pages = ((events_total + 7) / 8).max(1);
+    let events_page = (events_requested as i64).min(events_pages);
+    let event_offset = (events_page - 1) * 8;
+    let mut event_args = args.to_vec();
+    event_args.push(&event_offset);
+    let events=tx.query(&format!("SELECT data,block_number,log_index {event_filter} ORDER BY block_number DESC,log_index DESC LIMIT 8 OFFSET $7"),&event_args).await.map_err(|_|pg::error())?.into_iter().map(|r|history_event(&r.get::<_,Value>(0),r.get(1),r.get(2))).collect::<Result<Vec<_>,_>>()?;
+    let balances = tx
+        .query_opt(
+            "SELECT data FROM chain_wallets WHERE market=$1 AND wallet=$2",
+            &[&tracker.market, &wallet],
+        )
+        .await
+        .map_err(|_| pg::error())?
+        .map(|r| r.get::<_, Value>(0));
+    let zero = "0".repeat(64);
+    let balance = |key: &str| {
+        mining::amount(mining::uint(
+            balances
+                .as_ref()
+                .and_then(|v| v[key].as_str())
+                .unwrap_or(&zero),
+        )?)
+    };
+    let pending = balance("referral_pending")?;
+    let earned = balance("referral_earned")?;
+    tx.commit().await.map_err(|_| pg::error())?;
+    let health = mining::health(&state)?;
+    Ok((
+        [(header::CACHE_CONTROL, "no-store")],
+        Json(
+            json!({"configured":true,"available":block>0,"stale":health["available"]!=true||now().saturating_sub(cursor.as_ref().and_then(|v|v["time"].as_u64()).unwrap_or(0))>=60,"chain_id":97,"market":tracker.market,"wallet":wallet,"storage":"postgresql","confirmed_block":block,"summary":{"invited":total,"active":active,"pending":pending,"earned":earned},"page":page,"pages":pages,"total":total,"items":items,"eventsPage":events_page,"eventsPages":events_pages,"eventsTotal":events_total,"events":events}),
+        ),
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use k256::ecdsa::SigningKey;
+    #[test]
+    fn referral_events_keep_exact_amounts_and_reject_invalid_words() {
+        let actor = format!("0x{}{}", "0".repeat(24), "11".repeat(20));
+        let hash = format!("0x{}", "aa".repeat(32));
+        let log = json!({"topics":[topic("ReferralAccrued(address,address,uint256,uint256)"),actor,actor],"data":format!("0x{:064x}{:064x}",7,1),"transactionHash":hash});
+        let row = history_event(&log, 123, 4).unwrap();
+        assert_eq!(row["baseReward"], "0.000000000000000007");
+        assert_eq!(row["amount"], "0.000000000000000001");
+        assert_eq!(row["kind"], "accrued");
+        let bound = json!({"topics":[topic("ReferralBound(address,address)"),actor,actor],"data":"0x","transactionHash":hash});
+        assert_eq!(
+            history_event(&bound, 123, 0).unwrap()["amount"],
+            Value::Null
+        );
+        let mut invalid = log.clone();
+        invalid["data"] = json!("0x01");
+        assert!(history_event(&invalid, 123, 4).is_err());
+        invalid = log.clone();
+        invalid["topics"][1] = json!(format!("0x{}", "ff".repeat(32)));
+        assert!(history_event(&invalid, 123, 4).is_err());
+        assert_eq!(
+            decimal_units("1000000000000000001").unwrap(),
+            "1.000000000000000001"
+        );
+        assert!(decimal_units("1.1").is_err());
+    }
     fn db() -> rusqlite::Connection {
         let db = rusqlite::Connection::open_in_memory().unwrap();
         crate::init_db(&db).unwrap();

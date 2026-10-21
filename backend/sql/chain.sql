@@ -104,6 +104,22 @@ CREATE TABLE IF NOT EXISTS chain_events (
 CREATE INDEX IF NOT EXISTS chain_events_block
     ON chain_events (market, block_number);
 
+CREATE INDEX IF NOT EXISTS chain_wallets_referrer
+    ON chain_wallets (market, (data->>'referrer'), wallet);
+CREATE INDEX IF NOT EXISTS chain_events_referral_recipient
+    ON chain_events (market, (data->'topics'->>2), (data->'topics'->>0), block_number DESC, log_index DESC);
+CREATE INDEX IF NOT EXISTS chain_events_actor
+    ON chain_events (market, (data->'topics'->>1), (data->'topics'->>0), block_number DESC, log_index DESC);
+
+-- Sum raw ABI amounts in PostgreSQL without floating-point conversion or loading every log into memory.
+CREATE OR REPLACE FUNCTION onhold_uint256(raw TEXT) RETURNS NUMERIC
+LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE AS $$
+    SELECT CASE WHEN raw ~ '^[0-9a-fA-F]{64}$' THEN
+        (SELECT sum((('x' || substr(raw, i * 8 + 1, 8))::bit(32)::bigint)::numeric
+                    * power(4294967296::numeric, 7 - i))::numeric(78,0) FROM generate_series(0, 7) i)
+    END
+$$;
+
 COMMENT ON TABLE chain_events IS '市场／NFT 挖矿合约已确认的原始链上日志；用于链上追溯和事件去重，重组时随投影一起重置，不是前端访问埋点。';
 COMMENT ON COLUMN chain_events.market IS '被监听的市场／NFT 挖矿合约地址。';
 COMMENT ON COLUMN chain_events.tx_hash IS '链上交易哈希，带 0x 前缀。';

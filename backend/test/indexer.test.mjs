@@ -71,6 +71,13 @@ test('WS → PostgreSQL replay matches chain rewards, survives restarts, falls b
   assert.equal(rpcCalls,readsBefore,'mining history reads must not call the chain');
   assert.equal((await fetch(api+'/api/mining-stats?period=invalid')).status,400);
   assert.equal((await read(address)).mining.shareBps,10000);
+  const referrals=async(wallet=referrer,page=1,eventsPage=1)=>(await fetch(`${api}/api/referrals?wallet=${wallet}&market=${marketAddress}&page=${page}&events_page=${eventsPage}`)).json();
+  assert.equal(sql("SELECT onhold_uint256(repeat('f',64))"),(2n**256n-1n).toString());assert.equal(sql("SELECT onhold_uint256('invalid') IS NULL"),'t');
+  const initialReferrals=await referrals();assert.equal(initialReferrals.available,true);assert.equal(initialReferrals.total,1);assert.equal(initialReferrals.summary.active,1);assert.equal(initialReferrals.items[0].wallet,address.toLowerCase());assert.equal(initialReferrals.items[0].stakedCount,2);assert.equal(initialReferrals.items[0].weight,4);assert.equal(parseEther(initialReferrals.items[0].contribution),0n);assert.equal(initialReferrals.events[0].kind,'bound');
+  assert.equal((await referrals(address)).total,0);assert.equal((await referrals(referrer,999,999)).page,1);
+  for(const query of ['wallet=bad','wallet='+referrer+'&page=0','wallet='+referrer+'&events_page=0','wallet='+referrer+'&extra=1','wallet='+referrer+'&market='+vaultAddress])assert.equal((await fetch(api+'/api/referrals?'+query)).status,400);
+  const noRpc=rpcCalls;await referrals();assert.equal(rpcCalls,noRpc,'referral history reads must only use PostgreSQL');
+
   const liveCalls=rpcCalls;const unstakingReceipt=await (await market.connect(user).unstake(1,{gasLimit:1000000})).wait();await mine();
   await until(async()=>{const v=await read(address);return v.available&&v.mining.weight===3;});
   proxy.failRpc=true;const unstakingStatus=await fetch(api+'/api/transactions/'+unstakingReceipt.hash).then(r=>r.json());assert.equal(unstakingStatus.status,'confirmed');assert.equal(unstakingStatus.blockNumber,unstakingReceipt.blockNumber);proxy.failRpc=false;
@@ -90,7 +97,7 @@ test('WS → PostgreSQL replay matches chain rewards, survives restarts, falls b
   assert.equal(offline.available,true,'confirmed DB data survives WS disconnection');
   assert.equal(offline.confirmed_block,beforeDisconnect.confirmed_block);assert.deepEqual(offline.ads,beforeDisconnect.ads);assert.deepEqual(offline.mining,beforeDisconnect.mining);
   const offlineGallery=await fetch(api+'/api/nfts').then(r=>r.json());assert.equal(offlineGallery.available,true);assert.equal(offlineGallery.stale,true);assert.equal(offlineGallery.total,2);
-  const offlineBurn=await fetch(api+'/api/burn').then(r=>r.json());assert.equal(offlineBurn.available,true);assert.equal(offlineBurn.stale,true);assert.equal(offlineBurn.totals.received,'0.000500000000000000');
+  const offlineBurn=await until(async()=>{const value=await fetch(api+'/api/burn').then(r=>r.json());return value.available&&value.stale?value:null;});assert.equal(offlineBurn.available,true);assert.equal(offlineBurn.stale,true);assert.equal(offlineBurn.totals.received,'0.000500000000000000');
   assert.equal(offline.financial.burned,beforeDisconnect.financial.burned);
   assert.equal((await fetch(api+'/api/ready')).status,503);
   const degraded=await fetch(api+'/api/health');assert.equal(degraded.status,200);assert.equal((await degraded.json()).status,'degraded');
@@ -104,6 +111,9 @@ test('WS → PostgreSQL replay matches chain rewards, survives restarts, falls b
   // Exercise a real local-chain ad buyback and replay its new funding schedule through PG.
   const rewardReceipt=await (await market.connect(user).getReward()).wait();await mine();
   await until(async()=>{const v=await read(address);return v.confirmed_block>=rewardReceipt.blockNumber&&Number(v.mining.claimed)>0;});
+  const accruedReferrals=await referrals();const inviterBeforeClaim=await read(referrer);
+  assert.equal(parseEther(accruedReferrals.summary.pending),parseEther(inviterBeforeClaim.mining.referralRewards));assert.equal(parseEther(accruedReferrals.items[0].contribution),parseEther(accruedReferrals.summary.earned));
+  const accrual=accruedReferrals.events.find(event=>event.kind==='accrued');assert.ok(accrual);assert.equal(parseEther(accrual.amount),parseEther(accrual.baseReward)*15n/100n);assert.equal(accrual.txHash,rewardReceipt.hash);
   proxy.failRpc=true;const rewardStatus=await fetch(api+'/api/transactions/'+rewardReceipt.hash).then(r=>r.json());assert.equal(rewardStatus.status,'confirmed');assert.equal(rewardStatus.from,address.toLowerCase());assert.equal(rewardStatus.blockNumber,rewardReceipt.blockNumber);proxy.failRpc=false;
   const token=new Contract(await deploy.token(),(await artifact('ClaudeTestToken')).abi,user);
   const {default:solc}=await import('solc');
@@ -143,11 +153,14 @@ test('WS → PostgreSQL replay matches chain rewards, survives restarts, falls b
   assert.ok(restored.financial.claims.length>0);assert.ok(restored.financial.claims.every(row=>Number(row.amount)>0&&row.block<=restored.confirmed_block));assert.equal(restored.financial.claims[0].recipient,referrer.toLowerCase());
   assert.equal(restored.mining.passes.filter(p=>!p.staked).length,2);assert.equal(parseEther(restored.mining.claimed),await market.totalClaimed({blockTag:restored.confirmed_block}));assert.equal(restored.history[0].clicks,1);assert.equal(restored.history[0].uv,1);
   const inviter=await read(referrer);assert.equal(inviter.mining.referralRewards,'0.000000000000000000');assert.ok(Number(inviter.mining.referralEarned)>0);
+  const paidReferrals=await referrals();assert.equal(parseEther(paidReferrals.summary.pending),0n);assert.equal(paidReferrals.summary.earned,inviter.mining.referralEarned);assert.equal(paidReferrals.items[0].contribution,paidReferrals.summary.earned);assert.equal(paidReferrals.events[0].kind,'paid');assert.equal(paidReferrals.items[0].stakedCount,0);
+
   redis.kill('SIGTERM');await once(redis,'exit');const cachedWithoutRedis=await fetch(api+'/api/mining-stats?period=1h').then(r=>r.json());assert.deepEqual(cachedWithoutRedis.latest,network.latest);const withoutRedis=await read(address);assert.equal(withoutRedis.available,true);assert.equal(withoutRedis.mining.passes[0].record.account,'Example Organization');
   assert.equal((await fetch(api+'/api/stats').then(r=>r.json())).ad_clicks,1);assert.equal(sql('SELECT count(*) FROM analytics_events'), '1');
   assert.equal(await provider.send('evm_revert',[rewind]),true);await mine();
   await until(async()=>{const v=await read(address);return v.available&&v.mining.minted===0&&v.mining.passes.length===0;});
   assert.equal(sql('SELECT count(*) FROM chain_nfts'),'0');
+  const rewoundReferrals=await referrals();assert.equal(rewoundReferrals.total,0);assert.equal(parseEther(rewoundReferrals.summary.earned),0n);assert.equal(rewoundReferrals.events.length,0);
   const replacement=await mint(1);await mine();
   const rebuilt=await until(async()=>{const v=await read(address);return v.available&&v.mining.passes[0]?.record?.uuid===replacement.uuid?v:null;});
   assert.equal(rebuilt.mining.passes[0].id,'1');assert.equal(sql('SELECT count(*) FROM chain_nfts'),'1');
