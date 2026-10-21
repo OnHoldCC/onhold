@@ -183,6 +183,7 @@ async fn session(state: &AppState, url: &str) -> Result<(), ApiError> {
     let mut addresses = Vec::new();
     if let Some(t) = &state.mining {
         addresses.push(t.market.clone());
+        if t.nft != t.market { addresses.push(t.nft.clone()); }
     }
     if let Some(t) = &state.burn {
         addresses.push(t.vault.clone());
@@ -424,6 +425,17 @@ mod tests {
         b.log(log(101, 0)).unwrap();
         assert!(b.ready().unwrap().is_none());
         assert_eq!(b.log(log(101, 1)).unwrap_err().1, "ws_late_log");
+    }
+    #[test]
+    fn shared_stream_preserves_nft_and_vault_log_order() {
+        let nft="0x1111111111111111111111111111111111111111";
+        let vault="0x2222222222222222222222222222222222222222";
+        let mut b=Buffer::new(header(100),vec![nft.into(),vault.into()]).unwrap();
+        let first=log(101,0);let mut second=log(101,1);second["address"]=json!(vault);
+        b.log(second).unwrap();b.log(first).unwrap();
+        for n in 101..=104 {b.header(header(n)).unwrap();}
+        let (_,logs)=b.ready().unwrap().unwrap();assert_eq!(logs.len(),2);
+        assert_eq!(logs[0]["address"],nft);assert_eq!(logs[1]["address"],vault);
     }
     #[test]
     fn gaps_reorgs_removed_logs_and_wrong_sources_require_recovery() {

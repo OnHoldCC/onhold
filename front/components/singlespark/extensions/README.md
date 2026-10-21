@@ -1,1 +1,3 @@
 The existing SingleSparkIcon wrapper is reused unchanged. Its local icon registry adds one pickaxe glyph from https://github.com/lucide-icons/lucide/blob/main/icons/pickaxe.svg (ISC; original SVG and LICENSE retained here). SingleSparkIcon supplies the same size, currentColor and 1.7 stroke as the other menu icons. Upstream SingleSpark workspaces are unchanged.
+
+The local home analytics metric accepts optional `valueTitle`, forwarded to SingleSparkMoney title and accessible label, so compact summaries retain the full amount. The active singlespark export and shared metric declaration include this small extension.

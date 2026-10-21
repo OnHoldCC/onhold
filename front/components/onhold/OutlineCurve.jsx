@@ -1,3 +1,4 @@
+import tokenIcon from '../../src/assets/claude-token-108.webp';
 import { useEffect, useId, useRef } from 'react';
 // Reused from SingleSparkFront/front/features/docs/OutlineCurve.tsx.
 
@@ -51,6 +52,6 @@ export function OutlineCurve({ content }) {
       <path className="how-scroll-track" d={curve} />
       <path ref={beam} className="how-scroll-beam" d={curve} stroke={`url(#${gradient})`} />
     </svg>
-    <span ref={spark} className="how-scroll-spark"><img src="assets/claude-token.png" width="24" height="24" alt=""/></span>
+    <span ref={spark} className="how-scroll-spark"><img src={tokenIcon} width="24" height="24" alt=""/></span>
   </div>;
 }

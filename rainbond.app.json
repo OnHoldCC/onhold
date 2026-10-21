@@ -50,18 +50,19 @@
     {
       "name": "api",
       "role": "service",
-      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261021-mining-flow-v30",
+      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261021-ui-readability-v50",
       "port": 8080,
       "env": {
         "ONHOLD_ORIGIN": "https://onhold.cc",
-        "ONHOLD_MARKET_ADDRESS": "0x25F6A10c47c7530481e77C729F02ea606fa57582",
-        "ONHOLD_MARKET_FROM_BLOCK": "138053408",
+        "ONHOLD_MARKET_ADDRESS": "0x6dF5e9B6c29fdA32187f34653003617EC9e1A180",
+        "ONHOLD_MARKET_FROM_BLOCK": "138068318",
         "ONHOLD_CHAIN_RPC_URL": "https://bsc-testnet-rpc.publicnode.com",
         "ONHOLD_CHAIN_WS_URL": "wss://bsc-testnet-rpc.publicnode.com",
-        "ONHOLD_BUYBACK_VAULT": "0x24cEc9F6A93d2e920EFE7360fc148f28d8bCffbf",
-        "ONHOLD_BUYBACK_FROM_BLOCK": "138053498",
+        "ONHOLD_BUYBACK_VAULT": "0xbeBd396010171dF44b2Cc2CA0E154f37ec6bA5bD",
+        "ONHOLD_BUYBACK_FROM_BLOCK": "138068437",
         "ONHOLD_BUYBACK_FLAP_LIVE": "false",
-        "ONHOLD_PREVIOUS_MARKET_ADDRESS": "0xc1719499434c74FCcCDfb574B9eAB27f3772DAA0"
+        "ONHOLD_PREVIOUS_MARKET_ADDRESS": "0xc1719499434c74FCcCDfb574B9eAB27f3772DAA0",
+        "ONHOLD_NFT_ADDRESS": "0xe6FCaf7da63c581afc22B27D0aCf27eB26645A1f"
       },
       "depends_on": [
         "postgres",
@@ -78,14 +79,15 @@
     {
       "name": "keeper",
       "role": "worker",
-      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261020-ads-keeper-v4",
+      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261021-split-keeper-v5",
       "command": "node backend/scripts/buyback-keeper.mjs --ads --mock",
       "env": {
         "ONHOLD_CHAIN_RPC_URL": "https://bsc-testnet-rpc.publicnode.com",
-        "ONHOLD_AD_REINVEST_MARKET": "0x25F6A10c47c7530481e77C729F02ea606fa57582",
+        "ONHOLD_AD_REINVEST_MARKET": "0x6dF5e9B6c29fdA32187f34653003617EC9e1A180",
         "ONHOLD_KEEPER_MAX_GAS_PRICE_GWEI": "1",
         "ONHOLD_KEEPER_SLIPPAGE_BPS": "100",
-        "ONHOLD_KEEPER_DATA_DIR": "/data/keeper-free-20261021"
+        "ONHOLD_KEEPER_DATA_DIR": "/data/keeper-split-20261021",
+        "ONHOLD_NFT_ADDRESS": "0xe6FCaf7da63c581afc22B27D0aCf27eB26645A1f"
       },
       "storage": [
         {

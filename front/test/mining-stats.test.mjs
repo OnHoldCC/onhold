@@ -1,6 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {loadMiningStats,miningPeriods,summaryHistory} from '../src/mining-stats.mjs';
+test('two summary metrics share one in-flight stats read without sharing cancellation',async t=>{
+ let complete,calls=0;
+ t.mock.method(globalThis,'fetch',()=>{calls++;return new Promise(resolve=>complete=()=>resolve(Response.json({period:'30d',available:false,latest:null,history:[]})));});
+ const controller=new AbortController();
+ const first=loadMiningStats('30d',controller.signal),second=loadMiningStats('30d');
+ controller.abort();await assert.rejects(first,{name:'AbortError'});complete();await second;assert.equal(calls,1);
+});
 test('summary curves use only recorded financial totals, including true zeroes',()=>{
   assert.deepEqual(summaryHistory([{sampledAt:1},{financial:{claimed:null}}],'claimed'),[]);
   const rows=[{financial:{claimed:'0.000000000000000000',burned:null}},{financial:{claimed:'12.500000000000000000',burned:'2.000000000000000000'}},{financial:{claimed:'NaN',burned:'-1'}}];

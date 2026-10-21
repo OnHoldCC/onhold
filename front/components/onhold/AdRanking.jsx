@@ -1,6 +1,6 @@
 import React,{useEffect,useState} from 'react';
 import {EmptyState} from '@singlespark/component-atlas/ui';
-import {SingleSparkList,SingleSparkListItem,SingleSparkAccordion,SingleSparkPagination,SingleSparkKeyValueList} from '@singlespark/component-atlas/primitives';
+import {SingleSparkBadge,SingleSparkList,SingleSparkListItem,SingleSparkAccordion,SingleSparkPagination,SingleSparkKeyValueList} from '@singlespark/component-atlas/primitives';
 import {SingleSparkMoney} from '@singlespark/component-atlas/singlespark';
 import {loadAdRanking} from '../../src/ad-ranking.mjs';
 import {formatEth,safeUrl} from '../../src/market.mjs';
@@ -16,12 +16,12 @@ export function AdRanking({t,lang}){
   },[page]);
   useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()),1000);return()=>clearInterval(timer);},[]);
   const duration=ad=>{const seconds=Math.max(0,Math.floor(((ad.endedAt||now)-ad.startedAt)/1000));return `${Math.floor(seconds/86400)}d ${String(Math.floor(seconds/3600)%24).padStart(2,'0')}:${String(Math.floor(seconds/60)%60).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;};
-  return <section className="data-card ad-ranking"><div className="section-top"><h2>{t('promotedSites')}</h2>{data?.configured&&<span className="small-badge">{data.total} {t('totalCampaigns')}</span>}</div>
+  return <section className="data-card ad-ranking"><div className="section-top"><h2>{t('promotedSites')}</h2>{data?.configured&&<SingleSparkBadge>{data.total} {t('totalCampaigns')}</SingleSparkBadge>}</div>
     <SingleSparkList className="promoted-site-list" aria-label={t('promotedSites')} loading={loading}>
       {data?.items.length?data.items.map((ad,index)=><SingleSparkListItem key={`${ad.id}-${ad.version}`} className="promoted-site-item" description={null}
         leading={<span className="promoted-site-leading"><span className="promoted-site-rank">{String((page-1)*10+index+1).padStart(2,'0')}</span><span className="ranked-site-avatar">{safeUrl(ad.avatar)&&<img src={ad.avatar} alt="" loading="lazy" referrerPolicy="no-referrer"/>}</span></span>}
         title={<a className="ranked-site-name" href={ad.url} target="_blank" rel="noopener noreferrer">{new URL(ad.url).hostname}<span className="site-external-arrow" aria-hidden="true">↗</span></a>}
-        trailing={<span className="promoted-site-stats"><span><small>{t('totalClicks')}</small><span>{new Intl.NumberFormat(lang).format(ad.clicks)}</span></span><span><small>{t('paidPrice')}</small><span className="token-amount"><SingleSparkMoney value={formatEth(ad.bid)}/><TokenUnit unit="BNB"/></span></span><span><small>{t('displayDuration')}</small><span>{duration(ad)}</span></span><span><small>{t('status')}</small><span className="small-badge">{t(ad.endedAt?'ended':'showing')}</span></span></span>}>
+        trailing={<span className="promoted-site-stats"><span><small>{t('totalClicks')}</small><span>{new Intl.NumberFormat(lang).format(ad.clicks)}</span></span><span><small>{t('paidPrice')}</small><span className="token-amount"><SingleSparkMoney value={formatEth(ad.bid)}/><TokenUnit unit="BNB"/></span></span><span><small>{t('displayDuration')}</small><span>{duration(ad)}</span></span><span><small>{t('status')}</small><SingleSparkBadge className="promoted-site-status" data-status={ad.endedAt?'ended':'showing'}>{t(ad.endedAt?'ended':'showing')}</SingleSparkBadge></span></span>}>
         <SingleSparkAccordion label={t('onchainDetails')} className="promoted-site-details"><p>{ad.description}</p><div className="ranked-site-tags">{ad.tags.map(tag=><span className="feature-tag" key={tag}>{tag}</span>)}</div><SingleSparkKeyValueList entries={[[t('url'),<a href={ad.url} target="_blank" rel="noopener noreferrer">{ad.url}</a>],['Owner',<a href={`${chain.explorer}/address/${ad.advertiser}`} target="_blank" rel="noopener noreferrer">{ad.advertiser}</a>],[t('transactionHash'),ad.txHash?<a href={`${chain.explorer}/tx/${ad.txHash}`} target="_blank" rel="noopener noreferrer">{ad.txHash}</a>:t('notAvailable')]]}/></SingleSparkAccordion>
       </SingleSparkListItem>):<li><EmptyState compact title={t('notAvailable')}/></li>}
     </SingleSparkList>

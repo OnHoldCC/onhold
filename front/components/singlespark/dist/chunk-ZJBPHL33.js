@@ -1007,7 +1007,7 @@ function AnalyticsVisual({
         /* @__PURE__ */ jsx21("span", { children: metric.label }),
         controls ?? /* @__PURE__ */ jsx21("span", { children: metric.period })
       ] }),
-      /* @__PURE__ */ jsx21("div", { className: "uh-fee-number", children: metric.unavailable ? unavailable : metric.value == null ? /* @__PURE__ */ jsx21(SingleSparkSkeleton, { variant: "input", width: 140, height: 48, label: `Loading ${metric.label}` }) : /* @__PURE__ */ jsx21(SingleSparkMoney, { value: metric.value }) }),
+      /* @__PURE__ */ jsx21("div", { className: "uh-fee-number", children: metric.unavailable ? unavailable : metric.value == null ? /* @__PURE__ */ jsx21(SingleSparkSkeleton, { variant: "input", width: 140, height: 48, label: `Loading ${metric.label}` }) : /* @__PURE__ */ jsx21(SingleSparkMoney, { value: metric.value, title: metric.valueTitle, "aria-label": metric.valueTitle }) }),
       stats && /* @__PURE__ */ jsx21("dl", { className: "uh-analytics-stats", children: stats.map((stat) => /* @__PURE__ */ jsxs13("div", { children: [
         /* @__PURE__ */ jsx21("dt", { children: stat.label }),
         /* @__PURE__ */ jsxs13("dd", { children: [
@@ -1029,7 +1029,7 @@ function AnalyticsVisual({
         /* @__PURE__ */ jsx21("span", { children: metric?.label ?? "Fees" }),
         metric ? controls ?? /* @__PURE__ */ jsx21("span", { children: metric.period }) : /* @__PURE__ */ jsx21("div", { children: /* @__PURE__ */ jsx21("div", { className: "uh-timeframes", children: ["1D", "30D", "All time", "1D"].map((label, i) => /* @__PURE__ */ jsx21("span", { children: label }, i)) }) })
       ] }),
-      /* @__PURE__ */ jsx21("div", { className: "uh-fee-number", children: metric?.unavailable ? unavailable : metric && metric.value == null ? /* @__PURE__ */ jsx21(SingleSparkSkeleton, { variant: "input", width: 140, height: 48, label: `Loading ${metric.label}` }) : metric?.format === "count" ? /* @__PURE__ */ jsx21(SingleSparkMoney, { value: metric.value }) : metric ? /* @__PURE__ */ jsxs13("div", { className: "uh-animated-metric", "aria-label": metric.value, title: metric.value, children: [
+      /* @__PURE__ */ jsx21("div", { className: "uh-fee-number", children: metric?.unavailable ? unavailable : metric && metric.value == null ? /* @__PURE__ */ jsx21(SingleSparkSkeleton, { variant: "input", width: 140, height: 48, label: `Loading ${metric.label}` }) : metric?.format === "count" ? /* @__PURE__ */ jsx21(SingleSparkMoney, { value: metric.value, title: metric.valueTitle, "aria-label": metric.valueTitle }) : metric ? /* @__PURE__ */ jsxs13("div", { className: "uh-animated-metric", "aria-label": metric.value, title: metric.value, children: [
         /* @__PURE__ */ jsx21("span", { className: "singlespark-sr-only", children: metric.value }),
         Number(metric.value.replaceAll(",", "")) >= 1 ? /* @__PURE__ */ jsxs13("span", { "aria-hidden": "true", children: [
           metric.value.split(".")[0],

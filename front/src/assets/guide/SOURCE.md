@@ -12,3 +12,5 @@ Privacy edit prompt: remove the entire browser chrome above the page; retain the
 
 - `paste-curl.png`: current OnHold verification form captured directly in the browser with an empty credential field. SVG callouts mark Paste (1) and Next (2).
 - `nft-preview.png`: current project BanPassCard and renderBanPassPng captured in a local preview, with an explicitly labeled synthetic example account. It illustrates the NFT and Mint NFT control, without submitting verification or an on-chain transaction.
+
+2026-10-21 delivery derivatives: `open-claude.webp` and `network-curl.webp` keep the source PNG dimensions and aspect ratio (WebP quality 82). The source PNGs remain unchanged. Preview and zoom use the same WebP; small interface text was visually checked at full size.

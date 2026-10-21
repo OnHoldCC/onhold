@@ -1,4 +1,5 @@
 import {readJson} from './read-json.mjs';
+import {createInteractionTiming} from './interaction-timing.mjs';
 const actions=new Set(['stake','unstake','getReward','claimReferralRewards']);
 const address=value=>/^0x[0-9a-f]{40}$/i.test(value||'');
 const hash=value=>/^0x[0-9a-f]{64}$/i.test(value||'');
@@ -21,7 +22,8 @@ export async function miningReceipt(pending){
   if(value.status==='failed'){clearMining(pending);throw Error('mining_transaction_failed');}
   return value;
 }
-export async function confirmMining(pending,onProgress=()=>{},wait=true){
+export async function confirmMining(pending,onProgress=()=>{},wait=true,timing=createInteractionTiming()){
+ return timing.measure('chainConfirm',async()=>{
   const deadline=Date.now()+90000;
   onProgress({stage:2,pending,hash:pending.hash});
   while(true){
@@ -32,4 +34,5 @@ export async function confirmMining(pending,onProgress=()=>{},wait=true){
     if(!wait||Date.now()>=deadline){const cause=Error('mining_confirmation_pending');cause.pending=pending;throw cause;}
     await new Promise(resolve=>setTimeout(resolve,2000));
   }
+ });
 }

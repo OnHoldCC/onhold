@@ -1,6 +1,6 @@
 # StakingRewards source and adaptation
 
-The deployed NFT contract inherits `contracts/staking/StakingRewards.sol`, a Solidity 0.8 port of the actual Synthetix StakingRewards source. There is one reward ledger. The previous `OnholdPassMining` custom `rewardPerWeight/rewardPaid/accrued/_settle` ledger has been removed.
+The legacy combined NFT/mining contract inherits `contracts/staking/StakingRewards.sol`, a Solidity 0.8 port of the actual Synthetix StakingRewards source. There is one reward ledger. The previous `OnholdPassMining` custom `rewardPerWeight/rewardPaid/accrued/_settle` ledger has been removed.
 
 ## Pinned upstream
 
@@ -23,3 +23,7 @@ The deployed NFT contract inherits `contracts/staking/StakingRewards.sol`, a Sol
 7. `getReward` retains upstream's zero-reward no-op behavior. Statistics/referral hooks track only actual accrual/payment. NFTs can be unstaked at any time; prior rewards remain payable. No-stake intervals are excluded from allocation, and rounding/skipped funds stay in the pool.
 
 Protocol marker is `onhold.nft-staking.v4`; the frontend and backend reject older contracts, including v3 weekly-halving deployments. Existing deployed code and balances are not migrated. A fresh deployment is required. The fork has local integration tests; an upstream audit does not cover these adaptations.
+
+## Separate gameplay Vault
+
+`VaultRewards.sol` ports the same ledger to initializer-safe storage and OpenZeppelin 5.4 upgradeable reentrancy protection. It initializes the combined budgets explicitly, rejects non-18-decimal reward tokens, and is used only by `OnholdGameplayVault`. The legacy ledger remains unchanged for existing deployments. The standalone `OnholdNFT` has no reward-token or gameplay dependency. Gameplay upgrades must preserve storage, accrued rewards, NFT custody, and both asset bindings. UUPS upgrade authority is trusted: owner-only authorization cannot prevent a malicious owner from installing malicious logic. Use a reviewed multi-signature timelock owner before production.

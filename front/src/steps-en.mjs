@@ -45,10 +45,10 @@ export const stepsEn = [
     "alt": "NFT example made with a synthetic account: red BANNED stamp, Max mining power 3 and Mint NFT button.",
     "instructions": [
       "Review the NFT image, plan, ban time and UUID. The screenshot uses a synthetic example account.",
-      "Connect your wallet. Pro mining power is 1; Max is 3.",
+      "Connect your wallet. Free weight is 0; Pro is 1; Max is 3.",
       "Click Mint NFT, then sign and confirm the transaction in your wallet.",
       "After minting, stake the NFT in Mining."
     ],
-    "tip": "Each verified restricted account can mint once. Holding alone earns nothing; staking starts mining."
+    "tip": "Each verified restricted account can mint once. Free earns no rewards; Pro/Max must be staked to mine."
   }
 ];

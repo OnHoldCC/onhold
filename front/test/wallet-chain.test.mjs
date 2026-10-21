@@ -54,6 +54,13 @@ test('ethers bid and staking transactions use the selected SingleSpark provider,
   const completed=await miningAction(market,selectedAddress,'unstake',61,undefined,v=>stages.push(v.stage));
   assert.equal(completed.hash,txHash);assert.deepEqual(stages,[0,1,2,3]);assert.equal(transactions.at(-1).gas,'0x3d090');
   assert.ok(!calls.slice(beforeCalls).includes('eth_getTransactionReceipt'));assert.ok(!calls.slice(beforeCalls).includes('eth_getTransactionByHash'));
+  // The global claim control and the staking page cannot prepare a second action together.
+  for(const key of store.keys())if(key.startsWith('onhold.miningpending'))store.delete(key);
+  let releaseEstimate,entered;const estimating=new Promise(resolve=>entered=resolve),countBefore=transactions.length;
+  okx.request=async args=>{if(args.method==='eth_estimateGas'){entered();return new Promise(resolve=>releaseEstimate=()=>resolve('0x30d40'));}if(args.method==='eth_sendTransaction'){transactions.push(args.params[0]);return txHash;}return selectedRequest(args);};
+  const first=miningAction(market,selectedAddress,'getReward');await estimating;
+  await assert.rejects(miningAction(market,selectedAddress,'unstake',61),/mining_confirmation_pending/);
+  releaseEstimate();await first;assert.equal(transactions.length,countBefore+1);
   session.stop();
  }finally{await rm(dir,{recursive:true,force:true});}
 });

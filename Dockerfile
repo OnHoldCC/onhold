@@ -40,7 +40,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --workspaces=false --ignore-scripts && npm cache clean --force
 COPY backend/scripts/buyback-keeper.mjs backend/scripts/buyback-cycle.mjs ./backend/scripts/
 COPY contracts/buyback-policy.json ./contracts/buyback-policy.json
-COPY --from=contracts-build /build/contracts/artifacts/FlapBuyback.json /build/contracts/artifacts/OnholdMarket.json ./contracts/artifacts/
+COPY --from=contracts-build /build/contracts/artifacts/FlapBuyback.json /build/contracts/artifacts/OnholdMarket.json /build/contracts/artifacts/OnholdGameplayVault.json ./contracts/artifacts/
 RUN mkdir -p /data/keeper && chown -R node:node /data
 USER node
 VOLUME ["/data"]

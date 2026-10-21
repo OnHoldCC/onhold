@@ -14,3 +14,7 @@
 `singlespark/dist/` 是共享组件包自带的发行文件，不是另一套网站；其资源、来源说明和许可证需要一起保留。网站业务改动优先写在 `onhold/`。
 
 `../src/main.jsx` 只负责挂载应用，`../src/` 中的其他文件是 API、链交互、翻译、业务逻辑和静态资源。`../dist/` 是网站构建产物，不要直接修改；在项目根目录运行 `npm run build` 重新生成。
+
+交易进度通过 `InteractionProgressDialog` 组合 SingleSpark Dialog、ProcessSteps、Accordion 和按钮，默认合并底层检查并保留完整耗时详情。手机端头部 × 与底部关闭均只收起弹框，顶部可重新查看原交易。
+
+`nft-display.mjs` 只统一网站显示副本的 BANNED 印章颜色，不修改链上 NFT 元数据或已上传图片。

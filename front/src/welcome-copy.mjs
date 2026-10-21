@@ -10,7 +10,7 @@ export const welcomeCopy={
     "letterStakeBody": "Stake your NFT to activate its mining weight. Holding it alone does not earn rewards.",
     "letterClaimTitle": "Claim $Claude",
     "letterClaimBody": "Claim your accrued $Claude from the mining page, without unstaking your NFT.",
-    "letterWeights": "Pro · weight 1 / Max · weight 3",
+    "letterWeights": "Free · weight 0 / Pro · weight 1 / Max · weight 3",
     "letterStart": "Create my NFT",
     "letterRead": "Read the letter",
     "letterPublic": "The account, UUID, plan and ban time will be public on-chain."
@@ -26,7 +26,7 @@ export const welcomeCopy={
     "letterStakeBody": "质押 NFT 后激活挖矿权重。仅持有 NFT 不产生奖励。",
     "letterClaimTitle": "领取 $Claude",
     "letterClaimBody": "在挖矿页面领取已累积的 $Claude，无需解押 NFT。",
-    "letterWeights": "Pro · 权重 1 / Max · 权重 3",
+    "letterWeights": "Free · 权重 0 / Pro · 权重 1 / Max · 权重 3",
     "letterStart": "生成我的 NFT",
     "letterRead": "读一封信",
     "letterPublic": "账号、UUID、套餐与封禁时间将公开记录在链上。"
@@ -42,7 +42,7 @@ export const welcomeCopy={
     "letterStakeBody": "NFT をステークすると採掘ウェイトが有効になります。保有するだけでは報酬は発生しません。",
     "letterClaimTitle": "$Claude を受け取る",
     "letterClaimBody": "NFT を解除せずに、採掘ページから獲得済みの $Claude を受け取れます。",
-    "letterWeights": "Pro · ウェイト 1 / Max · ウェイト 3",
+    "letterWeights": "Free · ウェイト 0 / Pro · ウェイト 1 / Max · ウェイト 3",
     "letterStart": "自分の NFT を作成",
     "letterRead": "手紙を読む",
     "letterPublic": "アカウント、UUID、プラン、停止日時はチェーン上で公開されます。"
@@ -58,7 +58,7 @@ export const welcomeCopy={
     "letterStakeBody": "NFT를 스테이킹해야 채굴 가중치가 활성화돼요. 보유만으로는 보상이 생기지 않아요.",
     "letterClaimTitle": "$Claude 받기",
     "letterClaimBody": "NFT를 해제하지 않고 채굴 페이지에서 누적된 $Claude를 받으세요.",
-    "letterWeights": "Pro · 가중치 1 / Max · 가중치 3",
+    "letterWeights": "Free · 가중치 0 / Pro · 가중치 1 / Max · 가중치 3",
     "letterStart": "내 NFT 만들기",
     "letterRead": "편지 읽기",
     "letterPublic": "계정, UUID, 요금제와 차단 시각이 체인에 공개돼요."
@@ -74,7 +74,7 @@ export const welcomeCopy={
     "letterStakeBody": "Deposita tu NFT en staking para activar su peso de minería. Tenerlo sin staking no genera recompensas.",
     "letterClaimTitle": "Reclama $Claude",
     "letterClaimBody": "Reclama el $Claude acumulado en la página de minería sin retirar tu NFT del staking.",
-    "letterWeights": "Pro · peso 1 / Max · peso 3",
+    "letterWeights": "Free · peso 0 / Pro · peso 1 / Max · peso 3",
     "letterStart": "Crear mi NFT",
     "letterRead": "Leer la carta",
     "letterPublic": "La cuenta, UUID, plan y fecha de suspensión serán públicos en cadena."
@@ -90,7 +90,7 @@ export const welcomeCopy={
     "letterStakeBody": "Dépose ton NFT en staking pour activer son poids de minage. Le détenir seul ne génère aucune récompense.",
     "letterClaimTitle": "Réclame tes $Claude",
     "letterClaimBody": "Récupère les $Claude accumulés sur la page de minage sans retirer ton NFT du staking.",
-    "letterWeights": "Pro · poids 1 / Max · poids 3",
+    "letterWeights": "Free · poids 0 / Pro · poids 1 / Max · poids 3",
     "letterStart": "Créer mon NFT",
     "letterRead": "Lire la lettre",
     "letterPublic": "Le compte, UUID, abonnement et date de suspension seront publics sur la chaîne."
@@ -106,7 +106,7 @@ export const welcomeCopy={
     "letterStakeBody": "Stake dein NFT, um sein Mining-Gewicht zu aktivieren. Bloßes Halten erzeugt keine Belohnungen.",
     "letterClaimTitle": "$Claude abholen",
     "letterClaimBody": "Hole angesammelte $Claude auf der Mining-Seite ab, ohne dein NFT aus dem Staking zu nehmen.",
-    "letterWeights": "Pro · Gewicht 1 / Max · Gewicht 3",
+    "letterWeights": "Free · Gewicht 0 / Pro · Gewicht 1 / Max · Gewicht 3",
     "letterStart": "Mein NFT erstellen",
     "letterRead": "Brief lesen",
     "letterPublic": "Konto, UUID, Abo und Sperrzeit werden öffentlich auf der Blockchain gespeichert."
@@ -122,7 +122,7 @@ export const welcomeCopy={
     "letterStakeBody": "Coloque seu NFT em staking para ativar seu peso de mineração. Apenas possuir o NFT não gera recompensas.",
     "letterClaimTitle": "Resgate $Claude",
     "letterClaimBody": "Resgate os $Claude acumulados na página de mineração sem retirar seu NFT do staking.",
-    "letterWeights": "Pro · peso 1 / Max · peso 3",
+    "letterWeights": "Free · peso 0 / Pro · peso 1 / Max · peso 3",
     "letterStart": "Criar meu NFT",
     "letterRead": "Ler a carta",
     "letterPublic": "A conta, UUID, plano e data da suspensão serão públicos na blockchain."

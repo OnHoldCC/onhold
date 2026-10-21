@@ -33,7 +33,7 @@ impl ClaimSigner {
     pub fn from_env() -> Result<Option<Self>, Box<dyn std::error::Error>> {
         match (
             std::env::var("ONHOLD_VERIFIER_PRIVATE_KEY").ok(),
-            std::env::var("ONHOLD_MARKET_ADDRESS").ok(),
+            std::env::var("ONHOLD_NFT_ADDRESS").or_else(|_| std::env::var("ONHOLD_MARKET_ADDRESS")).ok(),
         ) {
             (None, _) => Ok(None),
             (Some(secret), Some(market)) => {
@@ -120,6 +120,19 @@ struct Standing {
     organization_name: Option<String>,
     ban_category: Option<String>,
 }
+fn plan_tier(plan: &str) -> Result<u8, ApiError> {
+    let plan = if plan.len() <= 80 {
+        plan.to_ascii_lowercase()
+    } else {
+        String::new()
+    };
+    match (plan.contains("pro"), plan.contains("max")) {
+        (false, false) if plan == "free" || plan == "claude_free" => Ok(0),
+        (true, false) => Ok(1),
+        (false, true) => Ok(2),
+        _ => Err(error(StatusCode::UNPROCESSABLE_ENTITY, "unsupported_plan")),
+    }
+}
 fn parse_standing(value: &Value) -> Result<Standing, ApiError> {
     if value["standing"] != "bad_standing"
         || value["has_active_org"] != false
@@ -130,17 +143,7 @@ fn parse_standing(value: &Value) -> Result<Standing, ApiError> {
             "account_not_eligible",
         ));
     }
-    let plan = value["prev_plan_tier"]
-        .as_str()
-        .filter(|s| s.len() <= 80)
-        .unwrap_or("")
-        .to_ascii_lowercase();
-    let tier = match (plan.contains("pro"), plan.contains("max")) {
-        (false, false) if plan == "free" || plan == "claude_free" => 0,
-        (true, false) => 1,
-        (false, true) => 2,
-        _ => return Err(error(StatusCode::UNPROCESSABLE_ENTITY, "unsupported_plan")),
-    };
+    let tier = plan_tier(value["prev_plan_tier"].as_str().unwrap_or(""))?;
     let banned_at = value["banned_at"]
         .as_str()
         .filter(|s| !s.is_empty() && s.len() <= 64)
@@ -149,17 +152,17 @@ fn parse_standing(value: &Value) -> Result<Standing, ApiError> {
     let organizations = value["banned_orgs"]
         .as_array()
         .ok_or(error(StatusCode::BAD_GATEWAY, "invalid_provider_response"))?;
-    if organizations.len() != 1 {
+    let mut consumers = organizations.iter().filter(|org| {
+        org.get("org_type").is_none() || org["org_type"] == "consumer"
+    });
+    let organization = consumers.next().ok_or(error(
+        StatusCode::UNPROCESSABLE_ENTITY,
+        "account_not_eligible",
+    ))?;
+    if consumers.next().is_some() {
         return Err(error(
             StatusCode::UNPROCESSABLE_ENTITY,
             "ambiguous_identity",
-        ));
-    }
-    let organization = &organizations[0];
-    if organization.get("org_type").is_some() && organization["org_type"] != "consumer" {
-        return Err(error(
-            StatusCode::UNPROCESSABLE_ENTITY,
-            "account_not_eligible",
         ));
     }
     let id = organization["uuid"]
@@ -404,11 +407,8 @@ async fn quote_data(state: AppState, request: &MintRequest) -> Result<Quote, Api
     }
     let public_record: crypto::AccountRecord = serde_json::from_str(&public_record)
         .map_err(|_| error(StatusCode::INTERNAL_SERVER_ERROR, "storage_unavailable"))?;
-    let snapshot_tier = if public_record.plan.to_ascii_lowercase().contains("max") {
-        2
-    } else {
-        1
-    };
+    let snapshot_tier = plan_tier(&public_record.plan)
+        .map_err(|_| error(StatusCode::UNAUTHORIZED, "verification_expired"))?;
     if tier != snapshot_tier {
         return Err(error(StatusCode::UNAUTHORIZED, "verification_expired"));
     }
@@ -506,7 +506,7 @@ pub async fn authorize(
         return Err(error(StatusCode::BAD_GATEWAY, "wrong_chain"));
     }
     if contract_call(&state, &signer.market, "PROTOCOL_ID()", &[]).await?
-        != crypto::hex(&crypto::keccak("onhold.nft-staking.v4"))
+        != crypto::hex(&crypto::keccak(if std::env::var("ONHOLD_NFT_ADDRESS").is_ok() { "onhold.nft.v1" } else { "onhold.nft-staking.v4" }))
     {
         return Err(error(StatusCode::SERVICE_UNAVAILABLE, "protocol_mismatch"));
     }
@@ -697,6 +697,7 @@ mod tests {
             mining: None,
             pg: None,
             analytics: Default::default(),
+            public_cache: Default::default(),
             visitor_salt: "test-secret".into(),
             trusted_proxies: Vec::new(),
         }
@@ -801,7 +802,7 @@ mod tests {
                 axum::http::Request::post("/api/nft/create")
                     .header("Origin", &state.origin)
                     .header("Content-Type", "multipart/form-data; boundary=form")
-                    .body(axum::body::Body::from(form))
+                    .body(axum::body::Body::from(form.clone()))
                     .unwrap(),
             )
             .await
@@ -828,6 +829,37 @@ mod tests {
         assert_eq!(quote.tier, 1);
         assert!(quote.message.contains("NFT mint authorization"));
         assert!(!quote.message.contains("Receive:"));
+        for (plan, tier, weight) in [("free", 0, 0), ("CLAUDE_FREE", 0, 0), ("claude_max", 2, 3), ("claude_pro", 1, 1)] {
+            {
+                let db = state.db.lock().unwrap();
+                db.execute("UPDATE verified_accounts SET tier=?1", [tier]).unwrap();
+                db.execute("UPDATE verified_nft_records SET record=json_set(record,'$.plan',?1)", [plan]).unwrap();
+            }
+            let response = crate::router(state.clone(), std::path::PathBuf::from("/nonexistent"))
+                .oneshot(axum::http::Request::post("/api/nft/create")
+                    .header("Origin", &state.origin)
+                    .header("Content-Type", "multipart/form-data; boundary=form")
+                    .body(axum::body::Body::from(form.clone())).unwrap())
+                .await.unwrap();
+            assert_eq!(response.status(), StatusCode::OK, "{plan}");
+            let response: Value = serde_json::from_slice(&response.into_body().collect().await.unwrap().to_bytes()).unwrap();
+            assert_eq!(response["tier"], tier);
+            assert_eq!(response["weight"], weight);
+            assert!(response["message"].as_str().unwrap().contains(&format!("Plan tier: {tier}")));
+        }
+        for (plan, tier) in [("free", 1), ("claude_pro", 0), ("claude_max", 1), ("unknown", 0), ("claude_pro_max", 1)] {
+            {
+                let db = state.db.lock().unwrap();
+                db.execute("UPDATE verified_accounts SET tier=?1", [tier]).unwrap();
+                db.execute("UPDATE verified_nft_records SET record=json_set(record,'$.plan',?1)", [plan]).unwrap();
+            }
+            assert_eq!(quote_data(state.clone(), &request).await.err().unwrap().1, "verification_expired", "{plan}");
+        }
+        {
+            let db = state.db.lock().unwrap();
+            db.execute("UPDATE verified_accounts SET tier=1", []).unwrap();
+            db.execute("UPDATE verified_nft_records SET record=json_set(record,'$.plan','claude_pro')", []).unwrap();
+        }
         request.wallet = inviter.clone();
         assert_eq!(
             quote_data(state.clone(), &request).await.err().unwrap().1,
@@ -932,6 +964,26 @@ mod tests {
         let mut value = standing();
         value["banned_orgs"] = json!([value["banned_orgs"][0].clone(),{"uuid":"invalid"}]);
         assert!(parse_standing(&value).is_err());
+    }
+    #[test]
+    fn free_account_with_an_api_org_uses_only_the_unique_consumer_identity() {
+        let mut value = standing();
+        value["prev_plan_tier"] = json!("claude_free");
+        value["banned_orgs"][0]["org_type"] = json!("consumer");
+        let consumer = value["banned_orgs"][0].clone();
+        let expected = parse_standing(&value).unwrap().nullifier;
+        let api = json!({"uuid":"11111111-1111-4111-8111-111111111111","name":"Example API organization","org_type":"api"});
+        for organizations in [json!([consumer.clone(), api.clone()]), json!([api.clone(), consumer.clone()])] {
+            value["banned_orgs"] = organizations;
+            let account = parse_standing(&value).unwrap();
+            assert_eq!(account.nullifier, expected);
+            assert_eq!(account.record.uuid, consumer["uuid"].as_str().unwrap());
+            assert_eq!(account.tier, 0);
+        }
+        for organizations in [json!([api]), json!([consumer.clone(), consumer])] {
+            value["banned_orgs"] = organizations;
+            assert!(parse_standing(&value).is_err());
+        }
     }
     #[test]
     fn standing_requires_verified_restriction_and_one_consumer_identity() {

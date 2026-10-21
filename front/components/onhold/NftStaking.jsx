@@ -7,7 +7,7 @@ import {loadNftPage} from '../../src/nft-gallery.mjs';
 import {BanPassCard} from './BanPassCard';
 import {Notice} from './Feedback';
 
-function StakingList({wallet,market,position,revision,busy,locked,loadingId,onAction,t}){
+function StakingList({wallet,market,position,revision,busy,locked,loadingId,onAction,t,enabled=true}){
   const [page,setPage]=useState(1),[data,setData]=useState(null),[loading,setLoading]=useState(true),[error,setError]=useState(false);
   useEffect(()=>{
     let active=true;const controller=new AbortController();setData(null);setLoading(Boolean(wallet.address&&market));setError(false);
@@ -17,16 +17,16 @@ function StakingList({wallet,market,position,revision,busy,locked,loadingId,onAc
   if(!wallet.address)return <EmptyState title={t('notConnected')} action={<Button onClick={wallet.connect} loading={wallet.busy}>{t('connect')}</Button>}/>;
   return <>{(error||data?.configured===false||!market)&&<Notice error>{t('miningUnavailable')}</Notice>}{data?.stale&&<Notice>{t('gallerySyncing')}</Notice>}
     <div className="mining-passes staking-nft-list" aria-busy={loading}>
-      {loading&&!data?[0,1,2].map(id=><SingleSparkSkeleton key={id} variant="card" height={330} label={t('loadingData')}/>):data?.items.length?data.items.map(pass=><div className="mining-pass" key={pass.id}><BanPassCard {...pass} t={t}/><Button onClick={()=>onAction(position==='staked'?'unstake':'stake',pass.id)} disabled={busy||locked||error||!data.available||data.stale||(position==='owned'&&!wallet.referralBound)} loading={busy&&loadingId===String(pass.id)}>{t(position==='staked'?'unstake':'stake')} #{pass.id}</Button></div>):!error&&data?.available?<EmptyState className="staking-empty" icon={<SingleSparkIcon name="collectible" size={28}/>} title={t(position==='staked'?'noStakedNfts':'noAvailableNfts')}/>:null}
+      {loading&&!data?[0,1,2].map(id=><SingleSparkSkeleton key={id} variant="card" height={330} label={t('loadingData')}/>):data?.items.length?data.items.map(pass=><div className="mining-pass" key={pass.id}><BanPassCard {...pass} t={t}/><Button onClick={()=>onAction(position==='staked'?'unstake':'stake',pass.id)} disabled={busy||locked||(position==='owned'&&!enabled)||error||!data.available||data.stale||(position==='owned'&&!wallet.referralBound)} loading={busy&&loadingId===String(pass.id)}>{t(position==='staked'?'unstake':'stake')} #{pass.id}</Button></div>):!error&&data?.available?<EmptyState className="staking-empty" icon={<SingleSparkIcon name="collectible" size={28}/>} title={t(position==='staked'?'noStakedNfts':'noAvailableNfts')}/>:null}
     </div>
     {data?.pages>1&&<SingleSparkPagination page={page} totalPages={data.pages} onPageChange={setPage}/>}
   </>;
 }
-export function NftStaking({wallet,market,revision,busy,locked,loadingId,onAction,t}){
+export function NftStaking({wallet,market,revision,busy,locked,loadingId,onAction,t,enabled=true}){
   const [open,setOpen]=useState(false);
   useEffect(()=>setOpen(false),[wallet.address,market]);
-  return <SingleSparkPanel className="mining-position nft-staking"><div className="section-top"><h2>{t('stakedNfts')}</h2>{wallet.address&&<Button onClick={()=>setOpen(true)} disabled={busy||locked||!market||!wallet.referralBound}><SingleSparkIcon name="plus"/>{t('addStake')}</Button>}</div>
-    <StakingList key={`${market}:${wallet.address}`} wallet={wallet} market={market} position="staked" revision={revision} busy={busy} locked={locked} loadingId={loadingId} onAction={onAction} t={t}/>
-    <Dialog open={open} onClose={()=>setOpen(false)} ariaLabel={t('addStake')} className="dialog wide staking-picker"><div className="dialog-header"><h2>{t('addStake')}</h2><Button variant="ghost" onClick={()=>setOpen(false)} aria-label={t('close')}><SingleSparkIcon name="close"/></Button></div>{open&&<StakingList key={`${market}:${wallet.address}`} wallet={wallet} market={market} position="owned" revision={revision} busy={busy} locked={locked} loadingId={loadingId} onAction={async(action,id)=>{if(await onAction(action,id))setOpen(false);}} t={t}/>}</Dialog>
+  return <SingleSparkPanel className="mining-position nft-staking"><div className="section-top"><h2>{t('stakedNfts')}</h2>{wallet.address&&<Button onClick={()=>setOpen(true)} disabled={busy||locked||!enabled||!market||!wallet.referralBound}><SingleSparkIcon name="plus"/>{t('addStake')}</Button>}</div>
+    <StakingList enabled={enabled} key={`${market}:${wallet.address}`} wallet={wallet} market={market} position="staked" revision={revision} busy={busy} locked={locked} loadingId={loadingId} onAction={onAction} t={t}/>
+    <Dialog open={open} onClose={()=>setOpen(false)} ariaLabel={t('addStake')} className="dialog wide staking-picker"><div className="dialog-header"><h2>{t('addStake')}</h2><Button variant="ghost" onClick={()=>setOpen(false)} aria-label={t('close')}><SingleSparkIcon name="close"/></Button></div>{open&&<StakingList enabled={enabled} key={`${market}:${wallet.address}`} wallet={wallet} market={market} position="owned" revision={revision} busy={busy} locked={locked} loadingId={loadingId} onAction={async(action,id)=>{if(await onAction(action,id))setOpen(false);}} t={t}/>}</Dialog>
   </SingleSparkPanel>;
 }

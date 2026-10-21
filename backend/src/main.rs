@@ -1,3 +1,4 @@
+mod public_cache;
 mod analytics;
 mod analytics_cache;
 mod artwork;
@@ -37,6 +38,7 @@ struct AppState {
     mining: Option<mining::Tracker>,
     pg: Option<pg::Store>,
     analytics: analytics::Cache,
+    public_cache: Arc<public_cache::Cache>,
     visitor_salt: String,
     trusted_proxies: Vec<IpAddr>,
 }
@@ -331,7 +333,8 @@ async fn ready(state: State<AppState>) -> Result<impl IntoResponse, ApiError> {
     Ok((status, [(header::CACHE_CONTROL,"no-store")], Json(value)))
 }
 fn router(state: AppState, dist: PathBuf) -> Router {
-    Router::new()
+    let template=std::fs::read_to_string(dist.join("index.html")).ok().map(Arc::<str>::from);
+    let mut app=Router::new()
         .route(
             "/api/health",
             get(health),
@@ -339,6 +342,7 @@ fn router(state: AppState, dist: PathBuf) -> Router {
         .route("/api/ready", get(ready))
         .route("/api/events", post(ingest).layer(DefaultBodyLimit::max(4096)))
         .route("/api/uploads/avatar", post(uploads::upload_avatar).layer(DefaultBodyLimit::max(uploads::MAX_IMAGE_BYTES+65536)))
+        .route("/api/home", get(public_cache::home))
         .route("/api/stats", get(stats))
         .route("/api/burn", get(burn::snapshot))
         .route("/api/chain", get(mining::snapshot))
@@ -346,7 +350,7 @@ fn router(state: AppState, dist: PathBuf) -> Router {
         .route("/api/mining-stats", get(mining::network_stats))
         .route("/api/ads", get(mining::ads))
         .route("/api/nfts", get(mining::gallery))
-        .route("/api/status",get(|State(state):State<AppState>|async move{Json(json!({"uploads_configured":true,"upload_provider":"pons-ipfs","nft_configured":state.claims.is_some(),"protocol":"nft-staking-v4","chain_index_configured":state.mining.is_some(),"market":state.mining.map(|index|index.market).or_else(||state.claims.map(|claim|claim.market)),"chain_id":97}))}))
+        .route("/api/status",get(|State(state):State<AppState>|async move{Json(json!({"uploads_configured":true,"upload_provider":"pons-ipfs","gameplay_configured":state.mining.as_ref().is_some_and(|t|!t.nft_only),"nft_configured":state.claims.is_some(),"nft":state.claims.as_ref().map(|claim|claim.market.clone()),"protocol":"nft-staking-v4","chain_index_configured":state.mining.is_some(),"market":state.mining.map(|index|index.market).or_else(||state.claims.map(|claim|claim.market)),"chain_id":97}))}))
         .route("/api/referrals/bind",post(referrals::bind).layer(DefaultBodyLimit::max(4096)))
         .route("/api/referrals",get(referrals::history))
         .route("/api/invites",post(claims::invite).layer(DefaultBodyLimit::max(1024)))
@@ -355,8 +359,10 @@ fn router(state: AppState, dist: PathBuf) -> Router {
         .route("/api/nft/quote",post(claims::quote).layer(DefaultBodyLimit::max(4096)))
         .route("/api/nft/authorize",post(claims::authorize).layer(DefaultBodyLimit::max(4096)))
         .route("/api/nft/receipt",post(claims::receipt).layer(DefaultBodyLimit::max(4096)))
-        .fallback_service(ServeDir::new(dist).precompressed_br().precompressed_gzip())
-        .layer(axum::middleware::from_fn(static_headers))
+        .fallback_service(ServeDir::new(dist).precompressed_br().precompressed_gzip());
+    if let Some(template)=template {app=app.route("/",get(move|State(state):State<AppState>|{let template=template.clone();async move{public_cache::html(state,template).await}}));}
+    app.layer(axum::middleware::from_fn(static_headers))
+        .layer(axum::middleware::from_fn_with_state(state.clone(),public_cache::middleware))
         .with_state(state)
 }
 #[tokio::main]
@@ -398,6 +404,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         mining: mining::Tracker::from_env()?,
         pg,
         analytics: Default::default(),
+            public_cache: Default::default(),
         visitor_salt,
         trusted_proxies,
     };
@@ -429,7 +436,7 @@ mod tests {
     use axum::{body::Body, http::Request};
     use http_body_util::BodyExt;
     use tower::ServiceExt;
-    fn app_with_state() -> (Router, AppState) {
+    pub(super) fn app_with_state() -> (Router, AppState) {
         let db = Connection::open_in_memory().unwrap();
         init_db(&db).unwrap();
         let state = AppState {
@@ -441,6 +448,7 @@ mod tests {
             mining: None,
             pg: None,
             analytics: Default::default(),
+            public_cache: Default::default(),
             visitor_salt: "test-secret".into(),
             trusted_proxies: Vec::new(),
         };
@@ -488,7 +496,8 @@ mod tests {
         assert_eq!(asset.headers()[header::CONTENT_ENCODING],"br");
         assert!(asset.headers()[header::CONTENT_TYPE].to_str().unwrap().contains("javascript"));
         let api=app.oneshot(Request::get("/api/health").body(Body::empty()).unwrap()).await.unwrap();
-        assert!(api.headers().get(header::CACHE_CONTROL).is_none());
+        assert_eq!(api.headers()[header::CACHE_CONTROL],"no-store");
+        assert!(api.headers().get("server-timing").is_some());
         std::fs::remove_dir_all(directory).unwrap();
     }
     #[tokio::test]
@@ -643,7 +652,7 @@ mod tests {
         .await;
         async fn read(app: Router) -> Value {
             let response = app
-                .oneshot(Request::get("/api/stats").body(Body::empty()).unwrap())
+                .oneshot(Request::get("/api/stats").header(header::CACHE_CONTROL,"no-cache").body(Body::empty()).unwrap())
                 .await
                 .unwrap();
             serde_json::from_slice(&response.into_body().collect().await.unwrap().to_bytes())

@@ -1,3 +1,4 @@
+import tokenIcon from '../../src/assets/claude-token-108.webp';
 import React,{useId,useState} from 'react';
 import {Button} from '@singlespark/component-atlas/ui';
 
@@ -18,7 +19,7 @@ export function Flywheel({t}){
           {[0,120,240].map(angle=><path key={angle} transform={`rotate(${angle} 400 325)`} d="M477 190 A156 156 0 0 1 552 290 M542 280 L552 290 L558 277" className="flywheel-motion"/>)}
         </g>
       </svg>
-      <div className="flywheel-center"><img src="assets/claude-token.png" alt="" width="56" height="56"/><strong>OnHold</strong><span>{t('flywheelCenter')}</span></div>
+      <div className="flywheel-center"><img src={tokenIcon} alt="" width="56" height="56"/><strong>OnHold</strong><span>{t('flywheelCenter')}</span></div>
       <ol className="flywheel-steps">{steps.map(([x,y],i)=><li key={i} style={{'--step-x':`${x}%`,'--step-y':`${y}%`}} className={i===3?'flywheel-reinvest':''}>
         <svg className="flywheel-box" viewBox="0 0 200 100" preserveAspectRatio="none" aria-hidden="true"><path d="M13 3 Q100 0 187 4 Q198 5 197 17 L198 84 Q198 97 186 96 L14 98 Q3 98 4 84 L2 17 Q2 3 13 3Z"/><path d="M15 5 Q103 3 186 3 Q196 4 198 18 L196 83 Q198 95 185 98 L15 96 Q1 98 3 83 L4 18 Q2 5 15 5Z"/></svg>
         <span className="flywheel-step-index">{String(i+1).padStart(2,'0')}</span><strong>{t(`flywheelStep${i+1}`)}</strong><span>{t(`flywheelDetail${i+1}`)}</span>

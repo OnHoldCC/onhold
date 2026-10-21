@@ -1,3 +1,4 @@
+import {createInteractionTiming} from '../../src/interaction-timing.mjs';
 import React,{useEffect,useState,useRef,useId,lazy,Suspense} from 'react';
 import {Button,SegmentedTabs,EmptyState} from '@singlespark/component-atlas/ui';
 import {SingleSparkPanel,SingleSparkKeyValueList} from '@singlespark/component-atlas/primitives';
@@ -20,7 +21,7 @@ export function NftMining({wallet,market,t,lang,onClaimed,serviceLoading=false,s
   useEffect(()=>{
     let active=true,running=false;setData(null);setError('');setHash('');setLoading(Boolean(market)||serviceLoading);
     async function refresh(){if(!market||running||document.hidden)return;running=true;try{const value=await readMining(market,wallet.address);if(active){setData(value);setError('');}}catch{if(active){setError(t('miningUnavailable'));}}finally{running=false;if(active)setLoading(false);}}
-    void refresh();const timer=setInterval(refresh,15000);return()=>{active=false;clearInterval(timer);};
+    void refresh();const timer=setInterval(refresh,15000);document.addEventListener('visibilitychange',refresh);window.addEventListener('onhold:mining-updated',refresh);return()=>{active=false;clearInterval(timer);document.removeEventListener('visibilitychange',refresh);window.removeEventListener('onhold:mining-updated',refresh);};
   },[market,wallet.address,wallet.revision,lang,serviceLoading]);
   const amount=(value,digits=4,unit='')=><DataValue value={value} loading={loading} t={t} lang={lang} digits={digits} unit={unit}/>;
   const [tier,setTier]=useState('all');
@@ -33,15 +34,20 @@ export function NftMining({wallet,market,t,lang,onClaimed,serviceLoading=false,s
     let pending=recover?progress?.pending:null,confirmed=false;
     setProgress({action,tokenId:id,stage:recover?2:0,pending,started:pending?.started||Date.now()});
     const update=value=>{pending=value.pending||pending;if(current())setProgress(previous=>({...previous,...value,error:null}));};
+    const trace=createInteractionTiming(timing=>{if(current())setProgress(previous=>({...previous,timing}));});
     try{
-      const result=recover?await confirmMining(pending,update,false):await miningAction(market,wallet.address,action,id,wallet.referrer,update);
+      const result=recover?await confirmMining(pending,update,false,trace):await miningAction(market,wallet.address,action,id,wallet.referrer,update,trace);
       if(!current())return false;
       confirmed=true;
-      const next=await readMining(market,wallet.address);
-      if(next.confirmedBlock<result.blockNumber)throw Error('mining_sync_pending');
-      if(!current())return false;
-      setData(next);setHash(result.hash);clearMining(result.pending);setProgress(previous=>({...previous,stage:3,done:true,pending:null,hash:result.hash}));
-      await Promise.resolve(onClaimed?.()).catch(()=>{});
+      await trace.measure('dataSync',async()=>{
+        const next=await readMining(market,wallet.address);
+        if(next.confirmedBlock<result.blockNumber)throw Error('mining_sync_pending');
+        if(!current())return;
+        setData(next);setHash(result.hash);clearMining(result.pending);
+        await Promise.resolve(onClaimed?.()).catch(()=>{});
+        if(current())setProgress(previous=>({...previous,stage:3,done:true,pending:null,hash:result.hash}));
+        window.dispatchEvent(new Event('onhold:mining-updated'));
+      });
       return current();
     }catch(cause){
       if(current()){
@@ -50,7 +56,7 @@ export function NftMining({wallet,market,t,lang,onClaimed,serviceLoading=false,s
         pending=cause.pending||pending;setError(message);setProgress(previous=>({...previous,pending,action:pending?.action||action,error:message}));
       }
       return false;
-    }finally{if(current()){activeAction.current=false;setBusy(false);}}
+    }finally{trace.finish();if(current()){activeAction.current=false;setBusy(false);}}
   }
   const [tipsOpen,setTipsOpen]=useState(false),tipsRef=useRef(null),tipsId=useId();
   useEffect(()=>{
@@ -63,21 +69,23 @@ export function NftMining({wallet,market,t,lang,onClaimed,serviceLoading=false,s
   const miningTips=<div className="mining-tip" ref={tipsRef} onPointerEnter={event=>{if(event.pointerType==='mouse')setTipsOpen(true);}} onPointerLeave={event=>{if(event.pointerType==='mouse'&&!tipsRef.current?.querySelector(':focus-visible'))setTipsOpen(false);}} onBlur={event=>{if(!event.currentTarget.contains(event.relatedTarget))setTipsOpen(false);}}>
     <Button className="mining-tip-button" variant="ghost" aria-label={t('miningRules')} aria-expanded={tipsOpen} aria-controls={tipsId} aria-describedby={tipsOpen?tipsId:undefined} onFocus={event=>{if(event.currentTarget.matches(':focus-visible'))setTipsOpen(true);}} onClick={event=>setTipsOpen(open=>event.nativeEvent.pointerType==='mouse'?true:!open)}><SingleSparkIcon name="info" size={18}/></Button>
     <div id={tipsId} className="mining-tip-content" role="tooltip" tabIndex={tipsOpen?0:-1} hidden={!tipsOpen}>
-      <p>{t('miningIntro')}</p><p>{t('emissionRule')}</p>
+      <p>{t('holdingRule')}</p><p>{t('emissionRule')}</p><p>{t('estimatedRewards')}</p>
       {data&&<><p>{t('adReinvested')}: {amount(data.adReinvested,4,'$Claude')} · {t('adTeamRevenue')}: {amount(data.adTeamRevenue,8,'BNB')} · {t('adReserve')}: {amount(data.adBuybackReserve,8,'BNB')}</p><p>{t(data.startedAt?(data.asOf>=data.endsAt?'miningEnded':'miningStarted'):'miningNotStarted')}{data.startedAt?` · ${new Date(data.startedAt*1000).toLocaleString(lang)} · ${t('miningEnds')} ${new Date(data.endsAt*1000).toLocaleString(lang)}`:''}</p></>}
     </div>
   </div>;
   const locked=Boolean(progress?.pending);
+  const showGlobalProgress=Boolean(progress&&(busy||progress.pending||!data||Number(data.earned)<=0));
   const feedback=<>{progressOpen&&progress&&<MiningProgress progress={progress} t={t} busy={busy} explorer={chain.explorer} onClose={()=>setProgressOpen(false)} onRefresh={()=>act(progress.action,progress.pending?.tokenId,true)}/>}
-    {progress&&!progressOpen&&<Button onClick={()=>setProgressOpen(true)}>{t('miningViewProgress')}</Button>}{!market&&!serviceLoading&&<Notice error={serviceError}>{t(serviceError?'miningUnavailable':'claimsNotConfigured')}</Notice>}<Notice error>{error}</Notice>{hash&&<Notice><a href={`${chain.explorer}/tx/${hash}`} target="_blank" rel="noopener noreferrer">{t('viewTransaction')} ↗</a></Notice>}</>;
+    {progress&&!progressOpen&&<Button onClick={()=>setProgressOpen(true)}>{t('miningViewProgress')}</Button>}{!market&&!serviceLoading&&<Notice error={serviceError}>{t(serviceError?'miningUnavailable':'claimsNotConfigured')}</Notice>}{error!==progress?.error&&<Notice error>{error}</Notice>}</>;
+  if(view==='claim-button')return <><Button className="mining-claim-button" aria-label={t(showGlobalProgress?'miningViewProgress':'claimMining')} title={error||`${t('estimatedRewards')} · ${t('syncedBlock')} ${data?.confirmedBlock??'—'}`} variant="primary" loading={busy&&progressOpen} onClick={()=>showGlobalProgress?setProgressOpen(true):act('getReward')} disabled={!showGlobalProgress&&(busy||!data||Number(data.earned)<=0)}><span className="mining-claim-amount">{amount(data?.earned,4,'$Claude')}</span><span>{showGlobalProgress?'Progress':'Claim'}</span></Button>{progressOpen&&progress&&<MiningProgress progress={progress} t={t} busy={busy} explorer={chain.explorer} onClose={()=>setProgressOpen(false)} onRefresh={()=>act(progress.action,progress.pending?.tokenId,true)}/>}</>;
   if(view==='owned')return <section className="mining-section mining-owned">
     <div className="nft-gallery-heading"><h1>{t('myNfts')}</h1><SegmentedTabs value={tier} onChange={setTier} panelId="owned-nft-list" options={[{value:'all',label:t('allPlans')},{value:'0',label:'Free'},{value:'1',label:'Pro'},{value:'2',label:'Max'}]} ariaLabel={t('filterNfts')}/></div>
-    {feedback}
+    {feedback}{data?.gameplayAvailable===false&&<Notice>{t('miningComingSoon')}</Notice>}
     <div id="owned-nft-list" className="mining-passes" role="tabpanel" aria-labelledby={`owned-nft-list-tab-${tier}`} aria-busy={Boolean(loading&&wallet.address)}>
-      {loading&&wallet.address&&!data?[0,1,2].map(id=><SingleSparkSkeleton key={id} variant="card" height={330} label={t('loadingData')}/>):passes.length?passes.map(pass=><div className="mining-pass" key={pass.id}><BanPassCard {...pass} t={t}/><p>{t(pass.staked?'staked':'notStaked')}</p><Button onClick={()=>act(pass.staked?'unstake':'stake',pass.id)} disabled={busy||locked||!wallet.address} loading={busy&&String(progress?.tokenId)===String(pass.id)}>{t(pass.staked?'unstake':'stake')}</Button></div>):<EmptyState className="mining-owned-empty" icon={<SingleSparkIcon name="collectible" size={28}/>} title={t(!wallet.address?'notConnected':data?'noNfts':'miningUnavailable')} action={!wallet.address?<Button onClick={wallet.connect} loading={wallet.busy}>{t('connect')}</Button>:undefined}/>}
+      {loading&&wallet.address&&!data?[0,1,2].map(id=><SingleSparkSkeleton key={id} variant="card" height={330} label={t('loadingData')}/>):passes.length?passes.map(pass=><div className="mining-pass" key={pass.id}><BanPassCard {...pass} t={t}/><p>{t(pass.staked?'staked':'notStaked')}</p><Button onClick={()=>act(pass.staked?'unstake':'stake',pass.id)} disabled={busy||locked||!wallet.address||(!pass.staked&&data?.gameplayAvailable===false)} loading={busy&&String(progress?.tokenId)===String(pass.id)}>{t(pass.staked?'unstake':'stake')}</Button></div>):<EmptyState className="mining-owned-empty" icon={<SingleSparkIcon name="collectible" size={28}/>} title={t(!wallet.address?'notConnected':data?'noNfts':'miningUnavailable')} action={!wallet.address?<Button onClick={wallet.connect} loading={wallet.busy}>{t('connect')}</Button>:undefined}/>}
     </div>
     {data&&(data.ownedCount>50||data.stakedCount>50)&&<p>{t('passLimit')}</p>}
   </section>;
   if(view==='referral')return <><SingleSparkPanel className="mining-position"><h2>{t('referralTitle')}</h2><p className="fine-print">{t('miningInvite')}</p><p className="fine-print">{t('referralSettlement')}</p><SingleSparkKeyValueList entries={[[t('referralAvailable'),personal(data?.referralRewards,'$Claude')],[t('referralTotal'),personal(data?.referralEarned,'$Claude')],...(data?.referrer&&data.referrer!=='0x0000000000000000000000000000000000000000'?[[t('referrerWallet'),data.referrer]]:[])]}/><Button onClick={wallet.address?()=>act('claimReferralRewards'):wallet.connect} disabled={busy||locked||Boolean(wallet.address&&(!data||Number(data.referralRewards)<=0))} loading={busy&&progress?.action==='claimReferralRewards'}>{t('claimReferral')}</Button>{feedback}</SingleSparkPanel><Suspense fallback={<SingleSparkSkeleton variant="card" height={240} label={t('loadingData')}/>}><ReferralHistory key={`${market}:${wallet.address}`} wallet={wallet.address} market={market} t={t} lang={lang}/></Suspense></>;
-  return <section className="mining-section"><div className="page-intro"><div className="mining-title"><h1>{t('miningTitle')}</h1>{miningTips}</div><span className="platform-token-title">$Claude</span></div><div className="mining-metrics">{[[t('poolSize'),amount(data?.poolBudget,4,<span>$Claude</span>)],[t('dailyEmission'),amount(data?.daily,4,<span>$Claude</span>)],[t('totalWeight'),amount(data?.totalEffective)],[t('mintedPasses'),amount(data?.minted)]].map(([label,value])=><SingleSparkPanel key={label}><span>{label}</span><strong>{value}</strong></SingleSparkPanel>)}</div><NftStaking wallet={wallet} market={market} revision={hash} busy={busy} locked={locked} loadingId={busy&&['stake','unstake'].includes(progress?.action)?String(progress.tokenId):null} onAction={act} t={t}/><SingleSparkPanel className="mining-position"><div className="staking-rewards"><span>{t('earnedRewards')}</span><strong>{personal(data?.earned,'$Claude')}</strong></div><Button variant="primary" loading={busy&&progress?.action==='getReward'} onClick={wallet.address?()=>act('getReward'):wallet.connect} disabled={busy||locked||Boolean(wallet.address&&(!data||Number(data.earned)<=0))}>{t(wallet.address?'claimMining':'connect')}</Button><p className="fine-print">{t('holdingRule')}</p>{data&&<p className="fine-print">{t('estimatedRewards')} · {t('syncedBlock')} {data.confirmedBlock} · {new Date(data.asOf*1000).toLocaleString(lang)}</p>}</SingleSparkPanel>{feedback}</section>;
+  return <section className="mining-section"><div className="page-intro"><div className="mining-title"><h1>{t('miningTitle')}</h1>{miningTips}</div></div><div className="mining-metrics">{[[t('poolSize'),amount(data?.poolBudget,4,<span>$Claude</span>)],[t('dailyEmission'),amount(data?.daily,4,<span>$Claude</span>)],[t('totalWeight'),amount(data?.totalEffective)],[t('mintedPasses'),amount(data?.minted)]].map(([label,value])=><SingleSparkPanel key={label}><span>{label}</span><strong>{value}</strong></SingleSparkPanel>)}</div>{data?.gameplayAvailable===false&&<Notice>{t('miningComingSoon')}</Notice>}<NftStaking enabled={Boolean(data)&&data.gameplayAvailable!==false} wallet={wallet} market={market} revision={hash} busy={busy} locked={locked} loadingId={busy&&['stake','unstake'].includes(progress?.action)?String(progress.tokenId):null} onAction={act} t={t}/>{data&&<p className="mining-reward-note fine-print" title={`${t('estimatedRewards')} · ${new Date(data.asOf*1000).toLocaleString(lang)}`}>{t('syncedBlock')} {data.confirmedBlock} · <time>{new Date(data.asOf*1000).toLocaleTimeString(lang)}</time></p>}{feedback}</section>;
 }

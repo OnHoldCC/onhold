@@ -14,3 +14,12 @@ test('a failed request is evicted and can be retried',async t=>{
  t.mock.method(globalThis,'fetch',async()=>fail?new Response('',{status:503}):Response.json({ok:true}));
  await assert.rejects(readJson('/api/status'),/read_unavailable/);fail=false;assert.deepEqual(await readJson('/api/status'),{ok:true});
 });
+test('cancelling one subscriber preserves the shared read for the other',async t=>{
+ let complete,calls=0;
+ t.mock.method(globalThis,'fetch',()=>{calls++;return new Promise(resolve=>complete=()=>resolve(Response.json({ok:true})));});
+ const controller=new AbortController();
+ const cancelled=readJson('/api/shared',5000,controller.signal),remaining=readJson('/api/shared');
+ controller.abort();await assert.rejects(cancelled,{name:'AbortError'});
+ complete();assert.deepEqual(await remaining,{ok:true});assert.equal(calls,1);
+ assert.throws(()=>readJson('/api/shared',5000,controller.signal),{name:'AbortError'});
+});

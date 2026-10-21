@@ -1,3 +1,4 @@
+import {createInteractionTiming} from './interaction-timing.mjs';
 import {rememberReferral} from './referrals.mjs';
 import {subscribeInjectedWallets,listInjectedWallets,getInjectedForKind,findStoredInjectedWallet,readStoredWalletSelection,setActiveInjectedWallet,clearActiveInjectedWallet,getActiveInjectedWallet,getInjected,connectInjected,subscribeWalletEvents} from '../components/singlespark/runtime/injected.mjs';
 
@@ -21,14 +22,14 @@ export async function ensureWalletChain(provider,chain){
 
 export function createWalletSession(bindReferral){
   if(typeof bindReferral!=='function')throw Error('Referral binding is required');
-  let state={address:'',chainId:null,kind:'',busy:false,open:false,error:'',pending:false,binding:false,referralBound:false,referralCode:'',referrer:'',options:[],revision:0};
+  let state={address:'',chainId:null,kind:'',busy:false,open:false,error:'',pending:false,binding:false,referralBound:false,referralCode:'',referrer:'',options:[],revision:0,timing:null};
   const listeners=new Set();
-  let referralSource='';
+  let referralSource='',connectionTiming;
   let generation=0,offWallet=()=>{},offDiscovery=()=>{},started=false,restoring=false;
   const update=patch=>{state={...state,...patch};listeners.forEach(listener=>listener());};
   function disconnect(){
-    generation++;offWallet();offWallet=()=>{};clearActiveInjectedWallet();saveDisconnected(true);
-    update({address:'',chainId:null,kind:'',busy:false,open:false,error:'',pending:false,binding:false,referralBound:false,referralCode:'',referrer:'',revision:state.revision+1});
+    connectionTiming?.finish();connectionTiming=null;generation++;offWallet();offWallet=()=>{};clearActiveInjectedWallet();saveDisconnected(true);
+    update({address:'',chainId:null,kind:'',busy:false,open:false,error:'',pending:false,binding:false,referralBound:false,referralCode:'',referrer:'',timing:null,revision:state.revision+1});
   }
   function attach(selected,address,chainId,referral){
     offWallet();setActiveInjectedWallet(selected);saveDisconnected(false);
@@ -66,24 +67,25 @@ export function createWalletSession(bindReferral){
     generation++;const attempt=generation;
     const selected=getInjectedForKind(kind);
     if(!selected){update({error:'walletMissing'});return;}
-    update({busy:true,error:'',pending:false,kind:selected.kind});
+    update({busy:true,error:'',pending:false,kind:selected.kind,timing:null});
+    const timing=createInteractionTiming(value=>{if(attempt===generation)update({timing:value});});connectionTiming=timing;
     try{
-      const result=await connectInjected(selected.provider,{onPending:()=>{if(attempt===generation)update({pending:true});}});
+      const result=await timing.measure('connect',()=>connectInjected(selected.provider,{onPending:()=>{if(attempt===generation)update({pending:true});}}));
       if(attempt!==generation)return;
       const source=rememberReferral(globalThis.location?.search||'',localStorage)||referralSource;
       update({binding:true});
-      const referral=await bindReferral(selected.provider,result.address,source,()=>attempt===generation);
+      const referral=await bindReferral(selected.provider,result.address,source,()=>attempt===generation,true,timing);
       if(attempt!==generation)return;
-      const currentAccounts=await selected.provider.request({method:'eth_accounts'});
-      const currentChain=parseChain(await selected.provider.request({method:'eth_chainId'}));
+      const [currentAccounts,chainHex]=await timing.measure('walletCheck',()=>Promise.all([selected.provider.request({method:'eth_accounts'}),selected.provider.request({method:'eth_chainId'})]));
+      const currentChain=parseChain(chainHex);
       if(attempt!==generation)return;
       if(!Array.isArray(currentAccounts)||currentAccounts[0]?.toLowerCase()!==result.address.toLowerCase()||!currentChain)throw Error('wallet_changed');
       if(!referral?.referralBound)throw Error('referral_binding_required');
       attach(selected,result.address,currentChain,referral);update({open:false});
     }catch(error){if(attempt===generation)update({error:(error.code===4001||error.code==='ACTION_REJECTED')?'walletCancelled':error.code?`api.${error.code}`:['wallet_changed','invalid_referral_code','referral_binding_required'].includes(error.message)?`api.${error.message}`:'walletError'});}
-    finally{if(attempt===generation)update({busy:false,pending:false,binding:false});}
+    finally{timing.finish();if(attempt===generation)update({busy:false,pending:false,binding:false});}
   }
-  function close(){generation++;update({open:false,busy:false,pending:false,binding:false});}
+  function close(){connectionTiming?.finish();connectionTiming=null;generation++;update({open:false,busy:false,pending:false,binding:false});}
   return {
     getSnapshot:()=>state,
     subscribe:listener=>{listeners.add(listener);return()=>listeners.delete(listener);},

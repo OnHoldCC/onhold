@@ -498,3 +498,82 @@ test('Free cards stake and unstake with zero weight and never create mining or r
  await (await market.connect(user).unstake(1,{gasLimit:1000000})).wait();assert.equal(await market.ownerOf(1),recipient);assert.equal(await market.stakingWeightOf(recipient),1n);
  await (await market.connect(user).getReward({gasLimit:1000000})).wait();assert.ok(await token.balanceOf(recipient)>0n);assert.equal(await market.stakedBalanceOf(recipient),1n);
 });
+
+async function splitFixture({fund=true}={}){
+  const deploy=async(name,...args)=>{const a=artifact(name);const c=await new ContractFactory(a.abi,a.bytecode,owner).deploy(...args);await c.waitForDeployment();return c;};
+  const address=await owner.getAddress();
+  const nft=await deploy('OnholdNFT',address,address);
+  const portal=await deploy('MockSwapPortal');
+  const token=await deploy('MockClaudeToken',address,await portal.getAddress());await (await portal.initialize(await token.getAddress())).wait();
+  const implementation=await deploy('MockGameplayVault',await portal.getAddress());
+  const init=implementation.interface.encodeFunctionData('initialize',[address,await nft.getAddress(),await token.getAddress()]);
+  const proxy=await deploy('ERC1967Proxy',await implementation.getAddress(),init);
+  const vault=new Contract(await proxy.getAddress(),artifact('MockGameplayVault').abi,owner);
+  if(fund)await (await token.transfer(await vault.getAddress(),parseEther('100000000'))).wait();
+  return {nft,token,portal,implementation,vault,deploy};
+}
+test('standalone NFT mints before any token or vault exists and preserves permanent identity',async()=>{
+  const a=artifact('OnholdNFT'),address=await owner.getAddress();
+  const nft=await new ContractFactory(a.abi,a.bytecode,owner).deploy(address,address);await nft.waitForDeployment();
+  const recipient=await user.getAddress(),referrer=await other.getAddress();
+  const mint=await signed(nft,recipient,{referrer});await (await nft.connect(user).mintPass(...mint)).wait();
+  const image=await nft.tokenURI(1);assert.equal(await nft.ownerOf(1),recipient);assert.equal(await nft.referrerOf(recipient),referrer);
+  assert.equal(await nft.PROTOCOL_ID(),id('onhold.nft.v1'));assert.equal(await nft.passWeight(1),1n);
+  assert.equal(nft.interface.hasFunction('upgradeToAndCall'),false);assert.equal(nft.interface.hasFunction('rewardsToken'),false);
+  await assert.rejects(nft.connect(user).mintPass(...mint),/Account already minted/);
+  await assert.rejects(nft.connect(user).bindReferrer(ZeroAddress),/Referrer already bound/);
+  await (await nft.connect(user).transferFrom(recipient,referrer,1)).wait();assert.equal(await nft.tokenURI(1),image);
+});
+test('split vault locks implementation initialization, validates assets and needs authorization and funding',async()=>{
+  const {nft,token,implementation,vault,deploy}=await splitFixture({fund:false});const address=await owner.getAddress(),recipient=await user.getAddress();
+  const args=[address,await nft.getAddress(),await token.getAddress()];
+  await assert.rejects(implementation.initialize(...args),error=>error.data?.startsWith(id('InvalidInitialization()').slice(0,10)));await assert.rejects(vault.initialize(...args),error=>error.data?.startsWith(id('InvalidInitialization()').slice(0,10)));
+  const six=await deploy('SixDecimalTestToken');
+  await assert.rejects(deploy('ERC1967Proxy',await implementation.getAddress(),implementation.interface.encodeFunctionData('initialize',[address,await nft.getAddress(),await six.getAddress()])),/18 decimals required/);
+  await (await nft.connect(user).mintPass(...await signed(nft,recipient))).wait();
+  await assert.rejects(vault.connect(user).stake(1),/Mining pool not funded/);
+  await (await token.transfer(await vault.getAddress(),parseEther('100000000'))).wait();
+  await assert.rejects(vault.connect(user).stake(1));assert.equal(await vault.miningStartedAt(),0n);assert.equal(await nft.ownerOf(1),recipient);
+  await (await nft.connect(user).approve(await vault.getAddress(),1)).wait();await (await vault.connect(user).stake(1,{gasLimit:1200000})).wait();
+  assert.equal(await nft.ownerOf(1),await vault.getAddress());assert.equal(await vault.stakerOf(1),recipient);
+  await assert.rejects(vault.connect(other).unstake(1),/Not staker/);
+  await (await vault.connect(user).unstake(1,{gasLimit:1000000})).wait();assert.equal(await nft.ownerOf(1),recipient);
+});
+test('gameplay upgrade retains NFTs, token, stakes, referrals, rewards and ad reserves',async()=>{
+  const {nft,token,portal,implementation,vault,deploy}=await splitFixture();const recipient=await user.getAddress(),referrer=await other.getAddress(),address=await vault.getAddress();
+  await (await nft.connect(user).mintPass(...await signed(nft,recipient,{referrer}))).wait();const image=await nft.tokenURI(1);
+  await (await nft.connect(user).approve(address,1)).wait();await (await vault.connect(user).stake(1,{gasLimit:1200000})).wait();
+  await advance(await timestamp()+86400);await (await vault.connect(user).getReward({gasLimit:1000000})).wait();
+  await (await vault.bid(0,0,...listing,{value:parseEther('0.01')})).wait();
+  const methods=['miningStartedAt','baseMiningBudget','referralBudget','totalAllocated','rewardPerTokenStored','teamRevenue','adBuybackReserve','totalClaimed'];
+  const saved=await Promise.all(methods.map(name=>vault[name]())),bonus=await vault.referralRewards(referrer),tokens=await token.balanceOf(address);
+  const next=await deploy('GameplayVaultV2Test',await portal.getAddress());
+  await assert.rejects(vault.connect(user).upgradeToAndCall(await next.getAddress(),'0x'),error=>error.data?.startsWith(id('OwnableUnauthorizedAccount(address)').slice(0,10)));
+  await assert.rejects(implementation.upgradeToAndCall(await next.getAddress(),'0x'),error=>error.data?.startsWith(id('UUPSUnauthorizedCallContext()').slice(0,10)));
+  await (await vault.upgradeToAndCall(await next.getAddress(),'0x')).wait();
+  const upgraded=new Contract(address,artifact('GameplayVaultV2Test').abi,owner);
+  assert.deepEqual(await Promise.all(methods.map(name=>upgraded[name]())),saved);assert.equal(await upgraded.nft(),await nft.getAddress());assert.equal(await upgraded.rewardsToken(),await token.getAddress());
+  assert.equal(await upgraded.referralRewards(referrer),bonus);assert.equal(await token.balanceOf(address),tokens);assert.equal(await upgraded.stakerOf(1),recipient);assert.equal(await upgraded.stakingWeightOf(recipient),1n);assert.equal(await upgraded.referrerOf(recipient),referrer);assert.equal(await nft.tokenURI(1),image);assert.equal(await nft.ownerOf(1),address);
+  await (await upgraded.setGameplayFlag(42)).wait();assert.equal(await upgraded.gameplayFlag(),42n);
+  const layout=artifact('MockGameplayVault').storageLayout.storage,nextLayout=artifact('GameplayVaultV2Test').storageLayout.storage;assert.deepEqual(nextLayout.slice(0,layout.length).map(({label,slot,offset})=>({label,slot,offset})),layout.map(({label,slot,offset})=>({label,slot,offset})));
+  await (await upgraded.connect(other).claimReferralRewards({gasLimit:1000000})).wait();assert.equal(await token.balanceOf(referrer),bonus);
+  await (await upgraded.connect(user).unstake(1,{gasLimit:1000000})).wait();assert.equal(await nft.ownerOf(1),recipient);
+});
+test('split vault adds only actual ad purchases to the remaining mining budget',async()=>{
+  const {nft,vault}=await splitFixture();const recipient=await user.getAddress(),address=await vault.getAddress();
+  await (await nft.connect(user).mintPass(...await signed(nft,recipient))).wait();await (await nft.connect(user).approve(address,1)).wait();await (await vault.connect(user).stake(1,{gasLimit:1200000})).wait();
+  await (await vault.bid(0,0,...listing,{value:parseEther('0.01')})).wait();const base=await vault.baseMiningBudget(),end=await vault.periodFinish();
+  await (await vault.reinvestAdRevenue(parseEther('0.001'),parseEther('1000'),await timestamp()+90,{gasLimit:1500000})).wait();
+  assert.equal(await vault.totalAdReinvested(),parseEther('1000'));assert.equal(await vault.baseMiningBudget(),base+parseEther('1000')*100n/115n);assert.equal(await vault.periodFinish(),end);
+});
+
+test('an existing monolithic NFT can enter a new vault without replacing the NFT or token',async()=>{
+  const {market,token}=await fixture(),recipient=await user.getAddress(),address=await owner.getAddress();
+  await (await market.connect(user).mintPass(...await signed(market,recipient,{tier:0}))).wait();
+  const a=artifact('OnholdGameplayVault'),implementation=await new ContractFactory(a.abi,a.bytecode,owner).deploy();await implementation.waitForDeployment();
+  const proxyArtifact=artifact('ERC1967Proxy'),proxy=await new ContractFactory(proxyArtifact.abi,proxyArtifact.bytecode,owner).deploy(await implementation.getAddress(),implementation.interface.encodeFunctionData('initialize',[address,await market.getAddress(),await token.getAddress()]));await proxy.waitForDeployment();
+  const vault=new Contract(await proxy.getAddress(),a.abi,user),uri=await market.tokenURI(1);
+  await (await market.connect(user).approve(await vault.getAddress(),1)).wait();await (await vault.stake(1,{gasLimit:1200000})).wait();
+  assert.equal(await market.ownerOf(1),await vault.getAddress());assert.equal(await vault.miningStartedAt(),0n);assert.equal(await market.miningStartedAt(),0n);assert.equal(await market.tokenURI(1),uri);
+  await (await vault.unstake(1,{gasLimit:1000000})).wait();assert.equal(await market.ownerOf(1),recipient);
+});

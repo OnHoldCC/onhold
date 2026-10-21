@@ -8,19 +8,25 @@ import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {welcomeCopy} from '../src/welcome-copy.mjs';
 import {translate} from '../src/i18n.mjs';
-import {portraitClipPath} from '../src/portrait-shape.mjs';
+import {portraitClipPath,portraitClipPaths} from '../src/portrait-shape.mjs';
 
 test('portrait uses compact WebP variants with alpha and an inline silhouette',async()=>{
-  for(const [size,height,limit] of [[640,800,100000],[1024,1280,200000]]){
-    const file=await readFile(new URL(`../src/assets/welcome/claude-code-girl-${size}.webp`,import.meta.url));
-    assert.equal(file.toString('ascii',0,4),'RIFF');assert.equal(file.toString('ascii',8,16),'WEBPVP8X');
-    assert.ok(file[20]&0x10,'Transparent alpha is retained');
-    assert.equal(file.readUIntLE(24,3)+1,size);assert.equal(file.readUIntLE(27,3)+1,height);
-    assert.ok(file.length<limit,`${size}px portrait exceeds its transfer budget`);
+  for(const name of ['claude-code-girl','teacher','student','sister']){
+    for(const [size,height,limit] of [[640,800,100000],[1024,1280,200000]]){
+      const file=await readFile(new URL(`../src/assets/welcome/${name}-${size}.webp`,import.meta.url));
+      assert.equal(file.toString('ascii',0,4),'RIFF');assert.equal(file.toString('ascii',8,16),'WEBPVP8X');
+      assert.ok(file[20]&0x10,'Transparent alpha is retained');
+      assert.equal(file.readUIntLE(24,3)+1,size);assert.equal(file.readUIntLE(27,3)+1,height);
+      assert.ok(file.length<limit,`${name} ${size}px portrait exceeds its transfer budget`);
+    }
   }
-  assert.match(portraitClipPath,/^polygon\(/);
-  const coordinates=[...portraitClipPath.matchAll(/([\d.]+)%/g)].map(match=>Number(match[1]));
-  assert.ok(coordinates.length>50&&coordinates.every(value=>value>=0&&value<=100));
+  const paths=[portraitClipPath,...Object.values(portraitClipPaths)];
+  assert.equal(new Set(paths).size,4,'Each character needs its own silhouette');
+  for(const path of paths){
+    assert.match(path,/^polygon\(/);
+    const coordinates=[...path.matchAll(/([\d.]+)%/g)].map(match=>Number(match[1]));
+    assert.ok(coordinates.length>50&&coordinates.every(value=>value>=0&&value<=100));
+  }
 });
 
 test('welcome instructions explain the account-to-staking flow in all eight locales',()=>{
@@ -42,9 +48,14 @@ test('welcome uses the shared accessible dialog and a keyboard-accessible next a
     await build({stdin:{resolveDir:fileURLToPath(new URL('../',import.meta.url)),contents:`
       import React from 'react';import {renderToStaticMarkup as render} from 'react-dom/server';
       import {WelcomeLetter} from './components/onhold/WelcomeLetter.jsx';
+      import {welcomePortraits} from './src/welcome-portraits.mjs';
       import {translate} from './src/i18n.mjs';
       const props={onClose:()=>{},onStart:()=>{},lang:'en',onLanguageChange:()=>{},t:key=>translate('en',key)};
-      console.log(JSON.stringify({open:render(React.createElement(WelcomeLetter,{...props,open:true})),closed:render(React.createElement(WelcomeLetter,{...props,open:false}))}));
+      const variants=welcomePortraits.map((portrait,index)=>{
+        Math.random=()=>(index+.5)/welcomePortraits.length;
+        return {...portrait,html:render(React.createElement(WelcomeLetter,{...props,open:true}))};
+      });
+      console.log(JSON.stringify({variants,open:variants[0].html,closed:render(React.createElement(WelcomeLetter,{...props,open:false}))}));
     `},outfile,bundle:true,jsx:'automatic',platform:'node',format:'esm',logLevel:'silent',loader:{'.png':'file','.webp':'file','.css':'empty'},banner:{js:"import {createRequire} from 'node:module';const require=createRequire(import.meta.url);"}});
     const html=JSON.parse(execFileSync(process.execPath,[outfile],{encoding:'utf8',maxBuffer:8*1024*1024}));
     assert.match(html.open,/app-modal-dialog welcome-letter/);
@@ -57,5 +68,11 @@ test('welcome uses the shared accessible dialog and a keyboard-accessible next a
     assert.doesNotMatch(html.open,/claude-code-girl-spark.*\.png/);
     assert.match(html.open,/welcome-letter__skeleton/);assert.match(html.open,/clip-path:polygon/);
     assert.match(html.open,/aria-busy="true"/);assert.match(html.open,/decoding="async"/);
+    assert.deepEqual(html.variants.map(portrait=>portrait.id),['original','teacher','student','sister']);
+    for(const portrait of html.variants){
+      assert.ok(portrait.html.includes(`src="${portrait.src}"`),`${portrait.id} is reachable by random selection`);
+      assert.ok(portrait.html.includes(`srcSet="${portrait.small}"`));
+      assert.ok(portrait.html.includes(`clip-path:${portrait.clipPath}`),`${portrait.id} uses its matching skeleton`);
+    }
   }finally{await rm(directory,{recursive:true,force:true});}
 });

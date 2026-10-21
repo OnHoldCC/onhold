@@ -23,6 +23,30 @@ test('first connection signs only the exact scoped binding, then submits nonce a
  assert.equal((await bindWalletReferral(provider,wallet,'abcdef123456',market,()=>true)).referralBound,true);
  assert.equal(rpc.filter(m=>m==='personal_sign').length,1);assert.ok(!rpc.includes('eth_sendTransaction'));assert.deepEqual(requests[1],{wallet,nonce,signature:'0x'+'11'.repeat(65)});
 });
+test('opening your own invite continues with a signed no-inviter binding',async()=>{
+ const zero='0x0000000000000000000000000000000000000000',expires=Math.floor(Date.now()/1000)+600,requests=[];
+ const quote={bound:false,referrer:zero,nonce,expires_at:expires,message:referralMessage({origin,market,wallet,referrer:zero,nonce,expiresAt:expires})};
+ globalThis.fetch=async(path,options)=>{
+  const body=JSON.parse(options.body);requests.push(body);
+  if(body.referral_code)return {ok:false,json:async()=>({error:'self_referral'})};
+  return response(body.signature?{bound:true,referrer:zero,code:null}:quote);
+ };
+ const provider={request:async({method,params})=>{
+  if(method==='eth_accounts')return [wallet];if(method==='eth_chainId')return '0x61';
+  if(method==='personal_sign'){assert.equal(Buffer.from(params[0].slice(2),'hex').toString(),quote.message);return '0x'+'11'.repeat(65);}
+  throw Error('Unexpected method '+method);
+ }};
+ assert.deepEqual(await bindWalletReferral(provider,wallet,'abcdef123456',market,()=>true),{referralBound:true,referralCode:'',referrer:zero});
+ assert.deepEqual(requests,[{wallet,referral_code:'abcdef123456'},{wallet,referral_code:null},{wallet,nonce,signature:'0x'+'11'.repeat(65)}]);
+});
+test('invalid invites and service errors never silently become no inviter',async()=>{
+ const provider={request:async()=>{throw Error('No wallet prompt permitted');}};
+ for(const code of ['invalid_referral_code','service_unavailable']){
+  let calls=0;globalThis.fetch=async()=>{calls++;return {ok:false,json:async()=>({error:code})};};
+  await assert.rejects(bindWalletReferral(provider,wallet,'abcdef123456',market,()=>true),cause=>cause.code===code);
+  assert.equal(calls,1);
+ }
+});
 test('automatic restoration never signs an unbound wallet; tampered, expired or cancelled challenges cannot sign',async()=>{
  let signed=0;const provider={request:async()=>{signed++;throw Error('should not sign');}};
  const expires=Math.floor(Date.now()/1000)+600;const quote={bound:false,referrer,nonce,expires_at:expires,message:referralMessage({origin,market,wallet,referrer,nonce,expiresAt:expires})};

@@ -39,6 +39,7 @@ export interface AnalyticsPreviewProps extends PreviewProps {
     metric?: {
         label: string;
         value: string | null;
+        valueTitle?: string;
         period: string;
         history: number[];
         format?: 'count';

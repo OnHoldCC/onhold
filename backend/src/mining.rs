@@ -503,6 +503,8 @@ fn decimal(v: U256) -> Result<String, ApiError> {
 #[derive(Clone)]
 pub struct Tracker {
     pub market: String,
+    pub nft: String,
+    pub nft_only: bool,
     start: u64,
     cache: Arc<Mutex<Cache>>,
 }
@@ -536,7 +538,10 @@ impl Tracker {
                 if start == 0 {
                     return Err("Set the actual deployment block".into());
                 }
+                let nft_only=std::env::var("ONHOLD_NFT_ADDRESS").ok().and_then(|v|crypto::address(&v).ok()).as_ref()==Some(&market);
                 Ok(Some(Self {
+                    nft_only,
+                    nft: std::env::var("ONHOLD_NFT_ADDRESS").ok().map(|value| crypto::address(&value)).transpose().map_err(|_| "Invalid NFT address")?.unwrap_or_else(|| market.clone()),
                     market,
                     start,
                     cache: Arc::new(Mutex::new(Cache {
@@ -1015,6 +1020,8 @@ pub async fn snapshot(
     crate::analytics::apply_campaigns(&telemetry, &tracker.market, &mut ads);
     crate::analytics::apply_campaigns(&telemetry, &tracker.market, &mut history);
     let mut mining = data.mining(wallet.as_deref())?;
+    mining["gameplayAvailable"] = json!(!tracker.nft_only);
+    mining["nftAddress"] = json!(tracker.nft);
     mining["network"] = cached_network(&state).await.and_then(|v| v.get("latest").cloned()).unwrap_or(Value::Null);
     mining["ownedCount"] = json!(owned);
     mining["stakedCount"] = json!(staked);
@@ -1070,7 +1077,7 @@ pub async fn backfill(state: &AppState, tracker: &Tracker, head: u64) -> Result<
         json!([format!("0x{to:x}"), false]),
     )
     .await?;
-    let logs=rpc(state,"eth_getLogs",json!([{"address":tracker.market,"fromBlock":format!("0x{:x}",model.next_block),"toBlock":format!("0x{to:x}")}])).await?;
+    let logs=rpc(state,"eth_getLogs",json!([{"address":if tracker.nft==tracker.market {json!(tracker.market)}else{json!([tracker.market,tracker.nft])},"fromBlock":format!("0x{:x}",model.next_block),"toBlock":format!("0x{to:x}")}])).await?;
     if rpc(
         state,
         "eth_getBlockByNumber",
@@ -1111,7 +1118,7 @@ async fn apply_logs(
     });
     let mut dirty = Dirty::default();
     for log in &logs {
-        if log["address"].as_str().map(str::to_lowercase) != Some(tracker.market.clone()) {
+        if log["address"].as_str().map(str::to_lowercase)  .is_none_or(|address|address!=tracker.market && address!=tracker.nft) {
             return Err(invalid());
         }
         dirty.collect(&model, log)?;
@@ -1129,7 +1136,7 @@ async fn apply_logs(
                 state,
                 "eth_call",
                 // Pass metadata is immutable; reading it never needs an archival state node.
-                json!([{"to":tracker.market,"data":data},"latest"]),
+                json!([{"to":tracker.nft,"data":data},"latest"]),
             )
             .await?;
             pass.image = Some(crate::artwork::image_from_result(&result)?);
@@ -1185,14 +1192,19 @@ fn validate_deployment(logs: &Value, market: &str, start: u64, header: &Value) -
 pub async fn check(state: &AppState) -> Result<(), ApiError> {
     if let Some(tracker) = &state.mining {
         let result=rpc(state,"eth_call",json!([{"to":tracker.market,"data":crypto::hex(&crypto::keccak("PROTOCOL_ID()")[..4])},"latest"])).await?;
-        if result != crypto::hex(&crypto::keccak("onhold.nft-staking.v4")) {
+        if result != crypto::hex(&crypto::keccak(if tracker.nft_only {"onhold.nft.v1"}else if tracker.nft != tracker.market {"onhold.gameplay.v1"}else{"onhold.nft-staking.v4"})) {
             return Err(ApiError(StatusCode::BAD_GATEWAY, "protocol_mismatch"));
+        }
+        if tracker.nft != tracker.market {
+            let configured=rpc(state,"eth_call",json!([{"to":tracker.market,"data":crypto::hex(&crypto::keccak("nft()")[..4])},"latest"])).await?;
+            let actual=configured.as_str().and_then(|v|v.strip_prefix("0x")).map(|v| address(v,0)).transpose()?;
+            if actual.as_deref()!=Some(tracker.nft.as_str()) { return Err(ApiError(StatusCode::BAD_GATEWAY,"nft_mismatch")); }
         }
         // Constructor logs survive state pruning and bind the configured deployment block.
         let mut logs = rpc(
             state,
             "eth_getLogs",
-            json!([{"address":tracker.market,"fromBlock":format!("0x{:x}",tracker.start),"toBlock":format!("0x{:x}",tracker.start),"topics":[crypto::hex(&crypto::keccak("OwnershipTransferred(address,address)")),format!("0x{}",zero())]}]),
+            json!([{"address":tracker.nft,"fromBlock":format!("0x{:x}",tracker.start),"toBlock":format!("0x{:x}",tracker.start),"topics":[crypto::hex(&crypto::keccak("OwnershipTransferred(address,address)")),format!("0x{}",zero())]}]),
         )
         .await?;
         let header = rpc(state, "eth_getBlockByNumber", json!([format!("0x{:x}",tracker.start),false])).await?;
@@ -1203,7 +1215,7 @@ pub async fn check(state: &AppState) -> Result<(), ApiError> {
             let rows=client.query("SELECT data FROM chain_events WHERE market=$1 AND block_number=$2 AND data->'topics'->>0=$3 AND data->'topics'->>1=$4 ORDER BY log_index",&[&tracker.market,&(tracker.start as i64),&crypto::hex(&crypto::keccak("OwnershipTransferred(address,address)")),&format!("0x{}",zero())]).await.map_err(|_|pg::error())?;
             logs=json!(rows.iter().map(|row|row.get::<_,Value>(0)).collect::<Vec<_>>());
         }
-        validate_deployment(&logs, &tracker.market, tracker.start, &header)?;
+        validate_deployment(&logs, &tracker.nft, tracker.start, &header)?;
     }
     Ok(())
 }
@@ -1251,7 +1263,7 @@ pub async fn apply_stream(
     let logs = logs
         .iter()
         .filter(|log| {
-            log["address"].as_str() == Some(&tracker.market)
+            log["address"].as_str().is_some_and(|address|address==tracker.market||address==tracker.nft)
                 && quantity(&log["blockNumber"]).is_ok_and(|n| n >= model.next_block)
         })
         .cloned()
