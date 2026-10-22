@@ -1,0 +1,35 @@
+{
+  "chainId": 97,
+  "testOnly": true,
+  "proxyAddress": "0x6dF5e9B6c29fdA32187f34653003617EC9e1A180",
+  "previousImplementation": "0x9844aA595aC7a2e1f557fAe55Bec220E8c45997B",
+  "implementationAddress": "0xCA009758E936DE89adE42f178dbacc18305eC024",
+  "nftAddress": "0xe6FCaf7da63c581afc22B27D0aCf27eB26645A1f",
+  "tokenAddress": "0xd47430c9668131AaEE37eDc34F1e768Af4412005",
+  "verifiedAt": "2026-10-22T04:35:44.450Z",
+  "checks": {
+    "assetBindingsPreserved": true,
+    "miningClockPreserved": true,
+    "existingExtensionStoragePreserved": true,
+    "directTransferRecovery": true,
+    "stakedNftRecoveryRejected": true,
+    "normalStakeAndUnstake": true,
+    "earlyReserveWithdrawalRejected": true,
+    "expiredReserveWithdrawal": "Verified on public testnet in a separate test-only vault with simulated expiry"
+  },
+  "transactions": {
+    "implementation": "0x780fa2747c3d758292d9c06d73eddf034f624b6ee18d4c735411f6ea5b89489a",
+    "upgrade": "0x5e26428540e03dfff425848044091cb66563cd1079df29cb0eb0a5afbd431dc9",
+    "directTransfer": "0x138712b42ede5190b08861f0a93f244b2ad455137dec5be2db389d9df0993093",
+    "recover": "0x25166b6b95d4443b2b00fccef3b32e6900e10cfaa417ba81c61d4c01c3a49475",
+    "approveStake": "0x2e2f32276b16200c9c55889eadbbd005dc7658101e4cfc0de9b30ff45727aa06",
+    "stake": "0xe3c8a16192275dfe796b27b1d1208aa62d3ac2a3df65d274d11db3b60997a5a6",
+    "unstake": "0xa41ef0fcb72010ca0fcafa6415ac7cdcdb5b1e8dbef9a2c3df70a92eeff846ff"
+  },
+  "expiryAcceptance": {
+    "record": "testnet-expired-ad-reserve-20261022.json",
+    "proxyAddress": "0x60CFAb7fd44e6223099d99E78D39681016D26bF5",
+    "expirySimulated": true,
+    "notUsedByWebsite": true
+  }
+}

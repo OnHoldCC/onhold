@@ -176,7 +176,7 @@ impl Buffer {
     }
 }
 async fn session(state: &AppState, url: &str) -> Result<(), ApiError> {
-    if rpc(state, "eth_chainId", json!([])).await? != "0x61" {
+    if rpc(state, "eth_chainId", json!([])).await? != state.network.hex() {
         return Err(error("wrong_chain"));
     }
     mining::check(state).await?;
@@ -236,7 +236,7 @@ async fn session(state: &AppState, url: &str) -> Result<(), ApiError> {
                             )
                         }
                         Some(3) => {
-                            if v["result"] != "0x61" {
+                            if v["result"] != state.network.hex() {
                                 return Err(error("wrong_ws_chain"));
                             }
                             chain = true;

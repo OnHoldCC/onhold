@@ -1,9 +1,10 @@
+import {chain} from './network.mjs';
 import {createInteractionTiming} from './interaction-timing.mjs';
 import {claimRequest,createInvite} from './claims-api.mjs';
 const ZERO='0x0000000000000000000000000000000000000000';
 const code=value=>typeof value==='string'&&/^[a-f0-9]{12}$/i.test(value);
 const address=value=>typeof value==='string'&&/^0x[0-9a-fA-F]{40}$/.test(value);
-const sourceKey='onhold.referral.source';
+const sourceKey=chain.id===97?'onhold.referral.source':`onhold.referral.source:${chain.id}`;
 export function rememberReferral(search,storage){
   const incoming=new URLSearchParams(search).get('ref');
   if(incoming!==null&&!code(incoming)&&!address(incoming))throw Error('invalid_referral_code');
@@ -12,7 +13,7 @@ export function rememberReferral(search,storage){
   return code(saved)||address(saved)?saved.toLowerCase():'';
 }
 export function referralMessage({origin,market,wallet,referrer,nonce,expiresAt}){
-  return `ONHOLD referral binding\nSite: ${origin}\nChain: BNB Testnet (97)\nContract: ${market.toLowerCase()}\nWallet: ${wallet.toLowerCase()}\nInviter: ${referrer}\nThis permanently fixes this wallet's inviter for future NFTs. Zero address means no inviter. This signature does not send a transaction or grant token permissions.\nNonce: ${nonce}\nExpires: ${expiresAt}`;
+  return `ONHOLD referral binding\nSite: ${origin}\nChain: ${chain.label}\nContract: ${market.toLowerCase()}\nWallet: ${wallet.toLowerCase()}\nInviter: ${referrer}\nThis permanently fixes this wallet's inviter for future NFTs. Zero address means no inviter. This signature does not send a transaction or grant token permissions.\nNonce: ${nonce}\nExpires: ${expiresAt}`;
 }
 export async function bindWalletReferral(provider,wallet,source,market,isCurrent,allowSign=true,timing=createInteractionTiming()){
   if(!address(wallet)||!address(market))throw Error('invalid_wallet');

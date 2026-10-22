@@ -14,7 +14,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 const ZERO: &str = "0x0000000000000000000000000000000000000000";
-const RPC: &str = "https://bsc-testnet-dataseed.bnbchain.org";
+
 fn error(status: StatusCode, code: &'static str) -> ApiError {
     ApiError(status, code)
 }
@@ -249,7 +249,7 @@ pub async fn verify(
             .claims
             .as_ref()
             .ok_or(error(StatusCode::SERVICE_UNAVAILABLE, "nft_not_configured"))?;
-        if rpc(&state, "eth_chainId", json!([])).await? != "0x61"
+        if rpc(&state, "eth_chainId", json!([])).await? != state.network.hex()
             || contract_call(&state, &signer.market, "MOCK_ONLY()", &[]).await?
                 != json!(format!("0x{:064x}", 1))
         {
@@ -414,7 +414,7 @@ async fn quote_data(state: AppState, request: &MintRequest) -> Result<Quote, Api
     }
     let publication = serde_json::to_string(&public_record)
         .map_err(|_| error(StatusCode::INTERNAL_SERVER_ERROR, "storage_unavailable"))?;
-    let message=format!("ONHOLD NFT mint authorization\nChain: BNB Testnet (97)\nContract: {}\nRecipient: {wallet}\nReferrer: {referrer}\nPlan tier: {tier}\nPERMANENT PUBLIC ON-CHAIN RECORD (account and raw UUID are public and cannot be erased): {publication}\nVerification: {}\nExpires: {expires}",signer.market,request.verification_token);
+    let message=format!("ONHOLD NFT mint authorization\nChain: {}\nContract: {}\nRecipient: {wallet}\nReferrer: {referrer}\nPlan tier: {tier}\nPERMANENT PUBLIC ON-CHAIN RECORD (account and raw UUID are public and cannot be erased): {publication}\nVerification: {}\nExpires: {expires}",state.network.label(),signer.market,request.verification_token);
     Ok(Quote {
         nullifier,
         wallet,
@@ -439,7 +439,7 @@ pub async fn quote(
 pub(super) async fn rpc(state: &AppState, method: &str, params: Value) -> Result<Value, ApiError> {
     let response = state
         .http
-        .post(std::env::var("ONHOLD_CHAIN_RPC_URL").unwrap_or_else(|_| RPC.into()))
+        .post(std::env::var("ONHOLD_CHAIN_RPC_URL").unwrap_or_else(|_| state.network.rpc()))
         .json(&json!({"jsonrpc":"2.0","id":1,"method":method,"params":params}))
         .send()
         .await
@@ -502,7 +502,7 @@ pub async fn authorize(
         .claims
         .clone()
         .ok_or(error(StatusCode::SERVICE_UNAVAILABLE, "nft_not_configured"))?;
-    if rpc(&state, "eth_chainId", json!([])).await? != "0x61" {
+    if rpc(&state, "eth_chainId", json!([])).await? != state.network.hex() {
         return Err(error(StatusCode::BAD_GATEWAY, "wrong_chain"));
     }
     if contract_call(&state, &signer.market, "PROTOCOL_ID()", &[]).await?
@@ -576,12 +576,12 @@ pub async fn authorize(
     };
     let proof = crypto::sign(
         &signer.key,
-        &crypto::mint_digest(&claim)
+        &crypto::mint_digest(&claim, state.network.id)
             .map_err(|_| error(StatusCode::INTERNAL_SERVER_ERROR, "signing_failed"))?,
     )
     .map_err(|_| error(StatusCode::INTERNAL_SERVER_ERROR, "signing_failed"))?;
     Ok(Json(
-        json!({"protocol":"nft-staking-v4","market":signer.market,"chain_id":97,"recipient":q.wallet,"nullifier":q.nullifier,"tier":q.tier,"referrer":q.referrer,"deadline":deadline,"record":q.record,"signature":proof}),
+        json!({"protocol":"nft-staking-v4","market":signer.market,"chain_id":state.network.id,"recipient":q.wallet,"nullifier":q.nullifier,"tier":q.tier,"referrer":q.referrer,"deadline":deadline,"record":q.record,"signature":proof}),
     ))
 }
 #[derive(Deserialize)]
@@ -689,6 +689,7 @@ mod tests {
             market: format!("0x{}", "11".repeat(20)),
         };
         AppState {
+            network: Default::default(),
             db: Arc::new(std::sync::Mutex::new(db)),
             origin: "http://localhost:4190".into(),
             http: reqwest::Client::new(),

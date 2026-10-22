@@ -1,3 +1,4 @@
+import {chain} from './network.mjs';
 import {readJson} from './read-json.mjs';
 export function extractSession(input){
   if(typeof input!=='string'||input.length>65536)throw Error('invalid_session');
@@ -13,7 +14,7 @@ export async function claimRequest(path,body){
   const value=await response.json().catch(()=>({error:'service_unavailable'}));
   if(!response.ok){const error=new Error(value.error||'service_unavailable');error.code=value.error;if(path==='/api/verify'&&validDetails(value.details))error.details=value.details;throw error;}return value;
 }
-export async function publicStatus(){try{const value=await readJson('/api/status',3000);return value.chain_id===97&&value.protocol==='nft-staking-v4'?value:null;}catch{return null;}}
+export async function publicStatus(){try{const value=await readJson('/api/status',3000);return value.chain_id===chain.id&&value.protocol==='nft-staking-v4'?value:null;}catch{return null;}}
 function validDetails(value){
   const text=(v,max)=>v===null||typeof v==='string'&&Array.from(v).length<=max;
   return value&&text(value.standing,80)&&text(value.previous_plan,80)&&text(value.banned_at,64)&&text(value.ban_category,80)&&Array.isArray(value.organizations)&&value.organizations.length<=5&&value.organizations.every(org=>text(org.name,160)&&(org.uuid===null||/^[0-9a-f-]{36}$/i.test(org.uuid)));

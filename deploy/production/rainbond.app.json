@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "project": {
+    "name": "onhold-prod",
+    "description": "Isolated BNB mainnet preparation; no signing or contracts"
+  },
+  "components": [
+    {
+      "name": "postgres",
+      "role": "database",
+      "image": "docker.1ms.run/library/postgres:16-bookworm",
+      "port": 5432,
+      "port_alias": "DATABASE",
+      "env": {
+        "POSTGRES_DB": "onhold_prod",
+        "POSTGRES_USER": "onhold_prod",
+        "PGDATA": "/var/lib/postgresql/data/pgdata"
+      },
+      "connection_envs": {
+        "DB_NAME": "onhold_prod",
+        "DB_USER": "onhold_prod",
+        "DB_PASS": "$POSTGRES_PASSWORD"
+      },
+      "storage": [
+        {
+          "volume_name": "onhold-prod-postgres",
+          "volume_type": "share-file",
+          "volume_path": "/var/lib/postgresql/data"
+        }
+      ],
+      "protocol": "tcp"
+    },
+    {
+      "name": "redis",
+      "role": "cache",
+      "image": "docker.1ms.run/library/redis:7-bookworm",
+      "port": 6379,
+      "port_alias": "REDIS",
+      "storage": [
+        {
+          "volume_name": "onhold-prod-redis",
+          "volume_type": "share-file",
+          "volume_path": "/data"
+        }
+      ],
+      "protocol": "tcp",
+      "env": {},
+      "cmd": "redis-server --appendonly yes --save 900 1 --requirepass $(ONHOLD_REDIS_PASSWORD)"
+    },
+    {
+      "name": "api",
+      "role": "service",
+      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261022-production-v62",
+      "port": 8080,
+      "env": {
+        "ONHOLD_ENV": "production",
+        "ONHOLD_CHAIN_ID": "56",
+        "ONHOLD_MODE": "prepare",
+        "ONHOLD_ORIGIN": "https://onhold.cc",
+        "ONHOLD_ADDR": "0.0.0.0:8080",
+        "ONHOLD_DATA_DIR": "/data/prod",
+        "ONHOLD_DIST_DIR": "/app/front/dist"
+      },
+      "depends_on": [
+        "postgres",
+        "redis"
+      ],
+      "storage": [
+        {
+          "volume_name": "onhold-prod-api",
+          "volume_type": "share-file",
+          "volume_path": "/data"
+        }
+      ],
+      "access_mode": "same-origin"
+    }
+  ]
+}

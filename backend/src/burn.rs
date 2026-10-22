@@ -54,10 +54,10 @@ fn now() -> u64 {
         .unwrap_or_default()
         .as_secs()
 }
-fn policy() -> Result<Value, ApiError> {
+fn policy(chain_id: u64) -> Result<Value, ApiError> {
     Ok(
         serde_json::from_str::<Value>(include_str!("../../contracts/buyback-policy.json"))
-            .map_err(|_| internal())?["97"]
+            .map_err(|_| internal())?[chain_id.to_string()]
             .clone(),
     )
 }
@@ -102,9 +102,9 @@ pub async fn snapshot(
         json!({"configured":false,"available":true,"events":[],"totals":null,"status":"unconfigured"})
     };
     value["token_symbol"] = json!(token_symbol());
-    value["chain_id"] = json!(97);
+    value["chain_id"] = json!(state.network.id);
     value["storage"] = json!("postgresql");
-    if value["source"] != "flap" { value["policy"] = policy()?; }
+    if value["source"] != "flap" { value["policy"] = policy(state.network.id)?; }
     Ok(([(header::CACHE_CONTROL, "no-store")], Json(value)))
 }
 fn quantity(value: &Value) -> Result<u64, ApiError> {
@@ -208,12 +208,12 @@ impl Projection {
             policy: p["policy"].as_object().map(|_| p["policy"].clone()),
         })
     }
-    fn data(&self, tracker: &Tracker, header: &Value) -> Result<Value, ApiError> {
+    fn data(&self, tracker: &Tracker, header: &Value, chain_id:u64) -> Result<Value, ApiError> {
         let eligible = self
             .balance
             .checked_add(self.unsettled)
             .ok_or_else(internal)?;
-        let minimum = policy()?["minimum_wei"]
+        let minimum = policy(chain_id)?["minimum_wei"]
             .as_str()
             .and_then(|s| s.parse::<u128>().ok())
             .ok_or_else(internal)?;
@@ -523,7 +523,7 @@ pub async fn backfill(state: &AppState, tracker: &Tracker, head: u64) -> Result<
     if block_at(state, confirmed).await?["hash"] != header["hash"] {
         return Err(internal());
     }
-    let mut data = p.data(tracker, &header)?;
+    let mut data = p.data(tracker, &header,state.network.id)?;
     data["indexing"] = json!(confirmed < latest);
     data["syncing"] = json!(true);
     data["connected"] = json!(false);
@@ -583,7 +583,7 @@ pub async fn apply_stream(
         state,
         tracker,
         header,
-        &p.data(tracker, header)?,
+        &p.data(tracker, header,state.network.id)?,
         &logs,
         false,
     )
@@ -670,7 +670,7 @@ mod projection_tests {
             official: false,
         };
         let data = p
-            .data(&tracker, &json!({"number":"0x10","timestamp":"0x65"}))
+            .data(&tracker, &json!({"number":"0x10","timestamp":"0x65"}),97)
             .unwrap();
         assert_eq!(Projection::read(&data).unwrap(), p);
         assert!(p
@@ -709,7 +709,7 @@ mod projection_tests {
         let rows = receipts(&logs, &tracker, &p).unwrap();
         assert_eq!(rows.len(), 3);
         assert!(rows.iter().all(|r| r["spent"].is_null() && r["gas_refunded"].is_null() && r["source"] == "flap"));
-        let data = p.data(&tracker, &json!({"number":"0x10","timestamp":"0x65"})).unwrap();
+        let data = p.data(&tracker, &json!({"number":"0x10","timestamp":"0x65"}),97).unwrap();
         assert_eq!(data["source"], "flap");
         assert_eq!(data["totals"]["spent"], Value::Null);
         assert_eq!(Projection::read(&data).unwrap(), p);

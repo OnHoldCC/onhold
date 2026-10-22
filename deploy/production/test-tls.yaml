@@ -1,0 +1,12 @@
+apiVersion: apisix.apache.org/v2
+kind: ApisixTls
+metadata:
+  name: onhold-test
+  namespace: default
+spec:
+  hosts:
+    - test.onhold.cc
+  ingressClassName: apisix
+  secret:
+    name: onhold.cc
+    namespace: default

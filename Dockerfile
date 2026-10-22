@@ -7,11 +7,13 @@ RUN npm ci --include=dev
 
 FROM js-deps AS contracts-build
 COPY contracts ./contracts
+COPY config ./config
 RUN npm run contracts:build
 
 FROM contracts-build AS web-build
 COPY front ./front
-RUN node front/scripts/build.mjs
+ARG ONHOLD_CHAIN_CONFIG
+RUN ONHOLD_CHAIN_CONFIG=$ONHOLD_CHAIN_CONFIG node front/scripts/build.mjs
 
 FROM --platform=$BUILDPLATFORM docker.1ms.run/library/rust:1.94-bookworm AS rust-build
 WORKDIR /app
@@ -31,6 +33,7 @@ COPY backend/src ./backend/src
 COPY backend/sql ./backend/sql
 COPY front/src/fonts/nunito-variable.ttf ./front/src/fonts/nunito-variable.ttf
 COPY contracts/buyback-policy.json ./contracts/buyback-policy.json
+COPY config ./config
 RUN cargo build --locked --release --manifest-path backend/Cargo.toml --target x86_64-unknown-linux-gnu --jobs 2
 
 FROM docker.1ms.run/library/node:24-bookworm-slim AS keeper
@@ -40,6 +43,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --workspaces=false --ignore-scripts && npm cache clean --force
 COPY backend/scripts/buyback-keeper.mjs backend/scripts/buyback-cycle.mjs ./backend/scripts/
 COPY contracts/buyback-policy.json ./contracts/buyback-policy.json
+COPY config ./config
 COPY --from=contracts-build /build/contracts/artifacts/FlapBuyback.json /build/contracts/artifacts/OnholdMarket.json /build/contracts/artifacts/OnholdGameplayVault.json ./contracts/artifacts/
 RUN mkdir -p /data/keeper && chown -R node:node /data
 USER node

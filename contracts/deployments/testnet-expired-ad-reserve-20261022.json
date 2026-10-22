@@ -1,0 +1,32 @@
+{
+  "chainId": 97,
+  "testOnly": true,
+  "expirySimulated": true,
+  "notUsedByWebsite": true,
+  "implementationAddress": "0xbCFc82768A7dD7760f5C268b192FcB0CC9aA3347",
+  "proxyAddress": "0x60CFAb7fd44e6223099d99E78D39681016D26bF5",
+  "verifiedAt": "2026-10-22T04:39:15.416Z",
+  "depositBNB": "0.002",
+  "expiredReserveWithdrawnBNB": "0.001",
+  "teamRevenueReturnedBNB": "0.001",
+  "checks": {
+    "earlyWithdrawalRejected": true,
+    "nonOwnerWithdrawalRejected": true,
+    "bidAfterExpiryRejected": true,
+    "partialWithdrawal": true,
+    "dustWithdrawal": true,
+    "withdrawalEvents": 2,
+    "remainingNativeBalance": "0",
+    "noUserAssetsDeposited": true,
+    "activeVaultClockUnchanged": true
+  },
+  "transactions": {
+    "implementation": "0x8ba01bb2f26204d639e7abb1e7fdda9138546e7ae1689f61b0bdd35c6b3d5be8",
+    "proxy": "0x604b60268404f9aac60b9a4223d3ea556f4e4ca921fc9b2e889d6c24399825de",
+    "bid": "0x15013def0fe68ac157c17d072a5be6ba31bf6d03fe4d0651839199fd2ae34bca",
+    "expire": "0x3a3ec821955e7c7644704381b01b7e6c8bc8407a8ce14e063ebdcab9d10d8676",
+    "withdrawPartial": "0x003f32bba53543cfc52be39cbb6711710c5067eae8ae5bc47730044c6c150e86",
+    "withdrawDust": "0xd17d1f6ba7fce1097686ca917b1d2bc0cfaae77877797f307a4d2aa1f6785e82",
+    "withdrawTeam": "0x12ed65549b119294e449018e90769fc20d2e1ccc3f4041e4e81919ed1039094a"
+  }
+}

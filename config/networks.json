@@ -1,0 +1,30 @@
+{
+  "56": {
+    "id": 56,
+    "hexId": "0x38",
+    "name": "BNB Smart Chain",
+    "label": "BNB Mainnet (56)",
+    "rpc": "https://bsc-dataseed.bnbchain.org",
+    "explorer": "https://bscscan.com",
+    "nativeCurrency": {
+      "name": "BNB",
+      "symbol": "BNB",
+      "decimals": 18
+    },
+    "portal": "0xe2cE6ab80874Fa9Fa2aAE65D277Dd6B8e65C9De0"
+  },
+  "97": {
+    "id": 97,
+    "hexId": "0x61",
+    "name": "BNB Smart Chain Testnet",
+    "label": "BNB Testnet (97)",
+    "rpc": "https://bsc-testnet-dataseed.bnbchain.org",
+    "explorer": "https://testnet.bscscan.com",
+    "nativeCurrency": {
+      "name": "Test BNB",
+      "symbol": "tBNB",
+      "decimals": 18
+    },
+    "portal": "0x5bEacaF7ABCbB3aB280e80D007FD31fcE26510e9"
+  }
+}

@@ -68,14 +68,14 @@ pub struct MintData<'a> {
     pub deadline: u64,
     pub record: &'a AccountRecord,
 }
-pub fn mint_digest(claim: &MintData) -> Result<[u8; 32], &'static str> {
+pub fn mint_digest(claim: &MintData, chain_id: u64) -> Result<[u8; 32], &'static str> {
     let mut domain = Vec::new();
     domain.extend(keccak(
         "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)",
     ));
     domain.extend(keccak("ONHOLD"));
     domain.extend(keccak("5"));
-    domain.extend(word(97));
+    domain.extend(word(chain_id as u128));
     domain.extend(address_word(claim.market)?);
     let mut message = Vec::new();
     message.extend(keccak("MintPass(address recipient,bytes32 nullifier,uint8 tier,address referrer,uint256 deadline,bytes32 recordHash)"));
@@ -156,8 +156,9 @@ mod tests {
                 plan: "claude_pro".into(),
             },
         };
+        assert_ne!(mint_digest(&claim,56).unwrap(),mint_digest(&claim,97).unwrap());
         assert_eq!(
-            hex(&mint_digest(&claim).unwrap()),
+            hex(&mint_digest(&claim,97).unwrap()),
             "0xfa82b82ea16dddb784b1d78d16368e705b47b778260227e15ebecf0c4cf3ec5d"
         );
     }

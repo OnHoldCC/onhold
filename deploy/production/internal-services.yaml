@@ -1,0 +1,30 @@
+# Stable service names stay independent of Rainbond component port reconciliation.
+apiVersion: v1
+kind: Service
+metadata:
+  name: onhold-prod-postgres
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    name: gr1c4fce
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: onhold-prod-redis
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    name: gr02c588
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+      protocol: TCP

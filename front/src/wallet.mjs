@@ -14,7 +14,7 @@ export async function ensureWalletChain(provider,chain){
   try{await provider.request({method:'wallet_switchEthereumChain',params:[{chainId:chain.hexId}]});}
   catch(error){
     if(error.code!==4902)throw error;
-    await provider.request({method:'wallet_addEthereumChain',params:[{chainId:chain.hexId,chainName:chain.name,nativeCurrency:{name:'Test BNB',symbol:'tBNB',decimals:18},rpcUrls:[chain.rpc],blockExplorerUrls:[chain.explorer]}]});
+    await provider.request({method:'wallet_addEthereumChain',params:[{chainId:chain.hexId,chainName:chain.name,nativeCurrency:chain.nativeCurrency||{name:'BNB',symbol:'BNB',decimals:18},rpcUrls:[chain.rpc],blockExplorerUrls:[chain.explorer]}]});
     await provider.request({method:'wallet_switchEthereumChain',params:[{chainId:chain.hexId}]});
   }
   if(parseChain(await provider.request({method:'eth_chainId'}))!==chain.id)throw Error('walletOther');

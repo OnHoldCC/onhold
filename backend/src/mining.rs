@@ -284,6 +284,11 @@ impl Snapshot {
             self.ad_reserve = hex(uint(&self.ad_reserve)?.wrapping_add(&uint(word(data, 1)?)?));
         } else if is("RevenueWithdrawn(address,uint256)") {
             self.ad_team = hex(uint(&self.ad_team)?.wrapping_sub(&uint(word(data, 0)?)?));
+        } else if is("ExpiredAdReserveWithdrawn(address,uint256)") {
+            let amount = uint(word(data, 0)?)?;
+            let reserve = uint(&self.ad_reserve)?;
+            if amount > reserve { return Err(invalid()); }
+            self.ad_reserve = hex(reserve.wrapping_sub(&amount));
         } else if is("AdRewardsReinvested(uint256,uint256)") {
             self.ad_reserve = hex(uint(&self.ad_reserve)?.wrapping_sub(&uint(word(data, 0)?)?));
             self.ad_reinvested =
@@ -852,10 +857,10 @@ pub async fn transaction_status(State(state):State<AppState>,Path(hash):Path<Str
     if let Some(row)=indexed {
         let actor:String=row.get(1);
         let from=crypto::address(&format!("0x{}",actor.get(26..).ok_or_else(invalid)?)).map_err(|_|invalid())?;
-        return Ok(([(header::CACHE_CONTROL,"no-store")],Json(json!({"hash":hash,"chainId":97,"market":tracker.market,"status":"confirmed","blockNumber":row.get::<_,i64>(0),"confirmedBlock":confirmed,"from":from}))));
+        return Ok(([(header::CACHE_CONTROL,"no-store")],Json(json!({"hash":hash,"chainId":state.network.id,"market":tracker.market,"status":"confirmed","blockNumber":row.get::<_,i64>(0),"confirmedBlock":confirmed,"from":from}))));
     }
     let receipt=tokio::time::timeout(std::time::Duration::from_secs(5),rpc(&state,"eth_getTransactionReceipt",json!([hash]))).await.map_err(|_|ApiError(StatusCode::SERVICE_UNAVAILABLE,"transaction_status_unavailable"))??;
-    let mut value=json!({"hash":hash,"chainId":97,"market":tracker.market,"status":"pending"});
+    let mut value=json!({"hash":hash,"chainId":state.network.id,"market":tracker.market,"status":"pending"});
     if !receipt.is_null() {
         if receipt["transactionHash"].as_str().map(str::to_lowercase)!=Some(hash.to_lowercase()) || receipt["to"].as_str().map(str::to_lowercase)!=Some(tracker.market.clone()) { return Err(ApiError(StatusCode::BAD_REQUEST,"invalid_transaction")); }
         let block=quantity(&receipt["blockNumber"])?;
@@ -1040,7 +1045,7 @@ pub async fn snapshot(
     Ok((
         [(header::CACHE_CONTROL, "no-store")],
         Json(
-            json!({"configured":true,"available":available,"stale":stale,"connected":connected,"syncing":syncing,"last_error":tracker.cache.lock().map_err(|_|crate::internal())?.last_error,"chain_id":97,"protocol":"nft-staking-v4","mock":data.mock_minimum.is_some(),"market":tracker.market,"storage":"postgresql","metadata_cache":store.redis.is_some(),"confirmed_block":data.block,"block_hash":data.hash,"as_of":data.time,"mining":mining,"ads":ads,"history":history,"historyTotal":history_total,"financial":{"claims":claims,"recipients":data.recipient_count,"claimed":amount(uint(&data.claimed)?)?,"burned":burned,"burnedSymbol":crate::burn::token_symbol(),"marketAddress":tracker.market}}),
+            json!({"configured":true,"available":available,"stale":stale,"connected":connected,"syncing":syncing,"last_error":tracker.cache.lock().map_err(|_|crate::internal())?.last_error,"chain_id":state.network.id,"protocol":"nft-staking-v4","mock":data.mock_minimum.is_some(),"market":tracker.market,"storage":"postgresql","metadata_cache":store.redis.is_some(),"confirmed_block":data.block,"block_hash":data.hash,"as_of":data.time,"mining":mining,"ads":ads,"history":history,"historyTotal":history_total,"financial":{"claims":claims,"recipients":data.recipient_count,"claimed":amount(uint(&data.claimed)?)?,"burned":burned,"burnedSymbol":crate::burn::token_symbol(),"marketAddress":tracker.market}}),
         ),
     ))
 }
@@ -1616,6 +1621,20 @@ mod tests {
         assert_eq!(units(&s.ad_team).unwrap(), 50);
         assert_eq!(units(&s.ad_reserve).unwrap(), 11);
         assert_eq!(units(&s.ad_reinvested).unwrap(), added);
+        s.apply(&log(
+            "ExpiredAdReserveWithdrawn(address,uint256)",
+            vec![ZERO.into()],
+            vec![U256::from_u64(7)],
+        )).unwrap();
+        assert_eq!(units(&s.ad_reserve).unwrap(), 4);
+        assert_eq!(units(&s.ad_team).unwrap(), 50);
+        assert_eq!(units(&s.ad_reinvested).unwrap(), added);
+        assert!(s.apply(&log(
+            "ExpiredAdReserveWithdrawn(address,uint256)",
+            vec![ZERO.into()],
+            vec![U256::from_u64(5)],
+        )).is_err());
+        assert_eq!(units(&s.ad_reserve).unwrap(), 4);
         let restored: Snapshot = serde_json::from_value(s.global()).unwrap();
         assert_eq!(restored.mining(None).unwrap(), s.mining(None).unwrap());
     }

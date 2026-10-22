@@ -49,6 +49,15 @@ impl Store {
             .batch_execute(include_str!("../sql/chain.sql"))
             .await
             .map_err(|_| "Unable to initialize PostgreSQL schema")?;
+        let network=crate::network::Network::from_env()?;
+        let recorded=write.query_opt("SELECT value FROM analytics_settings WHERE name='runtime_chain_id'",&[]).await?;
+        if let Some(row)=recorded {
+            if row.get::<_,String>(0)!=network.id.to_string(){return Err("PostgreSQL belongs to another network".into())}
+        }else{
+            if network.id==56 && write.query_one("SELECT EXISTS(SELECT 1 FROM chain_state) OR EXISTS(SELECT 1 FROM analytics_events) OR EXISTS(SELECT 1 FROM buyback_state)",&[]).await?.get::<_,bool>(0){return Err("Mainnet requires an empty dedicated PostgreSQL database".into())}
+            write.execute("INSERT INTO analytics_settings(name,value) VALUES('runtime_chain_id',$1) ON CONFLICT(name) DO NOTHING",&[&network.id.to_string()]).await?;
+            if write.query_one("SELECT value FROM analytics_settings WHERE name='runtime_chain_id'",&[]).await?.get::<_,String>(0)!=network.id.to_string(){return Err("PostgreSQL network binding changed during startup".into())}
+        }
         write.execute("INSERT INTO analytics_settings(name,value) VALUES('visitor_salt',$1) ON CONFLICT(name) DO NOTHING",&[&uuid::Uuid::new_v4().to_string()]).await.map_err(|_|"Unable to initialize visitor salt")?;
         let visitor_salt = write
             .query_one(

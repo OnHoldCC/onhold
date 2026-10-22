@@ -61,7 +61,7 @@ async fn chain_bound(
     market: &str,
     wallet: &str,
 ) -> Result<Option<String>, ApiError> {
-    if claims::rpc(state, "eth_chainId", json!([])).await? != "0x61" {
+    if claims::rpc(state, "eth_chainId", json!([])).await? != state.network.hex() {
         return Err(ApiError(StatusCode::BAD_GATEWAY, "wrong_chain"));
     }
     let mut args = vec![0u8; 12];
@@ -90,6 +90,7 @@ async fn chain_bound(
     Ok(None)
 }
 fn message(
+    network: crate::network::Network,
     origin: &str,
     market: &str,
     wallet: &str,
@@ -97,7 +98,8 @@ fn message(
     nonce: &str,
     expires: u64,
 ) -> String {
-    format!("ONHOLD referral binding\nSite: {origin}\nChain: BNB Testnet (97)\nContract: {market}\nWallet: {wallet}\nInviter: {referrer}\nThis permanently fixes this wallet's inviter for future NFTs. Zero address means no inviter. This signature does not send a transaction or grant token permissions.\nNonce: {nonce}\nExpires: {expires}")
+    let chain_label=network.label();
+    format!("ONHOLD referral binding\nSite: {origin}\nChain: {chain_label}\nContract: {market}\nWallet: {wallet}\nInviter: {referrer}\nThis permanently fixes this wallet's inviter for future NFTs. Zero address means no inviter. This signature does not send a transaction or grant token permissions.\nNonce: {nonce}\nExpires: {expires}")
 }
 fn commit(
     db: &rusqlite::Connection,
@@ -119,6 +121,7 @@ fn commit(
 }
 
 fn finish(
+    network: crate::network::Network,
     db: &rusqlite::Connection,
     origin: &str,
     market: &str,
@@ -132,7 +135,7 @@ fn finish(
         StatusCode::UNAUTHORIZED,
         "referral_challenge_expired",
     ))?;
-    let text = message(origin, market, wallet, &referrer, nonce, expires);
+    let text = message(network, origin, market, wallet, &referrer, nonce, expires);
     if crypto::personal_wallet(&text, signature)
         .map_err(|_| ApiError(StatusCode::UNAUTHORIZED, "invalid_signature"))?
         != wallet
@@ -190,8 +193,9 @@ pub async fn bind(
                 "invalid_referral_challenge",
             ))?;
         let origin = state.origin.clone();
+        let network=state.network;
         return database(state, move |db| {
-            Ok(finish(db, &origin, &market, &wallet, &nonce, &signature))
+            Ok(finish(network, db, &origin, &market, &wallet, &nonce, &signature))
         })
         .await?
         .map(Json);
@@ -207,7 +211,7 @@ pub async fn bind(
     }
     let nonce = uuid::Uuid::new_v4().simple().to_string();
     let expires = now() + 600;
-    let text = message(&state.origin, &market, &wallet, &referrer, &nonce, expires);
+    let text = message(state.network, &state.origin, &market, &wallet, &referrer, &nonce, expires);
     let (m, w, n, r) = (market, wallet, nonce.clone(), referrer.clone());
     database(state,move|db|{
         db.execute("DELETE FROM referral_challenges WHERE expires_at<unixepoch()",[])?;
@@ -390,7 +394,7 @@ pub async fn history(
     Ok((
         [(header::CACHE_CONTROL, "no-store")],
         Json(
-            json!({"configured":true,"available":block>0,"stale":health["available"]!=true||now().saturating_sub(cursor.as_ref().and_then(|v|v["time"].as_u64()).unwrap_or(0))>=60,"chain_id":97,"market":tracker.market,"wallet":wallet,"storage":"postgresql","confirmed_block":block,"summary":{"invited":total,"active":active,"pending":pending,"earned":earned},"page":page,"pages":pages,"total":total,"items":items,"eventsPage":events_page,"eventsPages":events_pages,"eventsTotal":events_total,"events":events}),
+            json!({"configured":true,"available":block>0,"stale":health["available"]!=true||now().saturating_sub(cursor.as_ref().and_then(|v|v["time"].as_u64()).unwrap_or(0))>=60,"chain_id":state.network.id,"market":tracker.market,"wallet":wallet,"storage":"postgresql","confirmed_block":block,"summary":{"invited":total,"active":active,"pending":pending,"earned":earned},"page":page,"pages":pages,"total":total,"items":items,"eventsPage":events_page,"eventsPages":events_pages,"eventsTotal":events_total,"events":events}),
         ),
     ))
 }
@@ -455,10 +459,10 @@ mod tests {
             params![nonce, market, wallet, referrer, expires],
         )
         .unwrap();
-        let text = message(origin, &market, &wallet, &referrer, &nonce, expires);
+        let text = message(Default::default(), origin, &market, &wallet, &referrer, &nonce, expires);
         let signed = signature(&key, &text);
         assert_eq!(
-            finish(
+            finish(Default::default(),
                 &db,
                 "https://other.example",
                 &market,
@@ -471,20 +475,20 @@ mod tests {
             "invalid_signature"
         );
         assert_eq!(
-            finish(&db, origin, &referrer, &wallet, &nonce, &signed)
+            finish(Default::default(), &db, origin, &referrer, &wallet, &nonce, &signed)
                 .unwrap_err()
                 .1,
             "referral_challenge_expired"
         );
         let wrong = signature(&SigningKey::from_slice(&[8; 32]).unwrap(), &text);
         assert_eq!(
-            finish(&db, origin, &market, &wallet, &nonce, &wrong)
+            finish(Default::default(), &db, origin, &market, &wallet, &nonce, &wrong)
                 .unwrap_err()
                 .1,
             "invalid_signature"
         );
         assert_eq!(bound(&db, &market, &wallet).unwrap(), None);
-        let value = finish(&db, origin, &market, &wallet, &nonce, &signed).unwrap();
+        let value = finish(Default::default(), &db, origin, &market, &wallet, &nonce, &signed).unwrap();
         assert_eq!(value["bound"], true);
         assert_eq!(value["code"], "abcdef123456");
         assert_eq!(
@@ -492,7 +496,7 @@ mod tests {
             Some(referrer.clone())
         );
         assert_eq!(
-            finish(&db, origin, &market, &wallet, &nonce, &signed)
+            finish(Default::default(), &db, origin, &market, &wallet, &nonce, &signed)
                 .unwrap_err()
                 .1,
             "referral_challenge_expired"
@@ -506,10 +510,10 @@ mod tests {
         .unwrap();
         let signed2 = signature(
             &key,
-            &message(origin, &market, &wallet, &another, &nonce2, expires),
+            &message(Default::default(), origin, &market, &wallet, &another, &nonce2, expires),
         );
         assert_eq!(
-            finish(&db, origin, &market, &wallet, &nonce2, &signed2)
+            finish(Default::default(), &db, origin, &market, &wallet, &nonce2, &signed2)
                 .unwrap_err()
                 .1,
             "referrer_already_bound"
@@ -530,10 +534,10 @@ mod tests {
         .unwrap();
         let signed = signature(
             &key,
-            &message("https://onhold.cc", &market, &wallet, ZERO, &nonce, 0),
+            &message(Default::default(), "https://onhold.cc", &market, &wallet, ZERO, &nonce, 0),
         );
         assert_eq!(
-            finish(&db, "https://onhold.cc", &market, &wallet, &nonce, &signed)
+            finish(Default::default(), &db, "https://onhold.cc", &market, &wallet, &nonce, &signed)
                 .unwrap_err()
                 .1,
             "referral_challenge_expired"

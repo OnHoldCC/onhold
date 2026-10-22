@@ -1,4 +1,5 @@
 mod public_cache;
+mod network;
 mod analytics;
 mod analytics_cache;
 mod artwork;
@@ -30,6 +31,7 @@ use tower_http::services::ServeDir;
 
 #[derive(Clone)]
 struct AppState {
+    network: network::Network,
     db: Arc<Mutex<Connection>>,
     origin: String,
     http: reqwest::Client,
@@ -328,9 +330,24 @@ async fn health(State(state): State<AppState>) -> Result<Json<Value>, ApiError> 
     Ok(Json(json!({"status":if chain["available"]==true{"ok"}else{"degraded"},"chain":chain})))
 }
 async fn ready(state: State<AppState>) -> Result<impl IntoResponse, ApiError> {
+    if state.network.prepare {
+        if let Some(store)=&state.pg {
+            let client=store.read.get().await.map_err(|_| pg::error())?;
+            client.simple_query("SELECT 1").await.map_err(|_| pg::error())?;
+            if let Some(mut redis)=store.redis.clone() {
+                redis::cmd("PING").query_async::<String>(&mut redis).await.map_err(|_| pg::error())?;
+            }
+        }
+    }
     let Json(value) = health(state).await?;
     let status = if value["status"]=="ok" { StatusCode::OK } else { StatusCode::SERVICE_UNAVAILABLE };
     Ok((status, [(header::CACHE_CONTROL,"no-store")], Json(value)))
+}
+async fn prepare_guard(State(state):State<AppState>, request:axum::extract::Request,next:axum::middleware::Next)->Response {
+    if state.network.prepare && request.method()!=axum::http::Method::GET && request.method()!=axum::http::Method::HEAD {
+        return ApiError(StatusCode::SERVICE_UNAVAILABLE,"production_not_launched").into_response();
+    }
+    next.run(request).await
 }
 fn router(state: AppState, dist: PathBuf) -> Router {
     let template=std::fs::read_to_string(dist.join("index.html")).ok().map(Arc::<str>::from);
@@ -350,7 +367,7 @@ fn router(state: AppState, dist: PathBuf) -> Router {
         .route("/api/mining-stats", get(mining::network_stats))
         .route("/api/ads", get(mining::ads))
         .route("/api/nfts", get(mining::gallery))
-        .route("/api/status",get(|State(state):State<AppState>|async move{Json(json!({"uploads_configured":true,"upload_provider":"pons-ipfs","gameplay_configured":state.mining.as_ref().is_some_and(|t|!t.nft_only),"nft_configured":state.claims.is_some(),"nft":state.claims.as_ref().map(|claim|claim.market.clone()),"protocol":"nft-staking-v4","chain_index_configured":state.mining.is_some(),"market":state.mining.map(|index|index.market).or_else(||state.claims.map(|claim|claim.market)),"chain_id":97}))}))
+        .route("/api/status",get(|State(state):State<AppState>|async move{Json(json!({"uploads_configured":!state.network.prepare,"upload_provider":"pons-ipfs","gameplay_configured":state.mining.as_ref().is_some_and(|t|!t.nft_only),"nft_configured":state.claims.is_some(),"nft":state.claims.as_ref().map(|claim|claim.market.clone()),"protocol":"nft-staking-v4","chain_index_configured":state.mining.is_some(),"market":state.mining.map(|index|index.market).or_else(||state.claims.map(|claim|claim.market)),"chain_id":state.network.id,"mode":if state.network.prepare {"prepare"} else {"active"}}))}))
         .route("/api/referrals/bind",post(referrals::bind).layer(DefaultBodyLimit::max(4096)))
         .route("/api/referrals",get(referrals::history))
         .route("/api/invites",post(claims::invite).layer(DefaultBodyLimit::max(1024)))
@@ -363,10 +380,12 @@ fn router(state: AppState, dist: PathBuf) -> Router {
     if let Some(template)=template {app=app.route("/",get(move|State(state):State<AppState>|{let template=template.clone();async move{public_cache::html(state,template).await}}));}
     app.layer(axum::middleware::from_fn(static_headers))
         .layer(axum::middleware::from_fn_with_state(state.clone(),public_cache::middleware))
+        .layer(axum::middleware::from_fn_with_state(state.clone(),prepare_guard))
         .with_state(state)
 }
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let network = network::Network::from_env()?;
     let address = std::env::var("ONHOLD_ADDR").unwrap_or_else(|_| "127.0.0.1:4190".into());
     let origin = std::env::var("ONHOLD_ORIGIN").unwrap_or_else(|_| format!("http://{address}"));
     let directory =
@@ -376,6 +395,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     std::fs::create_dir_all(&directory)?;
     let connection = Connection::open(directory.join("events.sqlite3"))?;
     init_db(&connection)?;
+    network.bind_sqlite(&connection)?;
     let pg = pg::Store::from_env().await?;
     let visitor_salt = match &pg {
         Some(store) => store.visitor_salt.clone(),
@@ -393,6 +413,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect::<Result<Vec<_>, _>>()
         .map_err(|_| "Invalid ONHOLD_TRUSTED_PROXIES IP address")?;
     let state = AppState {
+        network,
         db: Arc::new(Mutex::new(connection)),
         origin,
         http: reqwest::Client::builder()
@@ -440,6 +461,7 @@ mod tests {
         let db = Connection::open_in_memory().unwrap();
         init_db(&db).unwrap();
         let state = AppState {
+            network: Default::default(),
             db: Arc::new(Mutex::new(db)),
             origin: "http://localhost:4190".into(),
             http: reqwest::Client::new(),
@@ -456,6 +478,19 @@ mod tests {
             ConnectInfo("127.0.0.1:1234".parse::<SocketAddr>().unwrap()),
         ));
         (app, state)
+    }
+    #[tokio::test]
+    async fn production_prepare_reports_mainnet_and_rejects_writes() {
+        let (_,mut state)=app_with_state();state.network=network::Network{id:56,prepare:true};
+        let app=router(state,PathBuf::from("/nonexistent"));
+        let response=app.clone().oneshot(Request::get("/api/status").body(Body::empty()).unwrap()).await.unwrap();
+        let value:Value=serde_json::from_slice(&response.into_body().collect().await.unwrap().to_bytes()).unwrap();
+        assert_eq!(value["chain_id"],56);assert_eq!(value["mode"],"prepare");assert_eq!(value["uploads_configured"],false);assert_eq!(value["nft_configured"],false);
+        for path in ["/api/verify","/api/nft/authorize","/api/referrals/bind","/api/uploads/avatar"] {
+            let response=app.clone().oneshot(Request::post(path).body(Body::empty()).unwrap()).await.unwrap();
+            assert_eq!(response.status(),StatusCode::SERVICE_UNAVAILABLE);
+        }
+        assert_eq!(app.oneshot(Request::get("/api/ready").body(Body::empty()).unwrap()).await.unwrap().status(),StatusCode::OK);
     }
     #[tokio::test]
     async fn nft_wallet_filters_validate_before_reading_state() {

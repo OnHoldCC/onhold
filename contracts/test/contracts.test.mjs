@@ -499,19 +499,87 @@ test('Free cards stake and unstake with zero weight and never create mining or r
  await (await market.connect(user).getReward({gasLimit:1000000})).wait();assert.ok(await token.balanceOf(recipient)>0n);assert.equal(await market.stakedBalanceOf(recipient),1n);
 });
 
-async function splitFixture({fund=true}={}){
+async function splitFixture({fund=true,mockVault=true}={}){
   const deploy=async(name,...args)=>{const a=artifact(name);const c=await new ContractFactory(a.abi,a.bytecode,owner).deploy(...args);await c.waitForDeployment();return c;};
   const address=await owner.getAddress();
   const nft=await deploy('OnholdNFT',address,address);
   const portal=await deploy('MockSwapPortal');
   const token=await deploy('MockClaudeToken',address,await portal.getAddress());await (await portal.initialize(await token.getAddress())).wait();
-  const implementation=await deploy('MockGameplayVault',await portal.getAddress());
+  const implementationName=mockVault?'MockGameplayVault':'OnholdGameplayVault';
+  const implementation=await deploy(implementationName,...(mockVault?[await portal.getAddress()]:[]));
   const init=implementation.interface.encodeFunctionData('initialize',[address,await nft.getAddress(),await token.getAddress()]);
   const proxy=await deploy('ERC1967Proxy',await implementation.getAddress(),init);
-  const vault=new Contract(await proxy.getAddress(),artifact('MockGameplayVault').abi,owner);
+  const vault=new Contract(await proxy.getAddress(),artifact(implementationName).abi,owner);
   if(fund)await (await token.transfer(await vault.getAddress(),parseEther('100000000'))).wait();
   return {nft,token,portal,implementation,vault,deploy};
 }
+test('only the owner can recover directly transferred NFTs; active and zero-weight stakes stay protected',async()=>{
+  const {nft,token,vault}=await splitFixture({mockVault:false}),recipient=await user.getAddress(),destination=await other.getAddress(),vaultAddress=await vault.getAddress();
+  for(const tier of [1,1,0])await (await nft.connect(user).mintPass(...await signed(nft,recipient,{tier}))).wait();
+  for(const tokenId of [1,3]){
+    await (await nft.connect(user).approve(vaultAddress,tokenId)).wait();
+    await (await vault.connect(user).stake(tokenId,{gasLimit:1200000})).wait();
+  }
+  await (await nft.connect(user).transferFrom(recipient,vaultAddress,2)).wait();
+  assert.equal(await vault.stakerOf(2),ZeroAddress);
+  await assert.rejects(vault.connect(user).recoverUnstakedNFT(2,recipient));
+  await assert.rejects(vault.recoverUnstakedNFT(2,ZeroAddress),/Invalid recipient/);
+  await assert.rejects(vault.recoverUnstakedNFT(2,vaultAddress),/Invalid recipient/);
+  for(const tokenId of [1,3])await assert.rejects(vault.recoverUnstakedNFT(tokenId,destination),/NFT is staked/);
+  await assert.rejects(vault.recoverUnstakedNFT(2,await token.getAddress()));
+  assert.equal(await nft.ownerOf(2),vaultAddress);
+  const receipt=await (await vault.recoverUnstakedNFT(2,destination)).wait();
+  const event=receipt.logs.map(log=>{try{return vault.interface.parseLog(log);}catch{return null;}}).find(log=>log?.name==='UnstakedNFTRecovered');
+  assert.equal(event.args.tokenId,2n);assert.equal(event.args.recipient,destination);
+  assert.equal(await nft.ownerOf(2),destination);
+  await assert.rejects(vault.recoverUnstakedNFT(2,recipient),/NFT not held/);
+  assert.equal(await vault.stakerOf(1),recipient);assert.equal(await vault.stakerOf(3),recipient);
+  assert.equal(await vault.totalStakedWeight(),1n);assert.equal(await vault.stakedBalanceOf(recipient),2n);
+  for(const tokenId of [1,3])await (await vault.connect(user).unstake(tokenId)).wait();
+  assert.equal(await nft.ownerOf(1),recipient);assert.equal(await nft.ownerOf(3),recipient);
+});
+test('the production vault accepts pre-mining ads but rejects new and replacement bids at mining expiry',async()=>{
+  const {nft,vault}=await splitFixture({mockVault:false}),recipient=await user.getAddress(),vaultAddress=await vault.getAddress();
+  await (await vault.bid(0,0,...listing,{value:parseEther('0.02')})).wait();
+  assert.equal(await vault.miningStartedAt(),0n);
+  await (await nft.connect(user).mintPass(...await signed(nft,recipient))).wait();
+  await (await nft.connect(user).approve(vaultAddress,1)).wait();await (await vault.connect(user).stake(1,{gasLimit:1200000})).wait();
+  const end=Number(await vault.periodFinish());
+  await advance(end-10);await (await vault.bid(1,0,...listing,{value:parseEther('0.002')})).wait();
+  const reserve=await vault.adBuybackReserve(),team=await vault.teamRevenue(),revenue=await vault.totalAdRevenue(),balance=await provider.getBalance(vaultAddress);
+  await advance(end);
+  await assert.rejects(vault.bid.staticCall(2,0,...listing,{value:parseEther('0.002')}),/Mining ended/);
+  await assert.rejects(vault.bid.staticCall(0,1,...listing,{value:parseEther('0.002')}),/Mining ended/);
+  assert.equal(await vault.adBuybackReserve(),reserve);assert.equal(await vault.teamRevenue(),team);assert.equal(await vault.totalAdRevenue(),revenue);assert.equal(await provider.getBalance(vaultAddress),balance);
+  await (await vault.connect(user).getReward()).wait();await (await vault.connect(user).unstake(1)).wait();assert.equal(await nft.ownerOf(1),recipient);
+});
+test('expired ad reserves are owner-withdrawable only after mining ends, without touching rewards or team funds',async()=>{
+  const {nft,token,vault}=await splitFixture({mockVault:false}),recipient=await user.getAddress(),destination=await other.getAddress(),vaultAddress=await vault.getAddress();
+  await (await vault.bid(0,0,...listing,{value:parseEther('0.002')})).wait();
+  const reserve=await vault.adBuybackReserve(),team=await vault.teamRevenue(),tokens=await token.balanceOf(vaultAddress);
+  await assert.rejects(vault.withdrawExpiredAdReserve(destination,reserve),/Mining not ended/);
+  await (await nft.connect(user).mintPass(...await signed(nft,recipient))).wait();await (await nft.connect(user).approve(vaultAddress,1)).wait();await (await vault.connect(user).stake(1,{gasLimit:1200000})).wait();
+  const end=Number(await vault.periodFinish());await advance(end-1);
+  await assert.rejects(vault.withdrawExpiredAdReserve.staticCall(destination,reserve),/Mining not ended/);
+  await advance(end);
+  await assert.rejects(vault.connect(user).withdrawExpiredAdReserve(destination,reserve));
+  await assert.rejects(vault.withdrawExpiredAdReserve(ZeroAddress,reserve),/Invalid withdrawal/);
+  await assert.rejects(vault.withdrawExpiredAdReserve(vaultAddress,reserve),/Invalid withdrawal/);
+  await assert.rejects(vault.withdrawExpiredAdReserve(destination,0),/Invalid withdrawal/);
+  await assert.rejects(vault.withdrawExpiredAdReserve(destination,reserve+1n),/Ad reserve exceeded/);
+  await assert.rejects(vault.withdrawExpiredAdReserve(await token.getAddress(),reserve),/Transfer failed/);
+  assert.equal(await vault.adBuybackReserve(),reserve);
+  const earned=await vault.earned(recipient),before=await provider.getBalance(destination),partial=reserve-1n;
+  const receipt=await (await vault.withdrawExpiredAdReserve(destination,partial)).wait();
+  const event=receipt.logs.map(log=>{try{return vault.interface.parseLog(log);}catch{return null;}}).find(log=>log?.name==='ExpiredAdReserveWithdrawn');
+  assert.equal(event.args.recipient,destination);assert.equal(event.args.amount,partial);
+  assert.equal(await provider.getBalance(destination),before+partial);assert.equal(await vault.adBuybackReserve(),1n);
+  await (await vault.withdrawExpiredAdReserve(destination,1)).wait();assert.equal(await vault.adBuybackReserve(),0n);
+  await assert.rejects(vault.withdrawExpiredAdReserve(destination,1),/Ad reserve exceeded/);
+  assert.equal(await vault.teamRevenue(),team);assert.equal(await provider.getBalance(vaultAddress),team);assert.equal(await token.balanceOf(vaultAddress),tokens);
+  assert.equal(await vault.earned(recipient),earned);assert.equal(await vault.stakerOf(1),recipient);
+  await (await vault.connect(user).getReward()).wait();await (await vault.connect(user).unstake(1)).wait();assert.equal(await nft.ownerOf(1),recipient);
+});
 test('standalone NFT mints before any token or vault exists and preserves permanent identity',async()=>{
   const a=artifact('OnholdNFT'),address=await owner.getAddress();
   const nft=await new ContractFactory(a.abi,a.bytecode,owner).deploy(address,address);await nft.waitForDeployment();

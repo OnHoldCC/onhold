@@ -7,7 +7,8 @@ import {confirmMint,recordMint} from './mint-receipt.mjs';
 import {parseEth,safeUrl} from './market.mjs';
 import {pendingMining,rememberMining,confirmMining} from './mining-receipt.mjs';
 import {createInteractionTiming} from './interaction-timing.mjs';
-export const chain={id:97,hexId:'0x61',name:'BNB Smart Chain Testnet',rpc:'https://bsc-testnet-dataseed.bnbchain.org',explorer:'https://testnet.bscscan.com'};
+import {chain,mintReceiptKey} from './network.mjs';
+export {chain};
 export function storedMarket() {
   try {return config.protocol==='nft-staking-v4'&&config.marketAddress?getAddress(config.marketAddress):null;}catch{return null;}
 }
@@ -21,7 +22,7 @@ async function signer() {
   if(getWalletProvider()!==selected)throw Error('wallet_changed');
   const provider=new BrowserProvider(selected);
   const [network,account]=await Promise.all([provider.getNetwork(),provider.getSigner()]);
-  if(network.chainId!==97n)throw new Error('BNB testnet required');
+  if(network.chainId!==BigInt(chain.id))throw new Error('wrong_chain');
   if(getWalletProvider()!==selected)throw Error('wallet_changed');
   signerProviders.set(account,selected);
   return account;
@@ -35,7 +36,7 @@ async function checkWallet(account,timing=createInteractionTiming()){
 async function chainSnapshot(address,wallet,fresh=false){
   const params=new URLSearchParams({market:getAddress(address)});if(wallet)params.set('wallet',getAddress(wallet));
   const value=await readJson(`/api/chain?${params}`,5000,undefined,fresh);
-  if(!value.available||value.chain_id!==97||value.protocol!=='nft-staking-v4'||getAddress(value.market)!==getAddress(address))throw Error('chain_cache_unavailable');
+  if(!value.available||value.chain_id!==chain.id||value.protocol!=='nft-staking-v4'||getAddress(value.market)!==getAddress(address))throw Error('chain_cache_unavailable');
   return value;
 }
 export async function readMarket(address,fresh=false){
@@ -69,7 +70,7 @@ export async function mintVerified(verificationToken,png,referrer,expectedMarket
   const signature=await timing.measure('signature',()=>account.signMessage(quote.message));
   onProgress({stage:2});
   const proof=await timing.measure('authorize',()=>claimRequest('/api/nft/authorize',{...body,signature}));
-  if(proof.protocol!=='nft-staking-v4'||proof.chain_id!==97||getAddress(proof.market)!==getAddress(expectedMarket)||getAddress(proof.recipient)!==getAddress(wallet))throw Error('invalid_mint_proof');
+  if(proof.protocol!=='nft-staking-v4'||proof.chain_id!==chain.id||getAddress(proof.market)!==getAddress(expectedMarket)||getAddress(proof.recipient)!==getAddress(wallet))throw Error('invalid_mint_proof');
   const [{Contract},{abi}]=await Promise.all([import('ethers'),import('./market-abi.mjs')]);
   const contract=new Contract(proof.market,abi,account);
   onProgress({stage:3});
@@ -84,9 +85,9 @@ export async function recoverMint(pending,timing=createInteractionTiming()){
   if(selected?.request){
     const {BrowserProvider}=await import('ethers');
     const provider=new BrowserProvider(selected);
-    if((await provider.getNetwork()).chainId===97n){
+    if((await provider.getNetwork()).chainId===BigInt(chain.id)){
       const receipt=await timing.measure('chainConfirm',()=>provider.getTransactionReceipt(pending.tx_hash));
-      if(receipt?.status===0){try{localStorage.removeItem('onhold.nftreceipt');}catch{}throw Error('mint_transaction_failed');}
+      if(receipt?.status===0){try{localStorage.removeItem(mintReceiptKey);}catch{}throw Error('mint_transaction_failed');}
     }
   }
   return timing.measure('receiptSync',()=>recordMint(pending));
@@ -142,7 +143,7 @@ async function runMiningAction(address,wallet,action,tokenId,expectedReferrer,on
   // Capture the hash directly; BrowserProvider.sendTransaction also polls the wallet for it.
   const hash=await timing.measure('sendTransaction',()=>selected.request({method:'eth_sendTransaction',params:[{from:wallet,to:address,data:request.data,gas:'0x'+(estimated*125n/100n).toString(16)}]}));
   if(!/^0x[0-9a-f]{64}$/i.test(hash))throw Error('invalid_transaction_receipt');
-  const sent={hash,market:address,wallet,action,tokenId,chainId:97,started:Date.now()};
+  const sent={hash,market:address,wallet,action,tokenId,chainId:chain.id,started:Date.now()};
   rememberMining(sent);
   return confirmMining(sent,onProgress,true,timing);
 }

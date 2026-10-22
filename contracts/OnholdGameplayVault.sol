@@ -38,6 +38,7 @@ contract OnholdGameplayVault is OwnableUpgradeable, UUPSUpgradeable, VaultReward
     mapping(address => bool) public hasReceived;
     event PassStaked(address indexed owner, uint256 indexed tokenId, uint256 weight);
     event PassUnstaked(address indexed owner, uint256 indexed tokenId, uint256 weight);
+    event UnstakedNFTRecovered(uint256 indexed tokenId, address indexed recipient);
     event Mined(address indexed recipient, uint256 amount, uint256 bonus);
     event ReferralAccrued(address indexed invitee, address indexed referrer, uint256 baseReward, uint256 bonus);
     event ReferralPaid(address indexed referrer, uint256 amount);
@@ -87,6 +88,13 @@ contract OnholdGameplayVault is OwnableUpgradeable, UUPSUpgradeable, VaultReward
         delete stakerOf[tokenId];
         nft.safeTransferFrom(address(this), msg.sender, tokenId);
         emit PassUnstaked(msg.sender, tokenId, weight);
+    }
+    function recoverUnstakedNFT(uint256 tokenId, address recipient) external onlyOwner nonReentrant {
+        require(recipient != address(0) && recipient != address(this), "Invalid recipient");
+        require(stakerOf[tokenId] == address(0), "NFT is staked");
+        require(nft.ownerOf(tokenId) == address(this), "NFT not held");
+        nft.safeTransferFrom(address(this), recipient, tokenId);
+        emit UnstakedNFTRecovered(tokenId, recipient);
     }
     function _afterRewardPaid(address account, uint256 amount) internal override {
         address referrer = referrerOf(account);
@@ -145,6 +153,7 @@ contract OnholdGameplayVault is OwnableUpgradeable, UUPSUpgradeable, VaultReward
     event BidPlaced(uint8 indexed slot, address indexed advertiser, uint256 amount, uint256 version);
     event AdPublished(uint8 indexed slot, uint256 indexed version, address advertiser, uint256 amount, uint256 startedAt, string url, string description, string avatar, string[] tags);
     event RevenueWithdrawn(address indexed recipient, uint256 amount);
+    event ExpiredAdReserveWithdrawn(address indexed recipient, uint256 amount);
     event AdRevenueSplit(uint256 teamAmount, uint256 reserveAmount);
     event AdRewardsReinvested(uint256 spent, uint256 tokensAdded);
     event AdKeeperChanged(address indexed keeper);
@@ -196,6 +205,7 @@ contract OnholdGameplayVault is OwnableUpgradeable, UUPSUpgradeable, VaultReward
         return replacement < minimum ? minimum : replacement;
     }
     function bid(uint8 slot, uint256 expectedVersion, string calldata url, string calldata description, string calldata avatar, string[] calldata tags) external payable nonReentrant {
+        require(miningStartedAt == 0 || block.timestamp < miningStartedAt + rewardsDuration, "Mining ended");
         require(slot < 6, "Invalid slot");
         require(ads[slot].version == expectedVersion, "Listing changed");
         require(msg.value >= minimumAdBid(), "Minimum bid not met");
@@ -259,5 +269,14 @@ contract OnholdGameplayVault is OwnableUpgradeable, UUPSUpgradeable, VaultReward
         (bool success,) = recipient.call{value: amount}("");
         require(success, "Transfer failed");
         emit RevenueWithdrawn(recipient, amount);
+    }
+    function withdrawExpiredAdReserve(address payable recipient, uint256 amount) external onlyOwner nonReentrant {
+        require(miningStartedAt != 0 && block.timestamp >= miningStartedAt + rewardsDuration, "Mining not ended");
+        require(recipient != address(0) && recipient != address(this) && amount > 0, "Invalid withdrawal");
+        require(amount <= adBuybackReserve, "Ad reserve exceeded");
+        adBuybackReserve -= amount;
+        (bool success,) = recipient.call{value: amount}("");
+        require(success, "Transfer failed");
+        emit ExpiredAdReserveWithdrawn(recipient, amount);
     }
 }

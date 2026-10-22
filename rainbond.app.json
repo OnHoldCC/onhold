@@ -50,10 +50,10 @@
     {
       "name": "api",
       "role": "service",
-      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261022-readable-v60",
+      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261022-vault-fixes-v63",
       "port": 8080,
       "env": {
-        "ONHOLD_ORIGIN": "https://onhold.cc",
+        "ONHOLD_ORIGIN": "https://test.onhold.cc",
         "ONHOLD_MARKET_ADDRESS": "0x6dF5e9B6c29fdA32187f34653003617EC9e1A180",
         "ONHOLD_MARKET_FROM_BLOCK": "138068318",
         "ONHOLD_CHAIN_RPC_URL": "https://bsc-testnet-rpc.publicnode.com",
