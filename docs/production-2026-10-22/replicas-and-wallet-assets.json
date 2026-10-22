@@ -1,12 +1,12 @@
 {
-  "checkedAt": "2026-10-22T14:27:39.920Z",
+  "checkedAt": "2026-10-22T14:49:57.659Z",
   "image": {
-    "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261022-swap-header-v70",
-    "digest": "sha256:c6ffe011099b9031704dc372b1a441fa33a654b939a730b283d6635b2013e91a"
+    "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261022-mobile-token-only-v72",
+    "digest": "sha256:11ff3e5fa6d06142233541b3591c3b138af9b901c393b589237c8f94b4f74249"
   },
   "replicas": 3,
   "binarySha256": "08aa52dc86e36cb8d800420d6c92b20d697d59e1e62baacf36b6ac1c06d9a7d4",
-  "frontendEntry": "app-BVGK4BEP.js",
+  "frontendEntry": "app-TKWA3WEE.js",
   "allReplicasReady": true,
   "allReplicasFresh": true,
   "indexers": 1,
@@ -23,7 +23,7 @@
   "testnetIsolated": true,
   "tests": {
     "rust": 61,
-    "frontend": 113,
+    "frontend": 114,
     "replicaFailoverIntegration": true
   },
   "httpSampling": [
@@ -44,5 +44,8 @@
     "Single physical host; SQLite WAL is shared locally.",
     "PostgreSQL and Redis are single instances.",
     "No peak-load test or new external contract audit."
-  ]
+  ],
+  "mobileSwapAndClaim": "equal-width same row",
+  "walletAssetImport": "ERC20 only; NFT import entry removed at user request",
+  "rollingAssetLimit": "During the v72 mixed-version rollout, a new JS chunk returned 404 from an old replica. All 24 assets passed after convergence. Pre-stage new hashed assets on every old serving replica before future rolling releases."
 }

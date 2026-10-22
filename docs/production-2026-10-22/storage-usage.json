@@ -1,0 +1,151 @@
+{
+  "checkedAt": "2026-10-22T14:54:17.925Z",
+  "nodeGiB": {
+    "capacity": 66.62727355957031,
+    "used": 49.24422836303711,
+    "percent": 74
+  },
+  "productionVolumeKiB": {
+    "postgres": 64700,
+    "redis": 35756,
+    "apiSqliteAndWal": 852,
+    "keeper": 16
+  },
+  "database": {
+    "database": "onhold_prod",
+    "database_bytes": 8789015,
+    "tables": [
+      {
+        "name": "analytics_events",
+        "bytes": 188416,
+        "live_rows": 177,
+        "dead_rows": 38
+      },
+      {
+        "name": "chain_state",
+        "bytes": 73728,
+        "live_rows": 2,
+        "dead_rows": 4
+      },
+      {
+        "name": "chain_payees",
+        "bytes": 32768,
+        "live_rows": 1,
+        "dead_rows": 0
+      },
+      {
+        "name": "analytics_settings",
+        "bytes": 32768,
+        "live_rows": 3,
+        "dead_rows": 0
+      },
+      {
+        "name": "chain_ads",
+        "bytes": 49152,
+        "live_rows": 1,
+        "dead_rows": 0
+      },
+      {
+        "name": "chain_indexer_status",
+        "bytes": 32768,
+        "live_rows": 1,
+        "dead_rows": 27
+      },
+      {
+        "name": "chain_wallets",
+        "bytes": 49152,
+        "live_rows": 1,
+        "dead_rows": 7
+      },
+      {
+        "name": "mining_samples",
+        "bytes": 65536,
+        "live_rows": 24,
+        "dead_rows": 0
+      },
+      {
+        "name": "buyback_events",
+        "bytes": 24576,
+        "live_rows": 0,
+        "dead_rows": 0
+      },
+      {
+        "name": "chain_events",
+        "bytes": 155648,
+        "live_rows": 40,
+        "dead_rows": 0
+      },
+      {
+        "name": "chain_nfts",
+        "bytes": 147456,
+        "live_rows": 2,
+        "dead_rows": 3
+      },
+      {
+        "name": "buyback_state",
+        "bytes": 73728,
+        "live_rows": 1,
+        "dead_rows": 5
+      }
+    ],
+    "analytics_total": 177,
+    "analytics_24h": 177,
+    "analytics_first": 1792659390,
+    "analytics_by_kind_24h": [
+      {
+        "kind": "wallet_connect",
+        "count": 33,
+        "average_row_bytes": 105
+      },
+      {
+        "kind": "page_view",
+        "count": 140,
+        "average_row_bytes": 165
+      },
+      {
+        "kind": "ad_click",
+        "count": 4,
+        "average_row_bytes": 212
+      }
+    ],
+    "chain_events": 40,
+    "chain_event_average_bytes": 874,
+    "nfts": 2,
+    "ads": 1,
+    "wallets": 1,
+    "mining_samples": 24,
+    "mining_samples_24h": 24,
+    "mining_sample_average_bytes": 355,
+    "wal_bytes": 33554432,
+    "wal_stats": {
+      "bytes": 43547701,
+      "stats_reset": "2026-10-22T03:19:10.573939+00:00"
+    },
+    "max_wal_size": "1GB",
+    "min_wal_size": "80MB"
+  },
+  "backup": {
+    "last_success": "2026-10-22T14:00:09.436354+00:00",
+    "sha256": "69695c6e471721d8f952ce6e5ff86eb85c373792ea812701b25278b094ea31b7",
+    "bytes": 46329,
+    "hourly": "onhold/mainnet/postgres/hourly/14.dump.age",
+    "daily": "onhold/mainnet/postgres/daily/3.dump.age",
+    "maximum_snapshots": 31
+  },
+  "redisAof": {
+    "bytes": 36718791,
+    "automaticRewriteMinimumBytes": 67108864,
+    "automaticRewriteGrowthPercent": 100
+  },
+  "dailySampling": {
+    "intervalSeconds": 900,
+    "normalSamplesPerDay": 96,
+    "averageRawRowBytes": 355
+  },
+  "limits": [
+    "Database was initialized today; no complete daily disk-growth baseline.",
+    "The 40 chain events are total stored events, not a timestamp-filtered 24-hour count.",
+    "Host image, container log and platform storage breakdown not available from these component volume measurements.",
+    "WAL and AOF writes are not permanent net disk growth; files are reused or rewritten."
+  ]
+}
