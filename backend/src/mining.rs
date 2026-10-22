@@ -1240,7 +1240,19 @@ pub async fn check(state: &AppState) -> Result<(), ApiError> {
 pub fn health(state: &AppState) -> Result<Value, ApiError> {
     let Some(tracker) = &state.mining else { return Ok(json!({"configured":false,"available":true})); };
     let cache = tracker.cache.lock().map_err(|_| crate::internal())?;
-    Ok(json!({"configured":true,"available":cache.connected&&!cache.syncing&&now().saturating_sub(cache.seen)<60&&now().saturating_sub(cache.snapshot.time)<60,"connected":cache.connected,"syncing":cache.syncing,"confirmed_block":cache.snapshot.block,"last_error":cache.last_error}))
+    Ok(json!({"configured":true,"available":cache.connected&&!cache.syncing&&now().saturating_sub(cache.seen)<60&&now().saturating_sub(cache.snapshot.time)<60,"connected":cache.connected,"syncing":cache.syncing,"confirmed_block":cache.snapshot.block,"last_error":cache.last_error,"seen_at":cache.seen,"as_of":cache.snapshot.time}))
+}
+pub fn follow(state: &AppState, data: &Value) -> Result<(), ApiError> {
+    if let Some(tracker) = &state.mining {
+        let mut cache = tracker.cache.lock().map_err(|_| crate::internal())?;
+        cache.snapshot.block = data["confirmed_block"].as_u64().unwrap_or(0);
+        cache.snapshot.time = data["as_of"].as_u64().unwrap_or(0);
+        cache.seen = data["seen_at"].as_u64().unwrap_or(0);
+        cache.connected = data["connected"] == true;
+        cache.syncing = data["syncing"] != false;
+        cache.last_error = (!data["last_error"].is_null()).then_some("indexer_unavailable");
+    }
+    Ok(())
 }
 pub fn status(state: &AppState, connected: bool, syncing: bool, error: Option<&'static str>) {
     if let Some(tracker) = &state.mining {

@@ -440,7 +440,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map_err(|_| "Unable to aggregate analytics")?;
     tokio::spawn(analytics::run(state.clone()));
     tokio::spawn(chain_stream::run(state.clone()));
-    tokio::spawn(mining::run_stats(state.clone()));
     let listener = tokio::net::TcpListener::bind(&address).await?;
     println!("ONHOLD Rust API + React: http://{address}");
     axum::serve(

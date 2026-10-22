@@ -10,11 +10,11 @@ import {join} from 'node:path';
 import {setTimeout as delay} from 'node:timers/promises';
 import {JsonRpcProvider,Contract,ContractFactory,AbiCoder,keccak256,toUtf8Bytes,id,parseEther} from 'ethers';
 async function port(){const s=netServer();s.listen(0,'127.0.0.1');await once(s,'listening');const p=s.address().port;await new Promise(resolve=>s.close(resolve));return p;}
-async function until(fn){let last;for(let i=0;i<140;i++){try{const value=await fn();if(value)return value;}catch(cause){last=cause;}await delay(250);}throw last||Error('Cache did not synchronize');}
+async function until(fn,diagnose){let last;for(let i=0;i<140;i++){try{const value=await fn();if(value)return value;}catch(cause){last=cause;}if(i===40&&diagnose)diagnose();await delay(250);}throw last||Error('Cache did not synchronize');}
 const artifact=async name=>JSON.parse(await readFile(new URL(`../../contracts/artifacts/${name}.json`,import.meta.url)));
-test('WS → PostgreSQL replay matches chain rewards, survives restarts, falls back from Redis and adds no RPC per API read', {timeout:110000},async()=>{
+test('WS → PostgreSQL replay matches chain rewards, survives restarts, falls back from Redis and adds no RPC per API read', {timeout:150000},async()=>{
  const rpcPort=await port(),apiPort=await port(),proxyPort=await port(),pgPort=await port(),redisPort=await port();const directory=await mkdtemp(join(tmpdir(),'onhold-ws-test-'));
- const anvil=spawn(process.env.ANVIL_BIN||'anvil',['--host','127.0.0.1','--port',String(rpcPort),'--chain-id','97','--silent'],{stdio:'ignore'});let backend,provider,postgres,redis;let rpcCalls=0;const pgUrl=`postgresql://onhold_test@127.0.0.1:${pgPort}/postgres?sslmode=disable`;const sql=query=>execFileSync('psql',['--no-psqlrc',pgUrl,'-Atc',query],{encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim();
+ const anvil=spawn(process.env.ANVIL_BIN||'anvil',['--host','127.0.0.1','--port',String(rpcPort),'--chain-id','97','--silent'],{stdio:'ignore'});let backend,provider,postgres,redis;const replicas=[];let rpcCalls=0;const pgUrl=`postgresql://onhold_test@127.0.0.1:${pgPort}/postgres?sslmode=disable`;const sql=query=>execFileSync('psql',['--no-psqlrc',pgUrl,'-Atc',query],{encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim();
  const rpcUrl=`http://127.0.0.1:${rpcPort}`,api=`http://127.0.0.1:${apiPort}`;
  const proxy=await wsProxy(rpcUrl,proxyPort,()=>rpcCalls++);
  proxy.pruneHistory=true;
@@ -31,10 +31,13 @@ test('WS → PostgreSQL replay matches chain rewards, survives restarts, falls b
   const rewind=await provider.send('evm_snapshot',[]);
   const marketAddress=await deploy.market(),market=new Contract(marketAddress,(await artifact('OnholdMarket')).abi,owner);
   const env={...process.env};for(const key of Object.keys(env))if(key.startsWith('ONHOLD_'))delete env[key];Object.assign(env,{ONHOLD_ADDR:`127.0.0.1:${apiPort}`,ONHOLD_DATA_DIR:directory,ONHOLD_DIST_DIR:'/nonexistent',ONHOLD_MARKET_ADDRESS:marketAddress,ONHOLD_MARKET_FROM_BLOCK:String(receipt.blockNumber),ONHOLD_NFT_DEPLOYMENT_TX_HASH:receipt.hash,ONHOLD_BUYBACK_VAULT:vaultAddress,ONHOLD_BUYBACK_FROM_BLOCK:String(vaultReceipt.blockNumber),ONHOLD_BUYBACK_FLAP_LIVE:'false',ONHOLD_CHAIN_WS_URL:`ws://127.0.0.1:${proxyPort}`,ONHOLD_CHAIN_RPC_URL:`http://127.0.0.1:${proxyPort}`,DATABASE_URL:pgUrl,REDIS_URL:`redis://127.0.0.1:${redisPort}`});
-  const start=()=>{const child=spawn('backend/target/debug/onhold-api',[],{cwd:new URL('../..',import.meta.url),env,stdio:['ignore','ignore','pipe']});child.stderr.on('data',chunk=>process.stderr.write(chunk));return child;};
+  const start=(address=env.ONHOLD_ADDR)=>{const child=spawn('backend/target/debug/onhold-api',[],{cwd:new URL('../..',import.meta.url),env:{...env,ONHOLD_ADDR:address},stdio:['ignore','ignore','pipe']});child.on('exit',(code,signal)=>console.error('TEST_REPLICA_EXIT',address,code,signal));child.stderr.on('data',chunk=>{process.stderr.write(chunk);if(chunk.toString().includes('leadership acquired'))child.leader=true;});return child;};
   await provider.send('anvil_mine',['0x44c']);proxy.pruneBefore=await provider.getBlockNumber()-10;
   proxy.pruneDeployment={address:marketAddress.toLowerCase(),block:'0x'+receipt.blockNumber.toString(16)};
+  sql(`CREATE TABLE chain_indexer_status(chain_id BIGINT PRIMARY KEY,data JSONB NOT NULL);INSERT INTO chain_indexer_status VALUES(97,'{"handoff_paused":true}');`);
   backend=start();await until(async()=> (await fetch(api+'/api/health')).ok);
+  await delay(2200);assert.equal(proxy.active(),0,'a legacy-rollout handoff gate must prevent new subscriptions');
+  sql("UPDATE chain_indexer_status SET data='{}' WHERE chain_id=97");
   await until(async()=>(await fetch(api+'/api/ready')).status===200);proxy.pruneBefore=0;
   assert.ok(proxy.methods.eth_getTransactionReceipt>0,'initial deployment validation uses its known transaction receipt');
   assert.equal(proxy.rejectedDeployment,0,'startup must not query archival constructor logs');
@@ -172,6 +175,29 @@ test('WS → PostgreSQL replay matches chain rewards, survives restarts, falls b
   const freePage=await nftPage('free');assert.equal(freePage.total,1);assert.equal(freePage.items[0].tier,0);assert.equal((await nftPage('all')).total,2);
   await (await market.connect(user).unstake(2,{gasLimit:1000000})).wait();await mine();await until(async()=>{const v=await read(address);return v.mining?.stakedCount===0;});
 
- } finally {if(backend&&!backend.killed){backend.kill('SIGTERM');await once(backend,'exit');}provider?.destroy();anvil.kill('SIGTERM');if(postgres&&!postgres.killed){postgres.kill('SIGTERM');await once(postgres,'exit');}if(redis&&!redis.killed){redis.kill('SIGTERM');await once(redis,'exit');}await proxy.close();await rm(directory,{recursive:true,force:true});}
+  // Three HTTP replicas share one SQLite directory and one PG indexer write lease.
+  delete env.REDIS_URL;
+  const peers=[await port(),await port()].map(p=>({url:`http://127.0.0.1:${p}`,child:start(`127.0.0.1:${p}`)}));replicas.push(...peers.map(p=>p.child));
+  const readPeer=async peer=>fetch(`${peer.url}/api/chain?wallet=${address}`).then(r=>r.json());
+  await until(async()=>(await Promise.all(peers.map(async peer=>(await fetch(peer.url+'/api/ready')).status===200))).every(Boolean),()=>console.error(sql("SELECT pid,state,wait_event_type,wait_event,left(query,160) FROM pg_stat_activity WHERE datname='postgres'")));
+  assert.equal(proxy.active(),1,'followers must not open WS subscriptions');
+  const leaseCount=()=>sql("SELECT count(*) FROM pg_locks WHERE locktype='advisory' AND classid=1330137432 AND objid=97 AND granted");
+  assert.equal(leaseCount(),'1');
+  await (await market.connect(user).stake(1,{gasLimit:1000000})).wait();await mine();
+  await until(async()=>(await Promise.all(peers.map(readPeer))).every(v=>v.available&&!v.stale&&v.mining?.weight===1));
+  const ended=once(backend,'exit');
+  sql("SELECT pg_terminate_backend(pid) FROM pg_locks WHERE locktype='advisory' AND classid=1330137432 AND objid=97 AND granted");
+  assert.equal((await ended)[0],1,'lost write connection must stop the former writer');
+  await until(()=>peers.some(p=>p.child.leader)&&proxy.active()===1);
+  await mine();
+  await until(async()=>(await Promise.all(peers.map(readPeer))).every(v=>v.available&&!v.stale&&v.mining?.weight===1));
+  backend=start();await until(async()=>(await fetch(api+'/api/ready')).status===200);
+  const leader=peers.find(p=>p.child.leader);leader.child.kill('SIGTERM');await once(leader.child,'exit');
+  await until(()=>leaseCount()==='1'&&proxy.active()===1);await mine();
+  await until(async()=>{const v=await read(address);return v.available&&!v.stale&&v.mining?.weight===1;});
+  assert.equal(sql('SELECT count(*) FROM chain_nfts'),'2','failover preserves projections');
+  assert.equal(sql('SELECT count(*)-count(DISTINCT (market,tx_hash,log_index)) FROM chain_events'),'0');
+
+ } finally {for(const child of replicas)if(child.exitCode===null&&!child.killed){child.kill('SIGTERM');await once(child,'exit');}if(backend&&backend.exitCode===null&&!backend.killed){backend.kill('SIGTERM');await once(backend,'exit');}provider?.destroy();anvil.kill('SIGTERM');if(postgres&&!postgres.killed){postgres.kill('SIGTERM');await once(postgres,'exit');}if(redis&&!redis.killed){redis.kill('SIGTERM');await once(redis,'exit');}await proxy.close();await rm(directory,{recursive:true,force:true});}
 });
 

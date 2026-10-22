@@ -1,6 +1,21 @@
 # Production environment split and NFT activation — 2026-10-22
 
-## Current state — gameplay connected and mining pool funded
+## Current state — three API replicas and v70 live
+
+Verified at 2026-10-22T14:27:39Z: all three production API replicas run the same v70 frontend (`app-BVGK4BEP.js`) and backend SHA-256 `08aa52dc86e36cb8d800420d6c92b20d697d59e1e62baacf36b6ac1c06d9a7d4`. All three return readiness 200, fresh mining data, total weight 3, two minted NFTs and one staked NFT. Mining started at Unix 1792674649; the first positive-weight stake and the user's successful claim have already happened. The 365-day mining clock is active.
+
+Production image: `registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261022-swap-header-v70`, digest `sha256:c6ffe011099b9031704dc372b1a441fa33a654b939a730b283d6635b2013e91a`. The top bar now opens the user's Flap token page with **Swap $OnHold**. The footer publishes all eight mainnet contract addresses and offers wallet token/NFT imports. NFT import checks current ownership; a staked NFT must be unstaked first. Unsupported wallets retain manual import instructions. Importing an asset does not send a transaction or request a signature.
+
+Only one API replica indexes chain events. Its PostgreSQL session advisory lock is held on the same connection that performs projection writes; loss of that connection fences writes and restarts that replica. Followers read shared health/checkpoint data without this exclusive lock. Mining statistics collection also runs only on the leader. The ad keeper remains a separate single replica. The live database has exactly one granted indexer lock.
+
+The actual image release used Rainbond's **build/deploy** action while retaining three serving replicas and the `/api/health` readiness probe. Its `upgrade` action alone was observed to restart the previous build, so image/source changes must use build/deploy, followed by runtime binary and frontend-entry checks. For the first transition from replicas without the lock, new indexer acquisition was held by `chain_indexer_status.data.handoff_paused`; it was cleared after all legacy pods were gone and the new binary was verified. Future releases already share the session lock and do not require this transition gate. No whole-component stop was issued. See [Rainbond's rolling build behavior](https://v5.11-docs.rainbond.com/docs/use-manual/component-manage/overview/basic-operation/).
+
+Validation: 61 Rust unit tests; 113 frontend tests; Anvil/PostgreSQL/Redis integration with three HTTP replicas, one WS subscription, database-connection termination, process termination and automatic takeover. First acquisition pause, live projections and uniqueness were checked. Some local integration attempts exceeded the startup wait while builds were running; the final recorded run passed in 77 seconds. The public check fetched 24 assets successfully, verified chain 56, the Flap link, staked Max NFT and isolated chain-97 test site. Sampled public HTTP checks recorded no 503; this is observed coverage, not an uptime guarantee. Summary: `replicas-and-wallet-assets.json`.
+
+Limits: these replicas share one physical host and the same local SQLite WAL filesystem. They cover individual API-process failures and rolling releases, not host loss. PostgreSQL and Redis remain single instances. Move SQLite state to a suitable shared database before placing API replicas on separate hosts. No peak-load test or new external contract audit was performed in this release. No chain transaction or contract upgrade was sent.
+
+## Earlier funding checkpoint
+
 
 At 2026-10-22T13:04:13.534Z, the user authorized and completed the initial 100,000,000 OnHold funding in [transaction `0x7a3f3d3946231ba5cabd7ce72c51a3a8fe048cbc568d72ba65a7cbe9fc4942da`](https://bscscan.com/tx/0x7a3f3d3946231ba5cabd7ce72c51a3a8fe048cbc568d72ba65a7cbe9fc4942da), block 129134776. The successful receipt and token balances confirm an exact 100,000,000-token pool increase and owner debit, with no transfer tax. Gas cost: 0.00000618075 BNB. Owner token balance immediately afterward: 2127577.357776463630987581. Mining remained unstarted (`miningStartedAt=0`); the first positive-weight NFT stake will start the 365-day clock. Public evidence: `contracts/deployments/bnb-mainnet-mining-funding-20261022.json`. Earlier unfunded statements below describe deployment before this funding. No NFT was minted or staked by this operation.
 

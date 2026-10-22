@@ -1,0 +1,76 @@
+{
+  "56": {
+    "tokenAddress": "0x2DCDE86543a9Cc2C9A3DD914bE3FD3AFEF6E7777",
+    "symbol": "OnHold",
+    "decimals": 18,
+    "contracts": [
+      [
+        "token",
+        "0x2DCDE86543a9Cc2C9A3DD914bE3FD3AFEF6E7777"
+      ],
+      [
+        "nft",
+        "0x930aebB5F91cdB219fE8C5178906e2e21a105E87"
+      ],
+      [
+        "gameplay",
+        "0x69aF74A7d86E0466fCC533a6eadAb3C25008FDdF"
+      ],
+      [
+        "implementation",
+        "0x52Ae9177B1e86914bb99E111790380D4098D36fe"
+      ],
+      [
+        "renderer",
+        "0x7FFE16B57fbaC080b16A1b68e0c93dad850e46D9"
+      ],
+      [
+        "taxProcessor",
+        "0x038eC6AaE174f00814F1A90f381d4D31f1274152"
+      ],
+      [
+        "tokenImplementation",
+        "0x024f18294970B5c76c0691b87f138A0317156422"
+      ],
+      [
+        "portal",
+        "0xe2cE6ab80874Fa9Fa2aAE65D277Dd6B8e65C9De0"
+      ]
+    ]
+  },
+  "97": {
+    "tokenAddress": "0xd47430c9668131AaEE37eDc34F1e768Af4412005",
+    "symbol": "OnHold",
+    "decimals": 18,
+    "contracts": [
+      [
+        "token",
+        "0xd47430c9668131AaEE37eDc34F1e768Af4412005"
+      ],
+      [
+        "nft",
+        "0xe6FCaf7da63c581afc22B27D0aCf27eB26645A1f"
+      ],
+      [
+        "gameplay",
+        "0x6dF5e9B6c29fdA32187f34653003617EC9e1A180"
+      ],
+      [
+        "implementation",
+        "0xCA009758E936DE89adE42f178dbacc18305eC024"
+      ],
+      [
+        "portal",
+        "0x2374FacC75a09B480Ee125147DB48D013285481c"
+      ],
+      [
+        "burnVault",
+        "0xbeBd396010171dF44b2Cc2CA0E154f37ec6bA5bD"
+      ],
+      [
+        "burnToken",
+        "0xF98926D4f930a2345eA55D496e3214D37Bf17777"
+      ]
+    ]
+  }
+}

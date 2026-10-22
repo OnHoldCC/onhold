@@ -1,4 +1,5 @@
 import {interactionCopy} from './interaction-copy.mjs';
+import {assetCopy} from './asset-copy.mjs';
 import {miningCopy} from './mining-copy.mjs';
 import {localeMessages} from './locales.mjs';
 import {welcomeCopy} from './welcome-copy.mjs';
@@ -641,5 +642,6 @@ for(const [lang,label]of Object.entries({en:"On-chain details",zh:"链上详情"
 for(const [lang,copy]of Object.entries({en:['Staked NFTs','Add stake','No staked NFTs yet','No NFTs available to stake'],zh:['已质押 NFT','添加质押','暂无已质押 NFT','暂无可质押 NFT'],ja:['ステーク済みNFT','ステークを追加','ステーク済みNFTはありません','ステーク可能なNFTはありません'],ko:['예치된 NFT','예치 추가','예치된 NFT가 없습니다','예치 가능한 NFT가 없습니다'],es:['NFT depositados','Añadir depósito','No hay NFT depositados','No hay NFT disponibles'],fr:['NFT déposés','Ajouter un dépôt','Aucun NFT déposé','Aucun NFT disponible'],de:['Gestakte NFTs','NFT staken','Keine gestakten NFTs','Keine verfügbaren NFTs'],pt:['NFTs em staking','Adicionar staking','Nenhum NFT em staking','Nenhum NFT disponível']})){['stakedNfts','addStake','noStakedNfts','noAvailableNfts'].forEach((key,index)=>messages[lang][key]=copy[index]);}
 
 for(const [lang,copy]of Object.entries(interactionCopy))Object.assign(messages[lang],copy);
+for(const [lang,copy]of Object.entries(assetCopy))Object.assign(messages[lang],copy);
 
 export const localeLoaders={};

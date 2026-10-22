@@ -238,3 +238,8 @@ CREATE TABLE IF NOT EXISTS mining_samples (
     PRIMARY KEY (market, sampled_at)
 );
 COMMENT ON TABLE mining_samples IS '已确认区块的挖矿权重与单位权重日收益快照；不回填未采集的历史，不代表 PoW 算力。';
+-- Shared indexer health; the session advisory lock is held on its write connection.
+CREATE TABLE IF NOT EXISTS chain_indexer_status (
+    chain_id BIGINT PRIMARY KEY,
+    data JSONB NOT NULL
+);

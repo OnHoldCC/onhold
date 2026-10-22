@@ -1,0 +1,48 @@
+{
+  "checkedAt": "2026-10-22T14:27:39.920Z",
+  "image": {
+    "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261022-swap-header-v70",
+    "digest": "sha256:c6ffe011099b9031704dc372b1a441fa33a654b939a730b283d6635b2013e91a"
+  },
+  "replicas": 3,
+  "binarySha256": "08aa52dc86e36cb8d800420d6c92b20d697d59e1e62baacf36b6ac1c06d9a7d4",
+  "frontendEntry": "app-BVGK4BEP.js",
+  "allReplicasReady": true,
+  "allReplicasFresh": true,
+  "indexers": 1,
+  "mining": {
+    "available": true,
+    "stale": false,
+    "weight": 3,
+    "minted": 2,
+    "started": 1792674649,
+    "staked": 1
+  },
+  "swapUrl": "https://flap.sh/bnb/0x2dcde86543a9cc2c9a3dd914be3fd3afef6e7777?lang=zh",
+  "publicAssets200": 24,
+  "testnetIsolated": true,
+  "tests": {
+    "rust": 61,
+    "frontend": 113,
+    "replicaFailoverIntegration": true
+  },
+  "httpSampling": [
+    {
+      "startedAt": "2026-10-22T14:00:24.323Z",
+      "lastSampleAt": "2026-10-22T14:15:22.758Z",
+      "samples": 2035,
+      "non200": 0
+    },
+    {
+      "startedAt": "2026-10-22T14:22:08.020Z",
+      "lastSampleAt": "2026-10-22T14:28:30.453Z",
+      "samples": 935,
+      "non200": 0
+    }
+  ],
+  "limits": [
+    "Single physical host; SQLite WAL is shared locally.",
+    "PostgreSQL and Redis are single instances.",
+    "No peak-load test or new external contract audit."
+  ]
+}

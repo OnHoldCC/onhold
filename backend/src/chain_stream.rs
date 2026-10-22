@@ -358,6 +358,45 @@ pub async fn run(state: AppState) {
     if state.mining.is_none() && state.burn.is_none() {
         return;
     }
+    let Some(store) = &state.pg else { return; };
+    let namespace = 0x4f484958_i32;
+    let chain = state.network.id as i64;
+    loop {
+        // This exact connection also performs projection writes: losing the lock fences them out.
+        let acquired = store.write.lock().await.query_one(
+            // Pause first acquisition while legacy replicas without this lock are rolled out.
+            "SELECT CASE WHEN EXISTS(SELECT 1 FROM chain_indexer_status WHERE chain_id=$2::integer AND data->>'handoff_paused'='true') THEN false ELSE pg_try_advisory_lock($1,$2::integer) END", &[&namespace, &(state.network.id as i32)]
+        ).await;
+        match acquired {
+            Ok(row) if row.get::<_, bool>(0) => break,
+            Ok(_) => {},
+            Err(_) => { eprintln!("indexer write connection lost; restarting replica"); std::process::exit(1); }
+        }
+        if let Ok(client) = store.read.get().await {
+            if let Ok(Some(row)) = client.query_opt("SELECT data FROM chain_indexer_status WHERE chain_id=$1", &[&chain]).await {
+                let _ = mining::follow(&state, &row.get::<_, Value>(0));
+            }
+        }
+        tokio::time::sleep(Duration::from_secs(2)).await;
+    }
+    eprintln!("chain indexer leadership acquired");
+    mining::status(&state, false, true, None);
+    let heartbeat = async {
+        loop {
+            let data = mining::health(&state).unwrap_or_else(|_| json!({}));
+            if store.write.lock().await.execute(
+                "INSERT INTO chain_indexer_status(chain_id,data) VALUES($1,$2) ON CONFLICT(chain_id) DO UPDATE SET data=excluded.data", &[&chain, &data]
+            ).await.is_err() { return; }
+            tokio::time::sleep(Duration::from_secs(2)).await;
+        }
+    };
+    tokio::select! {
+        _ = run_leader(&state) => {},
+        _ = async { mining::run_stats(state.clone()).await; std::future::pending::<()>().await } => {},
+        _ = heartbeat => { eprintln!("indexer write connection lost; restarting replica"); std::process::exit(1); }
+    }
+}
+async fn run_leader(state: &AppState) {
     mining::status(&state, false, true, None);
     burn::status(&state, false, None).await;
     let url = match endpoint() {
