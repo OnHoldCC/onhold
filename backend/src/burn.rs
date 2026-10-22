@@ -501,7 +501,8 @@ pub async fn backfill(state: &AppState, tracker: &Tracker, head: u64) -> Result<
     let mut p = if confirmed < latest || tracker.official {
         // Replay intermediate ranges from events; verify balances at the fresh final checkpoint.
         let mut p=if reset {Projection::default()} else {saved_data.as_ref().map(Projection::read).transpose()?.unwrap_or_default()};
-        if tracker.official { init_official(state, tracker, &mut p, &tag).await?; }
+        // Flap launch bindings are fixed; replay logs without requiring pruned historical state.
+        if tracker.official { init_official(state, tracker, &mut p, &format!("0x{latest:x}")).await?; }
         for log in logs {
             if tracker.official && official_burn(log, &p, &tracker.vault)?.is_none() { continue; }
             let block=block_at(state,quantity(&log["blockNumber"])?).await?;

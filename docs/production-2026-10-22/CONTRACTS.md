@@ -1,13 +1,13 @@
 # Mainnet contract deployment
 
-User-selected roles on BNB Smart Chain, chain ID 56:
+Historical deployment roles on BNB Smart Chain, chain ID 56 (active verifier and ad keeper are superseded below):
 
 | Role | Address | Gas |
 | --- | --- | --- |
 | Deployer, owner and advertising keeper | `0xD614169363e1381D8A2FD092C1E16FA80aE3eC96` | BNB |
 | NFT proof verifier | `0x1f6C08E2CB3192a9bfB37864f2950Fe97004299d` | None for message signing |
 
-The verifier is separate from the administrator. Running the advertising keeper automatically still requires the administrator wallet's private key. Keep the advertising keeper stopped while this wallet deploys or performs initialization transactions.
+The verifier is separate from the administrator. The original preparation used the administrator as advertising keeper. The current gameplay keeper is a separate wallet, listed below, and does not use the administrator private key.
 
 The existing private key file is under ignored `backend/data/mainnet/keys.json`, mode 600. Never commit it or the signed deployment journal. Production API configuration remains in preparation mode; no signing key has been activated in the production API by this contract preparation.
 
@@ -33,3 +33,13 @@ The contract deployment did not itself launch a token, initialize a gameplay pro
 The original verifier was retired after an unredacted platform event payload included its private key in diagnostic output. No private key belongs in a public deployment record. Raw event bodies and environment values are now excluded from the local release diagnostic output. The NFT owner changed the verifier to `0xF9fDEad7F2442e9176d72Df56e62354CD70a42eA` in transaction `0x99f46c969aadfdb4a5c194083a11f37f5360818ae1f8127a9af449dcd319d957`, block 129100752, for 0.0000015146 BNB. The NFT address, renderer, owner and artwork remain unchanged. The old verifier can no longer authorize mints.
 
 The active signing key is stored in ignored `.rainbond/secrets.prod.json`; the private recovery journal is `backend/data/mainnet/verifier-rotation.json`. The original deployment key file and transaction journal are historical constructor inputs, not the active signing configuration. Do not rerun the NFT deployment to change a verifier.
+
+## Flap token and gameplay activation
+
+The user launched OnHold on Flap in transaction `0xd430b9d466e2db2e6a6e073d6a98697773c86cfd9d84a2d25a14d5a276d67721`, block 129115315. Token `0x2dcde86543a9cc2c9a3dd914be3fd3afef6e7777` has 1 billion supply, 18 decimals and 3% buy/sell tax, with native deflation/liquidity each 50% of distributable tax revenue. This uses native Flap processing, with no legacy burn keeper. Public token inspection is recorded in `contracts/deployments/bnb-mainnet-token-20261022.json`.
+
+Gameplay proxy [`0x69aF74A7d86E0466fCC533a6eadAb3C25008FDdF`](https://bscscan.com/address/0x69aF74A7d86E0466fCC533a6eadAb3C25008FDdF) was deployed at block 129129192 with atomic owner/NFT/token initialization. Implementation [`0x52Ae9177B1e86914bb99E111790380D4098D36fe`](https://bscscan.com/address/0x52Ae9177B1e86914bb99E111790380D4098D36fe) and proxy both passed Sourcify exact creation/runtime matching. The owner remains `0xD614169363e1381D8A2FD092C1E16FA80aE3eC96`; ad keeper is `0xb4d2C58C19B78803A7CFD05998f070b2ae569045`, funded with 0.001 BNB for gas only. Deployment gas: 0.0002217185 BNB. Public deployment transactions, bytecode hashes and source verification links are in `contracts/deployments/bnb-mainnet-gameplay-20261022.json`.
+
+The pool remains unfunded and mining has not started. This deployment script refuses funding; it never transfers reward tokens. The existing implementation has no administrator ERC20 withdrawal; user NFT unstaking, base reward claims and referral claims remain available under their normal rules. A first positive-weight stake requires at least 100 million OnHold actually held by the Vault and starts the 365-day clock. The UUPS owner can authorize gameplay upgrades; NFT and reward-token asset addresses remain separate.
+
+`node --test contracts/test/deploy-mainnet-gameplay.test.mjs` verifies dry run, atomic initialization, roles, unfunded balances, recovery/resume and changed-input rejection. Thirty contract integration tests pass. This is not an independent security audit.

@@ -1,0 +1,58 @@
+{
+  "chainId": 56,
+  "marketAddress": "0x69aF74A7d86E0466fCC533a6eadAb3C25008FDdF",
+  "marketFromBlock": 129093703,
+  "gameplayFromBlock": 129129192,
+  "nftAddress": "0x930aebB5F91cdB219fE8C5178906e2e21a105E87",
+  "tokenAddress": "0x2DCDE86543a9Cc2C9A3DD914bE3FD3AFEF6E7777",
+  "implementationAddress": "0x52Ae9177B1e86914bb99E111790380D4098D36fe",
+  "owner": "0xD614169363e1381D8A2FD092C1E16FA80aE3eC96",
+  "adKeeper": "0xb4d2C58C19B78803A7CFD05998f070b2ae569045",
+  "mock": false,
+  "rewardTokensTransferred": "0",
+  "transactions": {
+    "implementation": "0x48cea090db93c0b9cdd8685763a9d5714c2930a7bba6b5f17f5ee1eb6000aa1c",
+    "proxy": "0x2517a8e4f7a69864d0e30eec7c19d65e9318bee4822bf5a9cb459908b4d855ac",
+    "adKeeper": "0xbb011f25fcd98df735009ce793bcc8c297d4c3d8df227646fcb03e92ef1d0443"
+  },
+  "verifiedAt": "2026-10-22T12:22:25.970Z",
+  "architecture": "fixed-assets-upgradeable-gameplay-v1",
+  "protocol": "nft-staking-v4",
+  "miningPoolFunded": false,
+  "compiler": "0.8.30+commit.73712a01.Emscripten.clang",
+  "compilerSettings": {
+    "viaIR": true,
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "evmVersion": "paris"
+  },
+  "deploymentGasBNB": "0.0002217185",
+  "sourceVerification": {
+    "OnholdGameplayVault": {
+      "provider": "Sourcify",
+      "address": "0x52Ae9177B1e86914bb99E111790380D4098D36fe",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "verifiedAt": "2026-10-22T12:28:55Z",
+      "url": "https://repo.sourcify.dev/56/0x52Ae9177B1e86914bb99E111790380D4098D36fe"
+    },
+    "ERC1967Proxy": {
+      "provider": "Sourcify",
+      "address": "0x69aF74A7d86E0466fCC533a6eadAb3C25008FDdF",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "verifiedAt": "2026-10-22T12:28:52Z",
+      "url": "https://repo.sourcify.dev/56/0x69aF74A7d86E0466fCC533a6eadAb3C25008FDdF"
+    }
+  },
+  "runtimeBytecodeHashes": {
+    "implementation": "0xbab4d2d480a85910d26a6a22f2e2de615ee02c1c1960c42db8e5547923e2b69c",
+    "proxy": "0x57553a23fa89caf56f3353cd98454c8f8450222a58539a148f6d46c604f5e0d1"
+  },
+  "keeperGas": {
+    "amountBNB": "0.001",
+    "tx": "0x646cf223358e4145f732c6b459f6969452986e62dc71b8adefda42227e4d57b8"
+  }
+}

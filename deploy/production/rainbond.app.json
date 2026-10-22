@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": {
     "name": "onhold-prod",
-    "description": "Isolated BNB mainnet NFT launch; gameplay disabled"
+    "description": "BNB mainnet fixed NFT and token, upgradeable gameplay; mining pool awaiting funding"
   },
   "components": [
     {
@@ -50,7 +50,7 @@
     {
       "name": "api",
       "role": "service",
-      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261022-receipt-rpc-v65",
+      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261022-gameplay-v67",
       "port": 8080,
       "env": {
         "ONHOLD_ENV": "production",
@@ -61,12 +61,15 @@
         "ONHOLD_DATA_DIR": "/data/prod",
         "ONHOLD_DIST_DIR": "/app/front/dist",
         "ONHOLD_NFT_ADDRESS": "0x930aebB5F91cdB219fE8C5178906e2e21a105E87",
-        "ONHOLD_MARKET_ADDRESS": "0x930aebB5F91cdB219fE8C5178906e2e21a105E87",
+        "ONHOLD_MARKET_ADDRESS": "0x69aF74A7d86E0466fCC533a6eadAb3C25008FDdF",
         "ONHOLD_MARKET_FROM_BLOCK": "129093703",
         "ONHOLD_CHAIN_RPC_URL": "https://bsc-dataseed.bnbchain.org",
         "ONHOLD_CHAIN_WS_URL": "wss://bsc-rpc.publicnode.com",
-        "ONHOLD_CHAIN_LOG_RPC_URL": "https://bsc-rpc.publicnode.com",
-        "ONHOLD_NFT_DEPLOYMENT_TX_HASH": "0x97661acf00103c2e89cd5d3f1a2f2a462814cad63877314cfdfe41ac43f9d44a"
+        "ONHOLD_CHAIN_LOG_RPC_URL": "https://rpc-bsc.48.club",
+        "ONHOLD_NFT_DEPLOYMENT_TX_HASH": "0x97661acf00103c2e89cd5d3f1a2f2a462814cad63877314cfdfe41ac43f9d44a",
+        "ONHOLD_FLAP_BURN_TOKEN": "0x2dcde86543a9cc2c9a3dd914be3fd3afef6e7777",
+        "ONHOLD_BUYBACK_FROM_BLOCK": "129115315",
+        "ONHOLD_BUYBACK_TOKEN_SYMBOL": "OnHold"
       },
       "depends_on": [
         "postgres",
@@ -80,6 +83,29 @@
         }
       ],
       "access_mode": "same-origin"
+    },
+    {
+      "name": "keeper",
+      "role": "worker",
+      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261022-mainnet-ad-keeper-v6",
+      "command": "node backend/scripts/buyback-keeper.mjs --ads",
+      "env": {
+        "ONHOLD_CHAIN_ID": "56",
+        "ONHOLD_MODE": "active",
+        "ONHOLD_CHAIN_RPC_URL": "https://bsc-dataseed.bnbchain.org",
+        "ONHOLD_AD_REINVEST_MARKET": "0x69aF74A7d86E0466fCC533a6eadAb3C25008FDdF",
+        "ONHOLD_NFT_ADDRESS": "0x930aebB5F91cdB219fE8C5178906e2e21a105E87",
+        "ONHOLD_KEEPER_MAX_GAS_PRICE_GWEI": "1",
+        "ONHOLD_KEEPER_SLIPPAGE_BPS": "100",
+        "ONHOLD_KEEPER_DATA_DIR": "/data/keeper"
+      },
+      "storage": [
+        {
+          "volume_name": "onhold-prod-ad-keeper",
+          "volume_type": "share-file",
+          "volume_path": "/data"
+        }
+      ]
     }
   ]
 }

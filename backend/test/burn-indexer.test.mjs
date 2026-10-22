@@ -43,10 +43,11 @@ for(const flapLive of [false,true,'official'])test(`Burn WS (${flapLive==='offic
   async function mine(){for(let i=0;i<4;i++){await provider.send('evm_mine',[]);await delay(40);}}
   await mine();const rewind=await provider.send('evm_snapshot',[]);
   proxy=await wsProxy(rpcUrl,proxyPort,()=>calls++);
+  if(official){await provider.send('anvil_mine',['0x44c']);proxy.pruneBefore=await provider.getBlockNumber()-10;}
   const env={...process.env};for(const key of Object.keys(env))if(key.startsWith('ONHOLD_')||key==='REDIS_URL')delete env[key];Object.assign(env,{ONHOLD_ADDR:`127.0.0.1:${apiPort}`,ONHOLD_DATA_DIR:directory,ONHOLD_DIST_DIR:'/nonexistent',ONHOLD_BUYBACK_VAULT:vaultAddress,ONHOLD_BUYBACK_FROM_BLOCK:String(deployed.blockNumber),ONHOLD_BUYBACK_FLAP_LIVE:String(!!flapLive),ONHOLD_CHAIN_WS_URL:`ws://127.0.0.1:${proxyPort}`,ONHOLD_CHAIN_RPC_URL:`http://127.0.0.1:${proxyPort}`,DATABASE_URL:pgUrl});
   if(official){delete env.ONHOLD_BUYBACK_VAULT;env.ONHOLD_FLAP_BURN_TOKEN=await token.getAddress();}
   const start=()=>{backend=spawn('backend/target/debug/onhold-api',[],{env,stdio:['ignore','ignore','pipe']});backend.stderr.on('data',chunk=>process.stderr.write(chunk));};
-  const read=()=>fetch(api+'/api/burn').then(r=>r.json());start();await until(async()=>{const v=await read();return v.available&&v.connected;});if(flapLive&&!official)assert.equal((await read()).totals.unsettled_creator_fees,'0.000400000000000000');
+  const read=()=>fetch(api+'/api/burn').then(r=>r.json());start();await until(async()=>{const v=await read();return v.available&&v.connected;});if(official){assert.equal(proxy.rejectedHistory,0,'official burn bootstrap must not read pruned historical state');proxy.pruneBefore=0;}if(flapLive&&!official)assert.equal((await read()).totals.unsettled_creator_fees,'0.000400000000000000');
   if(official){
    const initialCalls=calls;
    await (await token.transfer(await processor.getAddress(),parseEther('1000'))).wait();

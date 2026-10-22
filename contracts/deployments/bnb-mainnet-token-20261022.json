@@ -1,0 +1,32 @@
+{
+  "chainId": 56,
+  "name": "OnHold",
+  "symbol": "OnHold",
+  "tokenAddress": "0x2dcde86543a9cc2c9a3dd914be3fd3afef6e7777",
+  "tokenFromBlock": 129115315,
+  "creationTransaction": "0xd430b9d466e2db2e6a6e073d6a98697773c86cfd9d84a2d25a14d5a276d67721",
+  "createdAt": "2026-10-22T10:38:24.000Z",
+  "creator": "0xd614169363e1381d8a2fd092c1e16fa80ae3ec96",
+  "totalSupply": "1000000000.0",
+  "decimals": 18,
+  "portal": "0xe2cE6ab80874Fa9Fa2aAE65D277Dd6B8e65C9De0",
+  "tokenImplementation": "0x024f18294970B5c76c0691b87f138A0317156422",
+  "tokenVersion": 6,
+  "taxProcessor": "0x038eC6AaE174f00814F1A90f381d4D31f1274152",
+  "taxPolicy": {
+    "buy_tax_bps": 300,
+    "sell_tax_bps": 300,
+    "market_bps": 0,
+    "deflation_bps": 5000,
+    "lp_bps": 5000,
+    "dividend_bps": 0,
+    "protocol_fee_bps": 1000
+  },
+  "migratorType": 1,
+  "flapUrl": "https://flap.sh/bnb/0x2dcde86543a9cc2c9a3dd914be3fd3afef6e7777",
+  "website": "https://onhold.cc",
+  "gameplayVaultDeployed": true,
+  "miningPoolFunded": false,
+  "verifiedAt": "2026-10-22T12:02:14.249Z",
+  "gameplayVaultAddress": "0x69aF74A7d86E0466fCC533a6eadAb3C25008FDdF"
+}
