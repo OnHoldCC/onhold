@@ -933,7 +933,7 @@ function Digit({ duration }) {
 // react/components/singlespark-home/Graph.tsx
 import { useId as useId3 } from "react";
 import { jsx as jsx20, jsxs as jsxs12 } from "react/jsx-runtime";
-function Graph({ history, label = "Activity history" }) {
+function Graph({ history, label = "Activity history", loop = false }) {
   const gradientId = useId3();
   const live = history !== void 0;
   if (live && (history.length < 2 || history.some((value) => !Number.isFinite(value)))) {
@@ -963,7 +963,7 @@ function Graph({ history, label = "Activity history" }) {
           /* @__PURE__ */ jsx20("stop", { offset: "0%", stopColor: color, stopOpacity: ".18" }),
           /* @__PURE__ */ jsx20("stop", { offset: "100%", stopColor: color, stopOpacity: ".01" })
         ] }) }),
-        /* @__PURE__ */ jsxs12("g", { className: live ? "uh-history-reveal" : "uh-stream-pan", children: [
+        /* @__PURE__ */ jsxs12("g", { className: loop && live ? "uh-history-loop" : live ? "uh-history-reveal" : "uh-stream-pan", children: (loop && live ? [0, 1, 2] : [0]).map((tile) => jsxs12("g", { className: "uh-history-tile", transform: tile === 1 ? "translate(840 0) scale(-1 1)" : `translate(${tile * 420} 0)`, children: [
           /* @__PURE__ */ jsx20(
             "path",
             {
@@ -983,8 +983,9 @@ function Graph({ history, label = "Activity history" }) {
               vectorEffect: "non-scaling-stroke",
               strokeLinecap: "round"
             }
-          )
-        ] }, live ? curve : void 0)
+          ),
+          loop && live && jsx20("path", { className: "uh-history-highlight", d: curve, fill: "none", stroke: color, strokeOpacity: ".25", strokeWidth: "2", pathLength: "420", strokeDasharray: "14 126", vectorEffect: "non-scaling-stroke", strokeLinecap: "round" })
+        ] }, tile)) }, loop && live ? "history-loop" : live ? curve : void 0)
       ]
     }
   );
@@ -1018,7 +1019,7 @@ function AnalyticsVisual({
     ] }),
     /* @__PURE__ */ jsxs13("div", { className: `uh-graph uh-graph-live ${stats ? "uh-graph-summary" : ""}`, children: [
       /* @__PURE__ */ jsx21("div", { className: "uh-graph-grid" }),
-      /* @__PURE__ */ jsx21(Graph, { history: metric.history, label: `${metric.label} history` }, metric.period),
+      /* @__PURE__ */ jsx21(Graph, { history: metric.history, loop: true, label: `${metric.label} history` }),
       /* @__PURE__ */ jsx21("div", { className: "uh-graph-fade uh-graph-left" }),
       /* @__PURE__ */ jsx21("div", { className: "uh-graph-fade uh-graph-right" })
     ] })

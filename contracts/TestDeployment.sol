@@ -11,7 +11,7 @@ contract ClaudeTestToken is ERC20, ERC20Burnable {
         super._update(from, to, value);
         if (to == address(0)) totalBurned += value;
     }
-    constructor(address recipient) ERC20("Claude Test Token", "Claude") {
+    constructor(address recipient) ERC20("OnHold Test Token", "OnHold") {
         require(block.chainid == 97 || block.chainid == 31337, "Testnet only");
         _mint(recipient, 100_000_000 ether);
     }

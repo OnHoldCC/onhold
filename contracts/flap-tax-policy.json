@@ -1,0 +1,8 @@
+{
+  "buy_tax_bps": 300,
+  "sell_tax_bps": 300,
+  "deflation_bps": 5000,
+  "lp_bps": 5000,
+  "market_bps": 0,
+  "dividend_bps": 0
+}

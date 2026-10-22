@@ -14,11 +14,13 @@ test('initial module graph excludes wallet providers and deployment bytecode; ha
  for(const path of metrics.eager)for(const input of Object.keys(metrics.outputs[path].inputs))assert.doesNotMatch(input,/ethers\/.*\/providers\/|contracts\/artifacts\/|nft-artwork\.mjs|\/Docs\.jsx$/);
  assert.deepEqual((await readdir('front/dist')).filter(name=>name.endsWith('.html')),['index.html']);
  const html=await readFile('front/dist/index.html','utf8');assert.match(html,/rel="modulepreload"/);assert.doesNotMatch(html,/✳ OnHold/);assert.match(html,/rel="icon" type="image\/png" href="assets\/onhold-favicon-transparent\.png"/);
+ for(const [path,info]of Object.entries(metrics.outputs))for(const input of Object.keys(info.inputs))assert.doesNotMatch(input,/contracts\/artifacts\/(?:TestDeployment|MockTestDeployment|ClaudeTestToken)\.json/,path);
+ const bundle=(await Promise.all(Object.keys(metrics.outputs).filter(path=>path.endsWith('.js')).map(path=>readFile(path,'utf8')))).join('\n');assert.doesNotMatch(bundle,/onhold\.market\.v1|onholdTestMarket|isOnholdTestWallet|多模型统一接口/);
  const locales=Object.entries(metrics.outputs).filter(([,info])=>info.entryPoint?.startsWith('locale:'));
  assert.equal(locales.length,7);
  for(const [path,info]of locales){assert.ok(!metrics.eager.includes(path));assert.deepEqual((await import(pathToFileURL(path))).default,messages[info.entryPoint.slice(7)]);}
  const preload=html.match(/<script>(.*?)<\/script>/)[1];
- for(const [pathname,read,setup,expected]of [['/',null,'',2],['/','read','',0],['/claim',null,'',0],['/',null,'?setup=1',0]]){
+ for(const [pathname,read,setup,expected]of [['/',null,'',2],['/','read','',0],['/claim',null,'',0],['/',null,'?setup=1',2]]){
   const links=[],dataset={};
   runInNewContext(preload,{location:{pathname,search:setup},URLSearchParams,sessionStorage:{getItem:()=>read},document:{documentElement:{dataset},head:{append:link=>links.push(link)},createElement:()=>({})}});
   assert.equal(links.length,expected);

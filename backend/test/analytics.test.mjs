@@ -34,6 +34,8 @@ test('PostgreSQL and Redis keep exact PV/UV/clicks across duplicates, concurrent
   sql("INSERT INTO analytics_events(event_id,kind,page,created_at) SELECT 'legacy-page-event-'||i,'page_view','home',extract(epoch FROM now()-interval '2 days')::bigint FROM generate_series(1,1005)i");
   backend=start();await until(async()=>{const s=await stats();return s.source==='redis'&&s.data.page_views===1005;});
   const initial=(await stats()).data;assert.equal(initial.page_uv,0,'do not invent historical UV');assert.equal(initial.daily_clicks.length,30);
+  const legacyKey=redis('KEYS','onhold:analytics:v1:*').split('\n')[0],legacyRaw=redis('HGET',legacyKey,'data'),legacy=JSON.parse(legacyRaw);legacy.stats.financial.symbol='$Claude';redis('HSET',legacyKey,'data',JSON.stringify(legacy));
+  assert.equal((await stats()).data.financial.symbol,'$OnHold','old Redis labels must not leak after a rename');redis('HSET',legacyKey,'data',legacyRaw);
   const duplicate=event('same-page-event-00001');
   const results=await Promise.all(Array.from({length:20},()=>post(duplicate)));
   assert.equal(results.filter(v=>!v.duplicate).length,1);

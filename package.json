@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "contracts:build": "node contracts/scripts/compile.mjs",
+    "test:flap-fork": "node contracts/scripts/test-flap-native-fork.mjs",
     "build": "npm run build --workspace @onhold/front",
     "test": "node --test front/test/*.test.mjs contracts/test/*.test.mjs backend/test/*.test.mjs && cargo test --offline --manifest-path backend/Cargo.toml",
     "dev": "npm run build && cargo run --manifest-path backend/Cargo.toml",

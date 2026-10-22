@@ -1,0 +1,51 @@
+{
+  "chainId": 97,
+  "testOnly": true,
+  "verifiedAt": "2026-10-22T01:51:11.550Z",
+  "name": "OnHold Native TEST",
+  "symbol": "OHLDTEST",
+  "tokenAddress": "0xF98926D4f930a2345eA55D496e3214D37Bf17777",
+  "taxProcessorAddress": "0xFed3362598E1ed8D0c257A9CE0A36D5338E7B08C",
+  "portalAddress": "0x5bEacaF7ABCbB3aB280e80D007FD31fcE26510e9",
+  "launch": {
+    "tx": "0x0ec44e4751b14ca880b62b15e773a8f7758a0fca761927508bb56478fee50d24",
+    "block": 138183417,
+    "initialBuyBNB": "0.04"
+  },
+  "buyTaxBps": 300,
+  "sellTaxBps": 300,
+  "deflationBps": 5000,
+  "lpBps": 5000,
+  "marketBps": 0,
+  "dividendBps": 0,
+  "protocolShareOfTaxBps": 1000,
+  "metadata": {
+    "cid": "bafkreie35oj3gikgambjfjrojoa65xll6tbziotoeg2sxvg2nw6iab3wvm",
+    "website": "https://onhold.cc",
+    "twitter": "onholdcc"
+  },
+  "burn": {
+    "total": "0.0",
+    "sink": "0x000000000000000000000000000000000000dEaD",
+    "sinkBalance": "0.0",
+    "dispatchTx": "0x338a8f8eacaa00b023480d3fb89748ca8b0378d881a8b0ea3d9170e90486bb6f",
+    "dispatchTrigger": "manual call to official permissionless dispatch; no custom keeper",
+    "events": [],
+    "executed": false,
+    "pendingQuoteBNB": "0.00054"
+  },
+  "liquidity": {
+    "pendingQuoteBNB": "0.00054",
+    "quoteAddedBNB": "0.0",
+    "tokensAdded": "0.0",
+    "pool": "0x0000000000000000000000000000000000000000",
+    "status": 1
+  },
+  "totalSupply": "1000000000.0",
+  "limits": [
+    "Testnet only; NFT, mining token and gameplay vault retained",
+    "Official bot automation has not been verified",
+    "LP execution after DEX migration has not been verified",
+    "Official dispatch succeeded but performed no burn; pending deflation funds remain below the threshold observed in a local fork"
+  ]
+}

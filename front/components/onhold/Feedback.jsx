@@ -3,6 +3,7 @@ import {Button} from '@singlespark/component-atlas/ui';
 import {NotificationFrame,SingleSparkMoney} from '@singlespark/component-atlas/singlespark';
 import {SingleSparkTokenIcon} from '@singlespark/component-atlas/assets';
 import {SingleSparkSkeleton} from '@singlespark/component-atlas/feedback';
+import {compactAmount} from '../../src/format.mjs';
 
 // Same 520 ms navigation transition used by SingleSparkFront.
 export function RouteNavigationProgress({page,label}){
@@ -21,12 +22,14 @@ export function Notice({children,error=false,onClose,closeLabel,className=''}){
   return <div className={`u-business onhold-notice ${error?'onhold-notice--error':''} ${className}`} role={error?'alert':'status'}><NotificationFrame variant="toast" onClose={onClose} closeLabel={closeLabel}>{children}</NotificationFrame></div>;
 }
 export function TokenUnit({unit,size=18}){
-  return unit==='BNB'?<SingleSparkTokenIcon symbol={unit} size={size}/>:unit==='$Claude'?<span className="platform-token-unit">$Claude</span>:unit;
+  return unit==='BNB'?<SingleSparkTokenIcon symbol={unit} size={size}/>:unit==='$OnHold'?<span className="platform-token-unit">$OnHold</span>:unit;
 }
-export function DataValue({value,loading=false,t,unit='',digits=4,lang='en'}){
+export function DataValue({value,loading=false,t,unit='',digits=4,lang='en',compact=false}){
   if(loading&&value==null)return <SingleSparkSkeleton variant="input" width="7ch" height="1.2em" className="value-skeleton" label={t('loadingData')}/>;
   if(value==null||(typeof value==='string'&&!value.trim())||!Number.isFinite(Number(value)))return <span className="unavailable-value">{t('notAvailable')}</span>;
-  return <><SingleSparkMoney value={new Intl.NumberFormat(lang==='zh'?'zh-CN':lang,{maximumFractionDigits:digits}).format(typeof value==='bigint'?value:Number(value))}/>{unit&&<> <TokenUnit unit={unit}/></>}</>;
+  const full=String(value),short=compact&&Number(value)>=1000;
+  const money=<SingleSparkMoney value={short?compactAmount(value,lang):new Intl.NumberFormat(lang==='zh'?'zh-CN':lang,{maximumFractionDigits:digits}).format(typeof value==='bigint'?value:Number(value))} aria-label={short?full:undefined}/>;
+  return <>{short?<span title={full}>{money}</span>:money}{unit&&<> <TokenUnit unit={unit}/></>}</>;
 }
 
 export class PageLoadBoundary extends React.Component {

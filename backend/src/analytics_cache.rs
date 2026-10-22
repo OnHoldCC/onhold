@@ -18,7 +18,8 @@ pub async fn read(store: &pg::Store) -> Option<analytics::Snapshot> {
     let mut redis = store.redis.clone()?;
     let raw = redis::cmd("HGET").arg(key(store)).arg("data")
         .query_async::<Option<String>>(&mut redis).await.ok()??;
-    let cached: Cached = serde_json::from_str(&raw).ok()?;
+    let mut cached: Cached = serde_json::from_str(&raw).ok()?;
+    cached.stats.financial["symbol"] = json!("$OnHold");
     if !cached.ready { return None; }
     let mut campaigns = BTreeMap::new();
     for (key, counts) in cached.campaigns {
@@ -63,7 +64,7 @@ pub async fn sync(store: &pg::Store) -> Result<bool, ApiError> {
         .await.map_err(|_| pg::error())?.into_iter().map(|r| DayCount {date:r.get(0),clicks:0}).collect::<Vec<_>>();
     let initial = Cached {
         ready:false,
-        stats:Stats {page_views:0,page_uv:0,ad_clicks:0,wallet_connections:0,clicks_by_site:[0;6],uv_by_site:[0;6],updated_at:analytics::now(),daily_clicks:calendar.clone(),timezone:"Asia/Shanghai".into(),financial:json!({"symbol":"$Claude","confirmed":false,"claimed_count":null,"claimed_total":null,"burned_total":null})},
+        stats:Stats {page_views:0,page_uv:0,ad_clicks:0,wallet_connections:0,clicks_by_site:[0;6],uv_by_site:[0;6],updated_at:analytics::now(),daily_clicks:calendar.clone(),timezone:"Asia/Shanghai".into(),financial:json!({"symbol":"$OnHold","confirmed":false,"claimed_count":null,"claimed_total":null,"burned_total":null})},
         campaigns:BTreeMap::new(),
     };
     let rows = tx.query("SELECT event_id,kind,site_id,market,campaign_version,visitor_id,to_char(to_timestamp(created_at) AT TIME ZONE 'Asia/Shanghai','YYYY-MM-DD') FROM analytics_events WHERE redis_pending ORDER BY created_at,event_id LIMIT 1000", &[])

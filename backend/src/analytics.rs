@@ -138,7 +138,7 @@ pub fn sqlite_snapshot(db: &Connection) -> rusqlite::Result<Snapshot> {
             daily_clicks,
             updated_at: now(),
             timezone: "Asia/Shanghai".into(),
-            financial: json!({"symbol":"$Claude","confirmed":false,"claimed_count":null,"claimed_total":null,"burned_total":null}),
+            financial: json!({"symbol":"$OnHold","confirmed":false,"claimed_count":null,"claimed_total":null,"burned_total":null}),
         },
         campaigns,
     })

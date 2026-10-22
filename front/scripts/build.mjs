@@ -27,7 +27,7 @@ function collect(path){if(eager.has(path))return;eager.add(path);for(const item 
 collect(entry);
 const preload=[...eager].filter(path=>path!==entry).map(path=>`<link rel="modulepreload" href="${assetPath(path)}">`).join('');
 const portraits=['claude-code-girl','teacher','student','sister'].map(name=>[640,1024].map(width=>assetPath(Object.keys(outputs).find(path=>path.endsWith('.webp')&&Object.keys(outputs[path].inputs).some(input=>input.endsWith(`/welcome/${name}-${width}.webp`))))));
-const portraitPreload=`<script>(()=>{try{if(location.pathname!=='/'||new URLSearchParams(location.search).get('setup')==='1'||sessionStorage.getItem('onhold.welcome.v1')==='read')return;}catch{}const images=${JSON.stringify(portraits)};const index=Math.floor(Math.random()*images.length);document.documentElement.dataset.welcomePortrait=String(index);images[index].forEach((href,i)=>{const link=document.createElement('link');link.rel='preload';link.as='image';link.href=href;link.media=i?'(min-width: 641px)':'(max-width: 640px)';link.fetchPriority='high';document.head.append(link);});})();</script>`;
+const portraitPreload=`<script>(()=>{try{if(location.pathname!=='/'||sessionStorage.getItem('onhold.welcome.v1')==='read')return;}catch{}const images=${JSON.stringify(portraits)};const index=Math.floor(Math.random()*images.length);document.documentElement.dataset.welcomePortrait=String(index);images[index].forEach((href,i)=>{const link=document.createElement('link');link.rel='preload';link.as='image';link.href=href;link.media=i?'(min-width: 641px)':'(max-width: 640px)';link.fetchPriority='high';document.head.append(link);});})();</script>`;
 const html=(await readFile(join(root,'src/index.html'),'utf8')).replace('app.js',assetPath(entry)).replace('app.css',assetPath(entryInfo.cssBundle)).replace('style.css',stylePath).replace('</head>',portraitPreload+preload+'</head>');
 for(const [path,info]of Object.entries(outputs))if(/\.(js|css)$/.test(path)){
  const data=await readFile(path);
@@ -48,4 +48,4 @@ for(const name of ['nunito-variable.ttf','OFL.txt']) await copyFile(join(root,'s
 for(const name of ['backers','singlespark','web3','fonts']) await cp(join(root,'components/singlespark/assets',name),join(root,'dist/assets',name),{recursive:true});
 await mkdir(join(root,'dist/assets/guide'),{recursive:true});
 await copyFile(join(root,'src/assets/guide/SOURCE.md'),join(root,'dist/assets/guide/SOURCE.md'));
-console.log('Built React SPA: one entry, 5 routes, 8 languages, $Claude components.');
+console.log('Built React SPA: one entry, 5 routes, 8 languages, $OnHold components.');

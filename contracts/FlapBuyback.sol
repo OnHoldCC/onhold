@@ -108,7 +108,7 @@ contract FlapBuyback is VaultBaseV3, ReentrancyGuard {
         swapping = false;
     }
     function description() public view override returns (string memory) {
-        return string.concat("ONHOLD: native creator fees, less capped execution gas compensation, buy back $Claude to 0xdead every 180 seconds when funded. Burned base units: ", Strings.toString(totalBurned));
+        return string.concat("ONHOLD: native creator fees, less capped execution gas compensation, buy back $OnHold to 0xdead every 180 seconds when funded. Burned base units: ", Strings.toString(totalBurned));
     }
     function vaultUISchema() public pure override returns (VaultUISchema memory schema) {
         schema.vaultType = "ONHOLD Buyback";
@@ -126,7 +126,7 @@ contract FlapBuyback is VaultBaseV3, ReentrancyGuard {
             schema.methods[i].isWriteMethod = true;
             schema.methods[i].inputs = new FieldDescriptor[](3);
             schema.methods[i].inputs[0] = FieldDescriptor("amount", "uint256", "BNB to spend", 18);
-            schema.methods[i].inputs[1] = FieldDescriptor("minOutput", "uint256", "Minimum $Claude burned", 18);
+            schema.methods[i].inputs[1] = FieldDescriptor("minOutput", "uint256", "Minimum $OnHold burned", 18);
             schema.methods[i].inputs[2] = FieldDescriptor("deadline", "time", "Transaction expiry", 0);
         }
     }

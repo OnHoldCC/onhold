@@ -34,7 +34,7 @@ test('telemetry payload only contains the documented non-sensitive fields',()=>{
 
 test('homepage copy describes restriction NFTs and staking in all eight locales',()=>{
   assert.equal(Object.keys(messages).length,8);
-  for(const lang of Object.keys(messages)){assert.match(translate(lang,'homeIntro'),/NFT/);assert.match(translate(lang,'homeIntro'),/\$Claude/);}
+  for(const lang of Object.keys(messages)){assert.match(translate(lang,'homeIntro'),/NFT/);assert.match(translate(lang,'homeIntro'),/\$OnHold/);}
   assert.doesNotMatch(translate('en','homeTitle'),/spotlight|project/i);
   assert.doesNotMatch(translate('zh','homeTitle'),/看见|项目/);
 });
@@ -52,8 +52,8 @@ test('all locales describe 365-day linear mining and claiming without unstaking'
   assert.match(translate('en','miningInvite'),/15%/);
 });
 
-test('mining competition and test-auction rules are named in every locale',()=>{
- for(const lang of Object.keys(messages))for(const key of ['networkMining','networkWeight','perWeightDaily','myWeightShare','networkStatsNote','miningCompetition','miningHistoryPending','testAdRules'])assert.notEqual(translate(lang,key),key);
+test('mining competition and fast-auction rules are named in every locale',()=>{
+ for(const lang of Object.keys(messages))for(const key of ['networkMining','networkWeight','perWeightDaily','myWeightShare','networkStatsNote','miningCompetition','miningHistoryPending','fastAdRules'])assert.notEqual(translate(lang,key),key);
 });
 
 test('navigation labels are translated in every non-English locale',()=>{
@@ -87,3 +87,7 @@ test('wallet guidance and official site description are localized',()=>{
      assert.doesNotMatch(translate(lang,'api.artwork_unavailable'),/Pons|IPFS|SingleSpark/i);
    }
  });
+
+test("fast auction copy keeps the actual interval without a test-only prefix",()=>{
+ for(const lang of supportedLocales){assert.match(translate(lang,"fastAdRules"),/60/);assert.doesNotMatch(translate(lang,"fastAdRules"),/TEST|测试|テスト|테스트|PRUEBAS|TESTE/);}
+});

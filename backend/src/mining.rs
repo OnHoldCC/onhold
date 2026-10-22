@@ -1040,7 +1040,7 @@ pub async fn snapshot(
     Ok((
         [(header::CACHE_CONTROL, "no-store")],
         Json(
-            json!({"configured":true,"available":available,"stale":stale,"connected":connected,"syncing":syncing,"last_error":tracker.cache.lock().map_err(|_|crate::internal())?.last_error,"chain_id":97,"protocol":"nft-staking-v4","mock":data.mock_minimum.is_some(),"market":tracker.market,"storage":"postgresql","metadata_cache":store.redis.is_some(),"confirmed_block":data.block,"block_hash":data.hash,"as_of":data.time,"mining":mining,"ads":ads,"history":history,"historyTotal":history_total,"financial":{"claims":claims,"recipients":data.recipient_count,"claimed":amount(uint(&data.claimed)?)?,"burned":burned,"marketAddress":tracker.market}}),
+            json!({"configured":true,"available":available,"stale":stale,"connected":connected,"syncing":syncing,"last_error":tracker.cache.lock().map_err(|_|crate::internal())?.last_error,"chain_id":97,"protocol":"nft-staking-v4","mock":data.mock_minimum.is_some(),"market":tracker.market,"storage":"postgresql","metadata_cache":store.redis.is_some(),"confirmed_block":data.block,"block_hash":data.hash,"as_of":data.time,"mining":mining,"ads":ads,"history":history,"historyTotal":history_total,"financial":{"claims":claims,"recipients":data.recipient_count,"claimed":amount(uint(&data.claimed)?)?,"burned":burned,"burnedSymbol":crate::burn::token_symbol(),"marketAddress":tracker.market}}),
         ),
     ))
 }

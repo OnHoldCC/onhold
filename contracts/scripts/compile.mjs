@@ -9,4 +9,4 @@ const errors=(output.errors||[]).filter(error=>error.severity==='error');
 if(errors.length)throw new Error(errors.map(error=>error.formattedMessage).join('\n'));
 mkdirSync(join(root,'contracts/artifacts'),{recursive:true});
 for(const [source,contracts] of Object.entries(output.contracts))for(const [name,artifact] of Object.entries(contracts))if(source.startsWith('contracts/')||name==='ERC1967Proxy'){if(artifact.evm.deployedBytecode.object.length/2>24576)throw Error(name+' exceeds the EVM runtime size limit');writeFileSync(join(root,'contracts/artifacts',name+'.json'),JSON.stringify({abi:artifact.abi,storageLayout:artifact.storageLayout,bytecode:'0x'+artifact.evm.bytecode.object},null,2));}
-console.log('Compiled BNB-compatible market and test-only $Claude deployment.');
+console.log('Compiled BNB-compatible market and test-only $OnHold deployment.');

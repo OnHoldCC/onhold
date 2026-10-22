@@ -1,0 +1,54 @@
+--- r3/backend/src/pg.rs
++++ onhold/backend/src/pg.rs
+@@ -208,7 +208,7 @@
+             daily_clicks,
+             updated_at: crate::analytics::now(),
+             timezone: "Asia/Shanghai".into(),
+-            financial: serde_json::json!({"symbol":"$Claude","confirmed":false,"claimed_count":null,"claimed_total":null,"burned_total":null}),
++            financial: serde_json::json!({"symbol":"$OnHold","confirmed":false,"claimed_count":null,"claimed_total":null,"burned_total":null}),
+         },
+         campaigns,
+     })
+--- r3/backend/src/analytics.rs
++++ onhold/backend/src/analytics.rs
+@@ -138,7 +138,7 @@
+             daily_clicks,
+             updated_at: now(),
+             timezone: "Asia/Shanghai".into(),
+-            financial: json!({"symbol":"$Claude","confirmed":false,"claimed_count":null,"claimed_total":null,"burned_total":null}),
++            financial: json!({"symbol":"$OnHold","confirmed":false,"claimed_count":null,"claimed_total":null,"burned_total":null}),
+         },
+         campaigns,
+     })
+--- r3/backend/src/analytics_cache.rs
++++ onhold/backend/src/analytics_cache.rs
+@@ -18,7 +18,8 @@
+     let mut redis = store.redis.clone()?;
+     let raw = redis::cmd("HGET").arg(key(store)).arg("data")
+         .query_async::<Option<String>>(&mut redis).await.ok()??;
+-    let cached: Cached = serde_json::from_str(&raw).ok()?;
++    let mut cached: Cached = serde_json::from_str(&raw).ok()?;
++    cached.stats.financial["symbol"] = json!("$OnHold");
+     if !cached.ready { return None; }
+     let mut campaigns = BTreeMap::new();
+     for (key, counts) in cached.campaigns {
+@@ -63,7 +64,7 @@
+         .await.map_err(|_| pg::error())?.into_iter().map(|r| DayCount {date:r.get(0),clicks:0}).collect::<Vec<_>>();
+     let initial = Cached {
+         ready:false,
+-        stats:Stats {page_views:0,page_uv:0,ad_clicks:0,wallet_connections:0,clicks_by_site:[0;6],uv_by_site:[0;6],updated_at:analytics::now(),daily_clicks:calendar.clone(),timezone:"Asia/Shanghai".into(),financial:json!({"symbol":"$Claude","confirmed":false,"claimed_count":null,"claimed_total":null,"burned_total":null})},
++        stats:Stats {page_views:0,page_uv:0,ad_clicks:0,wallet_connections:0,clicks_by_site:[0;6],uv_by_site:[0;6],updated_at:analytics::now(),daily_clicks:calendar.clone(),timezone:"Asia/Shanghai".into(),financial:json!({"symbol":"$OnHold","confirmed":false,"claimed_count":null,"claimed_total":null,"burned_total":null})},
+         campaigns:BTreeMap::new(),
+     };
+     let rows = tx.query("SELECT event_id,kind,site_id,market,campaign_version,visitor_id,to_char(to_timestamp(created_at) AT TIME ZONE 'Asia/Shanghai','YYYY-MM-DD') FROM analytics_events WHERE redis_pending ORDER BY created_at,event_id LIMIT 1000", &[])
+--- r3/backend/src/burn.rs
++++ onhold/backend/src/burn.rs
+@@ -38,7 +38,7 @@
+     }
+ }
+ pub fn token_symbol() -> String {
+-    format!("${}",std::env::var("ONHOLD_BUYBACK_TOKEN_SYMBOL").unwrap_or_else(|_|"Claude".into()))
++    format!("${}",std::env::var("ONHOLD_BUYBACK_TOKEN_SYMBOL").unwrap_or_else(|_|"OnHold".into()))
+ }
+ fn now() -> u64 {
+     SystemTime::now()

@@ -208,7 +208,7 @@ pub async fn stats(store: &Store) -> Result<crate::analytics::Snapshot, ApiError
             daily_clicks,
             updated_at: crate::analytics::now(),
             timezone: "Asia/Shanghai".into(),
-            financial: serde_json::json!({"symbol":"$Claude","confirmed":false,"claimed_count":null,"claimed_total":null,"burned_total":null}),
+            financial: serde_json::json!({"symbol":"$OnHold","confirmed":false,"claimed_count":null,"claimed_total":null,"burned_total":null}),
         },
         campaigns,
     })

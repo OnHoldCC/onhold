@@ -9,10 +9,9 @@ import {pendingMining,rememberMining,confirmMining} from './mining-receipt.mjs';
 import {createInteractionTiming} from './interaction-timing.mjs';
 export const chain={id:97,hexId:'0x61',name:'BNB Smart Chain Testnet',rpc:'https://bsc-testnet-dataseed.bnbchain.org',explorer:'https://testnet.bscscan.com'};
 export function storedMarket() {
-  try {const address=(window.ethereum?.isOnholdTestWallet?window.ethereum.onholdTestMarket:null)||(config.protocol==='nft-staking-v4'?config.marketAddress:null)||JSON.parse(localStorage.getItem('onhold.nftcontract.v4'))?.marketAddress;return address?getAddress(address):null;}catch{return null;}
+  try {return config.protocol==='nft-staking-v4'&&config.marketAddress?getAddress(config.marketAddress):null;}catch{return null;}
 }
-export function storedNft(){return window.ethereum?.isOnholdTestWallet?storedMarket():(config.nftAddress||storedMarket());}
-export function storeMarket(address) {const checked=getAddress(address);localStorage.setItem('onhold.nftcontract.v4',JSON.stringify({chainId:97,marketAddress:checked}));return checked;}
+export function storedNft(){return config.nftAddress||storedMarket();}
 const signerProviders=new WeakMap();
 async function signer() {
   const {BrowserProvider}=await import('ethers');
@@ -42,7 +41,7 @@ async function chainSnapshot(address,wallet,fresh=false){
 export async function readMarket(address,fresh=false){
   if(fresh)invalidateHome();
   const value=await chainSnapshot(address,undefined,fresh);
-  return {...value,ads:value.ads.map(ad=>({...ad,title:safeUrl(ad.url)?new URL(ad.url).hostname:'',empty:ad.empty||false})),financial:value.financial};
+  return {...value,ads:value.ads.map(ad=>({...ad,title:safeUrl(ad.url)?new URL(ad.url).hostname:'',empty:ad.empty||false})),financial:{...value.financial,...(value.financial?.burnedSymbol&&value.financial.burnedSymbol!=='$OnHold'?{burned:null,burnedSymbol:'$OnHold'}:{})}};
 }
 export async function placeChainBid(address,slot,version,form,timing=createInteractionTiming()) {
   const [{Contract},{abi},account]=await timing.measure('walletPrepare',()=>Promise.all([import('ethers'),import('./market-abi.mjs'),signer()]));const market=new Contract(address,abi,account);
@@ -57,14 +56,6 @@ export async function placeChainBid(address,slot,version,form,timing=createInter
   const transaction=await timing.measure('sendTransaction',()=>market.bid(...args,{value,gasLimit}));
   await timing.measure('chainConfirm',()=>transaction.wait());return transaction.hash;
 }
-export async function deployTestContracts() {
-  const [{ContractFactory},{default:factoryArtifact},account]=await Promise.all([import('ethers'),import('../../contracts/artifacts/TestDeployment.json'),signer()]);
-  const factory=new ContractFactory(factoryArtifact.abi,factoryArtifact.bytecode,account);
-  await checkWallet(account);
-  const deployment=await factory.deploy();await deployment.waitForDeployment();
-  return {marketAddress:await deployment.market(),tokenAddress:await deployment.token(),transactionHash:deployment.deploymentTransaction().hash};
-}
-
 export async function mintVerified(verificationToken,png,referrer,expectedMarket,expectedWallet,onProgress,timing=createInteractionTiming()){
   const {claimRequest,createNft}=await import('./claims-api.mjs');
   onProgress({stage:0});

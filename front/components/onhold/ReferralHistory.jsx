@@ -18,7 +18,7 @@ export function ReferralHistory({wallet,market,t:sharedText,lang}){
  },[market,wallet,page,eventsPage]);
  const known=current?.available===true;
  const number=value=><DataValue value={value} loading={loading} t={t} lang={lang}/>;
- const money=value=><DataValue value={value} loading={loading} t={t} lang={lang} digits={8} unit="$Claude"/>;
+ const money=value=><DataValue value={value} loading={loading} t={t} lang={lang} digits={8} unit="$OnHold"/>;
  const address=value=><a href={`${chain.explorer}/address/${value}`} title={value} target="_blank" rel="noopener noreferrer">{value.slice(0,6)}…{value.slice(-4)}</a>;
  const peopleColumns=[{id:'wallet',header:t('referralWallet'),cell:row=>address(row.wallet)},{id:'stakes',header:t('referralStaked'),cell:row=>number(row.stakedCount)},{id:'weight',header:t('nftWeight'),cell:row=>number(row.weight)},{id:'base',header:t('referralBaseRewards'),cell:row=>money(row.baseRewards)},{id:'contribution',header:t('referralContribution'),cell:row=>money(row.contribution)}];
  const eventColumns=[{id:'kind',header:t('referralEventType'),cell:row=>t({bound:'referralBoundEvent',accrued:'referralAccruedEvent',paid:'referralPaidEvent'}[row.kind])},{id:'wallet',header:t('referralEventWallet'),cell:row=>address(row.wallet)},{id:'base',header:t('referralEventBase'),cell:row=>row.baseReward===null?'—':money(row.baseReward)},{id:'amount',header:t('referralEventAmount'),cell:row=>row.amount===null?'—':money(row.amount)},{id:'block',header:t('confirmedBlock'),cell:row=>number(row.block)},{id:'tx',header:t('transactionHash'),cell:row=><a href={`${chain.explorer}/tx/${row.txHash}`} target="_blank" rel="noopener noreferrer">{row.txHash.slice(0,8)}…{row.txHash.slice(-4)} ↗</a>}];

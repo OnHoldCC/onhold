@@ -1,0 +1,88 @@
+{
+  "simulationOnly": true,
+  "publicTransactionsSent": 0,
+  "publicTestBNBSpent": "0",
+  "verifiedAt": "2026-10-22T02:57:10.681Z",
+  "chainId": 97,
+  "forkBlock": 138191965,
+  "forkHash": "0xb8480ea98135a46a6298d45471029079a53bed2588289220b4df11184e986b7e",
+  "token": "0xF98926D4f930a2345eA55D496e3214D37Bf17777",
+  "processor": "0xFed3362598E1ed8D0c257A9CE0A36D5338E7B08C",
+  "pool": "0x20880B29B9B426Ab6CDa739B5a307C7f5180f719",
+  "localWalletBalanceSetBNB": "100",
+  "buyInputBNB": "17",
+  "dexSellTokenAmounts": [
+    "20000000",
+    "20000000"
+  ],
+  "burnedTokens": "2985567.953434441100388657",
+  "lpQuoteAddedBNB": "0.020989446606890848",
+  "lpTokensAdded": "307275.208308454453335279",
+  "lpMintedRaw": "82130496363546271005",
+  "burnTransfers": [
+    {
+      "tx": "0xc715ba4ed028c66920c66901fdc3f0dfa5f349a7944543ba26b7cf895af7fbcd",
+      "logIndex": 11,
+      "amount": "2678292.745125986647053378",
+      "from": "0xFed3362598E1ed8D0c257A9CE0A36D5338E7B08C",
+      "to": "0x000000000000000000000000000000000000dEaD"
+    },
+    {
+      "tx": "0x097ee158e9c495ce7b863ba85c65a78257fba7c2eec7f2f31d3d3caf12db3c98",
+      "logIndex": 14,
+      "amount": "307275.208308454453335279",
+      "from": "0xFed3362598E1ed8D0c257A9CE0A36D5338E7B08C",
+      "to": "0x000000000000000000000000000000000000dEaD"
+    }
+  ],
+  "lpMints": [
+    {
+      "tx": "0x097ee158e9c495ce7b863ba85c65a78257fba7c2eec7f2f31d3d3caf12db3c98",
+      "logIndex": 28,
+      "amount0": "20989446606890848",
+      "amount1": "307275208308454453335279"
+    }
+  ],
+  "transactions": [
+    {
+      "label": "buy-through-migration",
+      "localTx": "0x6a166aa0a7021cc291010f7c6e1f9f87fb6fc9fa55d7a2f6aa40c746a813f1d7",
+      "localBlock": 138191966,
+      "gasUsed": "612241"
+    },
+    {
+      "label": "official-dispatch-after-migration",
+      "localTx": "0xc715ba4ed028c66920c66901fdc3f0dfa5f349a7944543ba26b7cf895af7fbcd",
+      "localBlock": 138191967,
+      "gasUsed": "417696"
+    },
+    {
+      "label": "approve-exact-test-sells",
+      "localTx": "0xe16a7f1bbfd79fdcf9615d62b718e762a2164bec8910ce7eea3865df0fd9a1ff",
+      "localBlock": 138191968,
+      "gasUsed": "48956"
+    },
+    {
+      "label": "dex-sell-1",
+      "localTx": "0x33e38e47689b6b89fe0921a7438728568b1897adf4f8df6c2923955ca200c932",
+      "localBlock": 138191969,
+      "gasUsed": "352612"
+    },
+    {
+      "label": "dex-sell-2",
+      "localTx": "0x097ee158e9c495ce7b863ba85c65a78257fba7c2eec7f2f31d3d3caf12db3c98",
+      "localBlock": 138191970,
+      "gasUsed": "723342"
+    },
+    {
+      "label": "official-dispatch-after-dex-trades",
+      "localTx": "0x978abdf7956a589139bb7810589e0e137b1875e32bd4c346e6de69c1a159c37b",
+      "localBlock": 138191971,
+      "gasUsed": "107641"
+    }
+  ],
+  "limits": [
+    "Local fork evidence only; these transactions do not exist on the public testnet",
+    "Official bot automation and mainnet execution are not verified"
+  ]
+}

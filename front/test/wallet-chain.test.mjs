@@ -64,3 +64,21 @@ test('ethers bid and staking transactions use the selected SingleSpark provider,
   session.stop();
  }finally{await rm(dir,{recursive:true,force:true});}
 });
+
+
+test('OnHold summaries exclude another token’s burn total without inventing zeroes',async t=>{
+ const dir=await mkdtemp(join(tmpdir(),'onhold-summary-token-'));
+ try{
+  const out=join(dir,'chain.mjs');
+  await build({entryPoints:['front/src/chain.mjs'],outfile:out,bundle:true,platform:'browser',format:'esm',logLevel:'silent'});
+  const {readMarket}=await import(pathToFileURL(out));
+  const market='0x3333333333333333333333333333333333333333';
+  let symbol='$OHLDTEST',burned='167497.970492817354414814';
+  t.mock.method(globalThis,'fetch',async()=>Response.json({available:true,chain_id:97,protocol:'nft-staking-v4',market,ads:[],financial:{claimed:'345',claims:[],burned,burnedSymbol:symbol}}));
+  const excluded=await readMarket(market,true);
+  assert.equal(excluded.financial.burned,null);assert.equal(excluded.financial.burnedSymbol,'$OnHold');assert.equal(excluded.financial.claimed,'345');
+  symbol='$OnHold';
+  assert.equal((await readMarket(market,true)).financial.burned,burned);
+  burned='0';assert.equal((await readMarket(market,true)).financial.burned,'0');
+ }finally{t.mock.restoreAll();await rm(dir,{recursive:true,force:true});}
+});

@@ -35,7 +35,7 @@ test('welcome instructions explain the account-to-staking flow in all eight loca
   for(const [lang,copy] of Object.entries(welcomeCopy)){
     assert.deepEqual(Object.keys(copy).sort(),keys);
     for(const [key,value] of Object.entries(copy)){assert.ok(value?.trim(),`${lang}.${key}`);assert.equal(translate(lang,key),value);}
-    assert.match(copy.letterNftBody,/NFT/);assert.match(copy.letterClaimBody,/\$Claude/);
+    assert.match(copy.letterNftBody,/NFT/);assert.match(copy.letterClaimBody,/\$OnHold/);
     assert.match(copy.letterWeights,/Pro.*1.*Max.*3/);
     assert.match(copy.letterPublic,/UUID/);
   }

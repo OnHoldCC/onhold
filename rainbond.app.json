@@ -50,7 +50,7 @@
     {
       "name": "api",
       "role": "service",
-      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261021-ui-readability-v50",
+      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261022-readable-v60",
       "port": 8080,
       "env": {
         "ONHOLD_ORIGIN": "https://onhold.cc",
@@ -58,11 +58,12 @@
         "ONHOLD_MARKET_FROM_BLOCK": "138068318",
         "ONHOLD_CHAIN_RPC_URL": "https://bsc-testnet-rpc.publicnode.com",
         "ONHOLD_CHAIN_WS_URL": "wss://bsc-testnet-rpc.publicnode.com",
-        "ONHOLD_BUYBACK_VAULT": "0xbeBd396010171dF44b2Cc2CA0E154f37ec6bA5bD",
-        "ONHOLD_BUYBACK_FROM_BLOCK": "138068437",
-        "ONHOLD_BUYBACK_FLAP_LIVE": "false",
+        "ONHOLD_BUYBACK_FROM_BLOCK": "138183417",
+        "ONHOLD_BUYBACK_FLAP_LIVE": "true",
+        "ONHOLD_BUYBACK_TOKEN_SYMBOL": "OHLDTEST",
         "ONHOLD_PREVIOUS_MARKET_ADDRESS": "0xc1719499434c74FCcCDfb574B9eAB27f3772DAA0",
-        "ONHOLD_NFT_ADDRESS": "0xe6FCaf7da63c581afc22B27D0aCf27eB26645A1f"
+        "ONHOLD_NFT_ADDRESS": "0xe6FCaf7da63c581afc22B27D0aCf27eB26645A1f",
+        "ONHOLD_FLAP_BURN_TOKEN": "0xF98926D4f930a2345eA55D496e3214D37Bf17777"
       },
       "depends_on": [
         "postgres",

@@ -30,7 +30,7 @@ export function MiningNetworkHistory({t,lang}){
         valueLabels:rows.map(row=>number(row[metric])),
         emptyText:t('miningHistoryPending')
       }]}/>
-      <div className="mining-history-footer">{rows.length>0&&<details className="chart-table"><summary>{t('chartData')}</summary><table><thead><tr><th>{t('date')}</th><th>{label}</th></tr></thead><tbody>{rows.map(row=><tr key={row.sampledAt}><td>{new Date(row.sampledAt*1000).toLocaleString(lang)}</td><td>{number(row[metric])}{metric==='perWeightDaily'&&<TokenUnit unit="$Claude"/>}</td></tr>)}</tbody></table></details>}
+      <div className="mining-history-footer">{rows.length>0&&<details className="chart-table"><summary>{t('chartData')}</summary><table><thead><tr><th>{t('date')}</th><th>{label}</th></tr></thead><tbody>{rows.map(row=><tr key={row.sampledAt}><td>{new Date(row.sampledAt*1000).toLocaleString(lang)}</td><td>{number(row[metric])}{metric==='perWeightDaily'&&<TokenUnit unit="$OnHold"/>}</td></tr>)}</tbody></table></details>}
       {rows.length>0&&<p className="fine-print">{new Date(rows[0].sampledAt*1000).toLocaleString(lang)} — {new Date(rows.at(-1).sampledAt*1000).toLocaleString(lang)}</p>}</div>
     </>}
     {!data&&!error&&<div className="mining-history-footer"><SingleSparkSkeleton variant="text" rows={2} label={t('loadingData')}/></div>}

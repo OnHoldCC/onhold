@@ -1,0 +1,52 @@
+[
+  {
+    "path": "/?setup=1",
+    "status": 200,
+    "entry": "app-EVGXJFY6.js"
+  },
+  {
+    "path": "app-EVGXJFY6.js",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "path": "style-5c8659f3a50d.css",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "path": "api/stats",
+    "status": 200,
+    "symbol": "$OnHold"
+  },
+  {
+    "path": "api/status",
+    "status": 200,
+    "data": {
+      "chain_id": 97,
+      "chain_index_configured": true,
+      "gameplay_configured": true,
+      "market": "0x6df5e9b6c29fda32187f34653003617ec9e1a180",
+      "nft": "0xe6fcaf7da63c581afc22b27d0acf27eb26645a1f",
+      "nft_configured": true,
+      "protocol": "nft-staking-v4",
+      "upload_provider": "pons-ipfs",
+      "uploads_configured": true
+    }
+  },
+  {
+    "path": "api/ready",
+    "status": 200,
+    "data": {
+      "chain": {
+        "available": true,
+        "configured": true,
+        "confirmed_block": 138104527,
+        "connected": true,
+        "last_error": null,
+        "syncing": false
+      },
+      "status": "ok"
+    }
+  }
+]
