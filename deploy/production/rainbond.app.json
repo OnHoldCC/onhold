@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": {
     "name": "onhold-prod",
-    "description": "BNB mainnet fixed NFT and token, upgradeable gameplay; mining pool funded, awaiting first weighted stake"
+    "description": "BNB mainnet fixed NFT and token, funded and active mining, referrals and ads"
   },
   "components": [
     {
@@ -50,7 +50,7 @@
     {
       "name": "api",
       "role": "service",
-      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261022-gameplay-v67",
+      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261022-mining-ui-v68",
       "port": 8080,
       "env": {
         "ONHOLD_ENV": "production",

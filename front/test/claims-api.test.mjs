@@ -51,3 +51,28 @@ test('ineligible accounts expose only the validated parsed details and never adv
  payload={...payload,details:{...details,organizations:[{name:'x'.repeat(161),uuid:null}]}};
  await assert.rejects(verifyRestriction('sk-ant-sid'+'a'.repeat(40)),cause=>cause.code==='unsupported_plan'&&cause.details===undefined);
 });
+
+test('claim service status recovers after a failed first request and stops on unmount',async t=>{
+ const {watchPublicStatus}=await import('../src/claims-api.mjs');
+ const previous=globalThis.document;globalThis.document=new EventTarget();let stop=()=>{};
+ t.after(()=>{stop();if(previous===undefined)delete globalThis.document;else globalThis.document=previous;});
+ t.mock.timers.enable({apis:['setInterval']});
+ let healthy=false,calls=0;const values=[],status={chain_id:97,protocol:'nft-staking-v4',market:'0x'+'11'.repeat(20)};
+ t.mock.method(globalThis,'fetch',async path=>{assert.equal(path,'/api/status');calls++;return healthy?Response.json(status):new Response('',{status:503});});
+ stop=watchPublicStatus(value=>values.push(value));
+ await new Promise(setImmediate);assert.deepEqual(values,[null]);healthy=true;
+ t.mock.timers.tick(15000);await new Promise(setImmediate);assert.deepEqual(values,[null,status]);
+ document.dispatchEvent(new Event('visibilitychange'));await new Promise(setImmediate);assert.equal(calls,3);
+ stop();t.mock.timers.tick(15000);document.dispatchEvent(new Event('visibilitychange'));await new Promise(setImmediate);assert.equal(calls,3);
+});
+
+test('status refreshes do not overlap or update an unmounted page',async t=>{
+ const {watchPublicStatus}=await import('../src/claims-api.mjs');
+ const previous=globalThis.document;globalThis.document=new EventTarget();let stop=()=>{};
+ t.after(()=>{stop();if(previous===undefined)delete globalThis.document;else globalThis.document=previous;});
+ t.mock.timers.enable({apis:['setInterval']});let finish,calls=0;const values=[];
+ t.mock.method(globalThis,'fetch',()=>{calls++;return new Promise(resolve=>finish=resolve);});
+ stop=watchPublicStatus(value=>values.push(value));
+ t.mock.timers.tick(30000);document.dispatchEvent(new Event('visibilitychange'));assert.equal(calls,1);stop();
+ finish(Response.json({chain_id:97,protocol:'nft-staking-v4'}));await new Promise(setImmediate);assert.deepEqual(values,[]);
+});

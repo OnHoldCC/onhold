@@ -1,4 +1,5 @@
 import {messages,localeLoaders} from './locale-catalog.mjs';
+import {chain} from './network.mjs';
 export {messages};
 export const supportedLocales=['en','zh','ja','ko','es','fr','de','pt'];
 export function initialLocale(saved,languages=[]){
@@ -14,7 +15,7 @@ export async function loadLocale(lang){
   if(messages[lang]||!localeLoaders[lang])return;
   messages[lang]=(await localeLoaders[lang]()).default;
 }
-export function translate(lang,key) { return (messages[lang] || messages.en)[key] ?? messages.en[key] ?? key; }
+export function translate(lang,key) { return ((messages[lang] || messages.en)[key] ?? messages.en[key] ?? key).replaceAll('{network}',chain.label); }
 const errors = {
   '请输入正数，最多保留 18 位小数。':'Enter a positive number with up to 18 decimal places.',
   '出价必须大于 0。':'Your bid must be greater than zero.',

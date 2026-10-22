@@ -119,8 +119,8 @@ export const messages = {
     "walletMissing": "未检测到浏览器钱包。图片指南可以直接查看。",
     "walletCancelled": "你取消了钱包连接。",
     "walletError": "连接失败，请打开钱包后重试。",
-    "walletBNB": "BNB 测试网钱包已连接。",
-    "walletOther": "钱包已连接，当前不是 BNB 测试网。发起交易前需要切换网络。",
+    "walletBNB": "{network} 钱包已连接。",
+    "walletOther": "钱包已连接，发起交易前请切换到 {network}。",
     "walletChanged": "钱包账户或网络已变化，正式领取前须重新验证。",
     "footer": "独立社区项目",
     "compensationPreview": "示例赔付总额",
@@ -153,7 +153,7 @@ export const messages = {
     "pending": "等待钱包与链上确认…",
     "chainFailure": "链上操作未完成，请检查网络、余额，或刷新后重新报价。",
     "chainReadError": "广告数据读取失败，请稍后重试。",
-    "chainConnected": "BNB 测试网合约已连接",
+    "chainConnected": "{network} 合约已连接",
     "chainBidSuccess": "链上广告竞价已确认。",
     "emptySlot": "空广告位",
     "emptyDescription": "你的中转站可以出现在这里。",
@@ -256,7 +256,7 @@ export const messages = {
     "api.invalid_signature": "无法验证钱包签名。",
     "api.signature_required": "需要签署钱包绑定信息。",
     "api.chain_unavailable": "暂时无法连接测试网，请稍后重试。",
-    "api.wrong_chain": "请切换到 BNB 测试网。",
+    "api.wrong_chain": "请切换到 {network}。",
     "api.verifier_mismatch": "后端签名者与合约核验者不一致。",
     "api.rate_limited": "请求过于频繁，请稍后重试。",
     "api.service_unavailable": "后端服务暂不可用。",
@@ -409,8 +409,8 @@ export const messages = {
     "walletMissing": "No browser wallet detected. You can still view the guide.",
     "walletCancelled": "Wallet connection was cancelled.",
     "walletError": "Connection failed. Open your wallet and try again.",
-    "walletBNB": "BNB testnet wallet connected.",
-    "walletOther": "Wallet connected on a different network. Switch to BNB testnet before a transaction.",
+    "walletBNB": "{network} wallet connected.",
+    "walletOther": "Wallet connected on a different network. Switch to {network} before a transaction.",
     "walletChanged": "The account or network changed. Verification is required again before claiming.",
     "footer": "Independent community project",
     "compensationPreview": "Illustrative compensation total",
@@ -443,7 +443,7 @@ export const messages = {
     "pending": "Waiting for wallet and chain confirmation…",
     "chainFailure": "The on-chain action did not complete. Check network and balance, or refresh your quote.",
     "chainReadError": "Ad data could not be loaded. Please try again later.",
-    "chainConnected": "BNB testnet contract connected",
+    "chainConnected": "{network} contract connected",
     "chainBidSuccess": "On-chain bid confirmed.",
     "emptySlot": "Open ad slot",
     "emptyDescription": "Your relay site could appear here.",
@@ -546,7 +546,7 @@ export const messages = {
     "api.invalid_signature": "The wallet signature could not be verified.",
     "api.signature_required": "A wallet binding signature is required.",
     "api.chain_unavailable": "The testnet could not be reached. Try again later.",
-    "api.wrong_chain": "Switch to BNB testnet.",
+    "api.wrong_chain": "Switch to {network}.",
     "api.verifier_mismatch": "The backend signer does not match the contract verifier.",
     "api.rate_limited": "Too many requests. Please try again later.",
     "api.service_unavailable": "The backend service is unavailable.",
@@ -592,7 +592,7 @@ for(const [lang,noClaimRecords] of Object.entries({en:'No claim records yet',zh:
 for(const [lang,copy] of Object.entries(welcomeCopy))Object.assign(messages[lang],copy);
 
 
-for(const [lang,copy]of Object.entries({en:['Continue in your wallet; another request is already open.','Switch to BNB Testnet'],zh:['请在钱包中完成已打开的连接请求。','切换到 BNB 测试网'],ja:['ウォレットで保留中の接続を完了してください。','BNB テストネットに切り替え'],ko:['지갑에서 대기 중인 연결을 완료하세요.','BNB 테스트넷으로 전환'],es:['Completa la conexión pendiente en tu billetera.','Cambiar a BNB Testnet'],fr:['Terminez la connexion en attente dans votre portefeuille.','Passer à BNB Testnet'],de:['Schließe die offene Anfrage in deiner Wallet ab.','Zu BNB Testnet wechseln'],pt:['Conclua a conexão pendente na sua carteira.','Mudar para BNB Testnet']}))Object.assign(messages[lang],{walletPending:copy[0],switchWalletNetwork:copy[1]});
+for(const [lang,copy]of Object.entries({en:['Continue in your wallet; another request is already open.','Switch to {network}'],zh:['请在钱包中完成已打开的连接请求。','切换到 {network}'],ja:['ウォレットで保留中の接続を完了してください。','{network} に切り替え'],ko:['지갑에서 대기 중인 연결을 완료하세요.','{network}으로 전환'],es:['Completa la conexión pendiente en tu billetera.','Cambiar a {network}'],fr:['Terminez la connexion en attente dans votre portefeuille.','Passer à {network}'],de:['Schließe die offene Anfrage in deiner Wallet ab.','Zu {network} wechseln'],pt:['Conclua a conexão pendente na sua carteira.','Mudar para {network}']}))Object.assign(messages[lang],{walletPending:copy[0],switchWalletNetwork:copy[1]});
 
 for(const [lang,copy]of Object.entries({
 en:['Fixed invitation source','No inviter','Connect and sign to fix the invitation source.','Confirm the permanent invitation binding in your wallet.','Connect the wallet and sign the invitation binding first.','Invitation binding expired. Reconnect and sign again.','This wallet already has a fixed inviter.'],
