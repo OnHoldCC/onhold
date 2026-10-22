@@ -50,7 +50,7 @@
     {
       "name": "api",
       "role": "service",
-      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261022-mainnet-nft-v64",
+      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261022-receipt-rpc-v65",
       "port": 8080,
       "env": {
         "ONHOLD_ENV": "production",
@@ -63,8 +63,10 @@
         "ONHOLD_NFT_ADDRESS": "0x930aebB5F91cdB219fE8C5178906e2e21a105E87",
         "ONHOLD_MARKET_ADDRESS": "0x930aebB5F91cdB219fE8C5178906e2e21a105E87",
         "ONHOLD_MARKET_FROM_BLOCK": "129093703",
-        "ONHOLD_CHAIN_RPC_URL": "https://bsc-rpc.publicnode.com",
-        "ONHOLD_CHAIN_WS_URL": "wss://bsc-rpc.publicnode.com"
+        "ONHOLD_CHAIN_RPC_URL": "https://bsc-dataseed.bnbchain.org",
+        "ONHOLD_CHAIN_WS_URL": "wss://bsc-rpc.publicnode.com",
+        "ONHOLD_CHAIN_LOG_RPC_URL": "https://bsc-rpc.publicnode.com",
+        "ONHOLD_NFT_DEPLOYMENT_TX_HASH": "0x97661acf00103c2e89cd5d3f1a2f2a462814cad63877314cfdfe41ac43f9d44a"
       },
       "depends_on": [
         "postgres",

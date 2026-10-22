@@ -30,11 +30,14 @@ test('WS → PostgreSQL replay matches chain rewards, survives restarts, falls b
   const vaultArtifact=await artifact('FlapBuyback');const vault=await new ContractFactory(vaultArtifact.abi,vaultArtifact.bytecode,owner).deploy(await deploy.token(),referrer);const vaultReceipt=await vault.deploymentTransaction().wait();const vaultAddress=await vault.getAddress();
   const rewind=await provider.send('evm_snapshot',[]);
   const marketAddress=await deploy.market(),market=new Contract(marketAddress,(await artifact('OnholdMarket')).abi,owner);
-  const env={...process.env};for(const key of Object.keys(env))if(key.startsWith('ONHOLD_'))delete env[key];Object.assign(env,{ONHOLD_ADDR:`127.0.0.1:${apiPort}`,ONHOLD_DATA_DIR:directory,ONHOLD_DIST_DIR:'/nonexistent',ONHOLD_MARKET_ADDRESS:marketAddress,ONHOLD_MARKET_FROM_BLOCK:String(receipt.blockNumber),ONHOLD_BUYBACK_VAULT:vaultAddress,ONHOLD_BUYBACK_FROM_BLOCK:String(vaultReceipt.blockNumber),ONHOLD_BUYBACK_FLAP_LIVE:'false',ONHOLD_CHAIN_WS_URL:`ws://127.0.0.1:${proxyPort}`,ONHOLD_CHAIN_RPC_URL:`http://127.0.0.1:${proxyPort}`,DATABASE_URL:pgUrl,REDIS_URL:`redis://127.0.0.1:${redisPort}`});
+  const env={...process.env};for(const key of Object.keys(env))if(key.startsWith('ONHOLD_'))delete env[key];Object.assign(env,{ONHOLD_ADDR:`127.0.0.1:${apiPort}`,ONHOLD_DATA_DIR:directory,ONHOLD_DIST_DIR:'/nonexistent',ONHOLD_MARKET_ADDRESS:marketAddress,ONHOLD_MARKET_FROM_BLOCK:String(receipt.blockNumber),ONHOLD_NFT_DEPLOYMENT_TX_HASH:receipt.hash,ONHOLD_BUYBACK_VAULT:vaultAddress,ONHOLD_BUYBACK_FROM_BLOCK:String(vaultReceipt.blockNumber),ONHOLD_BUYBACK_FLAP_LIVE:'false',ONHOLD_CHAIN_WS_URL:`ws://127.0.0.1:${proxyPort}`,ONHOLD_CHAIN_RPC_URL:`http://127.0.0.1:${proxyPort}`,DATABASE_URL:pgUrl,REDIS_URL:`redis://127.0.0.1:${redisPort}`});
   const start=()=>{const child=spawn('backend/target/debug/onhold-api',[],{cwd:new URL('../..',import.meta.url),env,stdio:['ignore','ignore','pipe']});child.stderr.on('data',chunk=>process.stderr.write(chunk));return child;};
   await provider.send('anvil_mine',['0x44c']);proxy.pruneBefore=await provider.getBlockNumber()-10;
+  proxy.pruneDeployment={address:marketAddress.toLowerCase(),block:'0x'+receipt.blockNumber.toString(16)};
   backend=start();await until(async()=> (await fetch(api+'/api/health')).ok);
   await until(async()=>(await fetch(api+'/api/ready')).status===200);proxy.pruneBefore=0;
+  assert.ok(proxy.methods.eth_getTransactionReceipt>0,'initial deployment validation uses its known transaction receipt');
+  assert.equal(proxy.rejectedDeployment,0,'startup must not query archival constructor logs');
   const types={MintPass:[{name:'recipient',type:'address'},{name:'nullifier',type:'bytes32'},{name:'tier',type:'uint8'},{name:'referrer',type:'address'},{name:'deadline',type:'uint256'},{name:'recordHash',type:'bytes32'}]};
   async function mint(tier){const record={account:'Example Organization',uuid:crypto.randomUUID(),bannedAt:'2026-09-01T12:41:20.292985Z',plan:tier===1?'claude_pro':tier===2?'claude_max':'free'},nullifier=id(`ONHOLD:restricted-consumer-org:v1:${record.uuid}`),deadline=Number((await provider.getBlock('latest')).timestamp)+3600;
    const recordHash=keccak256(AbiCoder.defaultAbiCoder().encode(Array(4).fill('bytes32'),Object.values(record).map(v=>keccak256(toUtf8Bytes(v)))));const value={recipient:address,nullifier,tier,referrer,deadline,recordHash};const signature=await owner.signTypedData({name:'ONHOLD',version:'5',chainId:97,verifyingContract:marketAddress},types,value);
@@ -146,10 +149,9 @@ test('WS → PostgreSQL replay matches chain rewards, survives restarts, falls b
   backend.kill('SIGTERM');await once(backend,'exit');
   await (await market.connect(user).unstake(1,{gasLimit:1000000})).wait();await (await market.connect(user).unstake(2,{gasLimit:1000000})).wait();await (await market.connect(user).getReward()).wait();await (await market.claimReferralRewards()).wait();await mine();
   await provider.send('anvil_mine',['0x44c']);proxy.pruneBefore=await provider.getBlockNumber()-10;
-  proxy.pruneDeployment=marketAddress.toLowerCase();
   backend=start();const restored=await until(async()=>{const v=await read(address);return v.available&&v.mining?.weight===0&&Number(v.mining.claimed)>0?v:null;});
   assert.equal(proxy.rejectedHistory,0,'restart must not query pruned historical state');
-  await until(async()=>(await fetch(api+'/api/ready')).status===200);proxy.pruneDeployment=null;proxy.pruneBefore=0;
+  await until(async()=>(await fetch(api+'/api/ready')).status===200);assert.equal(proxy.rejectedDeployment,0,'restart must reuse confirmed deployment logs before archival RPC');proxy.pruneDeployment=null;proxy.pruneBefore=0;
   assert.ok(restored.financial.claims.length>0);assert.ok(restored.financial.claims.every(row=>Number(row.amount)>0&&row.block<=restored.confirmed_block));assert.equal(restored.financial.claims[0].recipient,referrer.toLowerCase());
   assert.equal(restored.mining.passes.filter(p=>!p.staked).length,2);assert.equal(parseEther(restored.mining.claimed),await market.totalClaimed({blockTag:restored.confirmed_block}));assert.equal(restored.history[0].clicks,1);assert.equal(restored.history[0].uv,1);
   const inviter=await read(referrer);assert.equal(inviter.mining.referralRewards,'0.000000000000000000');assert.ok(Number(inviter.mining.referralEarned)>0);

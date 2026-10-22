@@ -511,6 +511,7 @@ pub struct Tracker {
     pub nft: String,
     pub nft_only: bool,
     start: u64,
+    deployment_tx: Option<String>,
     cache: Arc<Mutex<Cache>>,
 }
 struct Cache {
@@ -549,6 +550,7 @@ impl Tracker {
                     nft: std::env::var("ONHOLD_NFT_ADDRESS").ok().map(|value| crypto::address(&value)).transpose().map_err(|_| "Invalid NFT address")?.unwrap_or_else(|| market.clone()),
                     market,
                     start,
+                    deployment_tx: std::env::var("ONHOLD_NFT_DEPLOYMENT_TX_HASH").ok().map(|v| crypto::bytes(&v,32).map(|v| crypto::hex(&v))).transpose().map_err(|_| "Invalid NFT deployment transaction hash")?,
                     cache: Arc::new(Mutex::new(Cache {
                         snapshot: Snapshot::new(start),
                         connected: false,
@@ -1194,6 +1196,18 @@ fn validate_deployment(logs: &Value, market: &str, start: u64, header: &Value) -
     if owner.len() != 64 || address(owner, 0)? == ZERO { return Err(mismatch()); }
     Ok(())
 }
+fn validate_deployment_receipt(receipt: &Value, hash: &str, nft: &str, start: u64, header: &Value) -> Result<(), ApiError> {
+    if receipt["status"] != "0x1" || receipt["transactionHash"] != hash || quantity(&receipt["blockNumber"])? != start || receipt["blockHash"] != header["hash"] {
+        return Err(ApiError(StatusCode::BAD_GATEWAY,"deployment_block_mismatch"));
+    }
+    let logs=receipt["logs"].as_array().ok_or_else(invalid)?.iter().filter(|log| {
+        log["address"].as_str().map(str::to_ascii_lowercase).as_deref()==Some(nft)
+            && log["topics"][0]==crypto::hex(&crypto::keccak("OwnershipTransferred(address,address)"))
+            && log["topics"][1]==format!("0x{}",zero())
+    }).cloned().collect::<Vec<_>>();
+    if logs.iter().any(|log| log["transactionHash"] != hash) { return Err(ApiError(StatusCode::BAD_GATEWAY,"deployment_block_mismatch")); }
+    validate_deployment(&json!(logs),nft,start,header)
+}
 pub async fn check(state: &AppState) -> Result<(), ApiError> {
     if let Some(tracker) = &state.mining {
         let result=rpc(state,"eth_call",json!([{"to":tracker.market,"data":crypto::hex(&crypto::keccak("PROTOCOL_ID()")[..4])},"latest"])).await?;
@@ -1205,20 +1219,19 @@ pub async fn check(state: &AppState) -> Result<(), ApiError> {
             let actual=configured.as_str().and_then(|v|v.strip_prefix("0x")).map(|v| address(v,0)).transpose()?;
             if actual.as_deref()!=Some(tracker.nft.as_str()) { return Err(ApiError(StatusCode::BAD_GATEWAY,"nft_mismatch")); }
         }
-        // Constructor logs survive state pruning and bind the configured deployment block.
-        let mut logs = rpc(
-            state,
-            "eth_getLogs",
-            json!([{"address":tracker.nft,"fromBlock":format!("0x{:x}",tracker.start),"toBlock":format!("0x{:x}",tracker.start),"topics":[crypto::hex(&crypto::keccak("OwnershipTransferred(address,address)")),format!("0x{}",zero())]}]),
-        )
-        .await?;
         let header = rpc(state, "eth_getBlockByNumber", json!([format!("0x{:x}",tracker.start),false])).await?;
-        if logs.as_array().is_some_and(Vec::is_empty) {
-            // Reuse the indexed constructor event, still binding it to a fresh canonical header.
-            let store=state.pg.as_ref().ok_or_else(pg::error)?;
-            let client=store.read.get().await.map_err(|_|pg::error())?;
-            let rows=client.query("SELECT data FROM chain_events WHERE market=$1 AND block_number=$2 AND data->'topics'->>0=$3 AND data->'topics'->>1=$4 ORDER BY log_index",&[&tracker.market,&(tracker.start as i64),&crypto::hex(&crypto::keccak("OwnershipTransferred(address,address)")),&format!("0x{}",zero())]).await.map_err(|_|pg::error())?;
-            logs=json!(rows.iter().map(|row|row.get::<_,Value>(0)).collect::<Vec<_>>());
+        // Reuse confirmed constructor logs, still binding them to a fresh canonical header.
+        let store=state.pg.as_ref().ok_or_else(pg::error)?;
+        let client=store.read.get().await.map_err(|_|pg::error())?;
+        let rows=client.query("SELECT data FROM chain_events WHERE market=$1 AND block_number=$2 AND data->'topics'->>0=$3 AND data->'topics'->>1=$4 ORDER BY log_index",&[&tracker.market,&(tracker.start as i64),&crypto::hex(&crypto::keccak("OwnershipTransferred(address,address)")),&format!("0x{}",zero())]).await.map_err(|_|pg::error())?;
+        drop(client);
+        let mut logs=json!(rows.iter().map(|row|row.get::<_,Value>(0)).collect::<Vec<_>>());
+        if rows.is_empty() {
+            if let Some(hash)=&tracker.deployment_tx {
+                let receipt=rpc(state,"eth_getTransactionReceipt",json!([hash])).await?;
+                return validate_deployment_receipt(&receipt,hash,&tracker.nft,tracker.start,&header);
+            }
+            logs=rpc(state,"eth_getLogs",json!([{"address":tracker.nft,"fromBlock":format!("0x{:x}",tracker.start),"toBlock":format!("0x{:x}",tracker.start),"topics":[crypto::hex(&crypto::keccak("OwnershipTransferred(address,address)")),format!("0x{}",zero())]}])).await?;
         }
         validate_deployment(&logs, &tracker.nft, tracker.start, &header)?;
     }
@@ -1384,6 +1397,24 @@ pub async fn network_stats(State(state): State<AppState>, Query(query): Query<Ne
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn deployment_receipt_binds_the_successful_transaction_to_its_canonical_constructor_event() {
+        let nft="0x1111111111111111111111111111111111111111";
+        let hash=format!("0x{}","c".repeat(64));
+        let header=json!({"number":"0x64","hash":format!("0x{}","a".repeat(64))});
+        let event=json!({"transactionHash":hash,"blockHash":header["hash"],"address":nft,"blockNumber":"0x64","removed":false,"data":"0x","topics":[crypto::hex(&crypto::keccak("OwnershipTransferred(address,address)")),format!("0x{}",zero()),format!("0x{}{}","0".repeat(24),"2".repeat(40))]});
+        let receipt=json!({"status":"0x1","transactionHash":hash,"blockNumber":"0x64","blockHash":header["hash"],"logs":[{"address":ZERO,"topics":[]},event]});
+        assert!(validate_deployment_receipt(&receipt,&hash,nft,100,&header).is_ok());
+        for (key,value) in [("status",json!("0x0")),("transactionHash",json!(format!("0x{}","d".repeat(64)))),("blockNumber",json!("0x65")),("blockHash",json!(format!("0x{}","b".repeat(64)))),("logs",json!([])),("logs",json!([event,event]))] {
+            let mut bad=receipt.clone();bad[key]=value;
+            assert!(validate_deployment_receipt(&bad,&hash,nft,100,&header).is_err());
+        }
+        for (key,value) in [("address",json!(ZERO)),("transactionHash",json!(format!("0x{}","d".repeat(64)))),("removed",json!(true)),("blockHash",json!(format!("0x{}","b".repeat(64))))] {
+            let mut bad=receipt.clone();bad["logs"][1][key]=value;
+            assert!(validate_deployment_receipt(&bad,&hash,nft,100,&header).is_err());
+        }
+        assert!(validate_deployment_receipt(&Value::Null,&hash,nft,100,&header).is_err());
+    }
     #[test]
     fn deployment_requires_the_constructor_event_at_the_exact_market_and_block() {
         let market = "0x1111111111111111111111111111111111111111";

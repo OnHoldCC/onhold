@@ -437,9 +437,14 @@ pub async fn quote(
     ))
 }
 pub(super) async fn rpc(state: &AppState, method: &str, params: Value) -> Result<Value, ApiError> {
+    let endpoint = if method == "eth_getLogs" {
+        std::env::var("ONHOLD_CHAIN_LOG_RPC_URL").or_else(|_| std::env::var("ONHOLD_CHAIN_RPC_URL"))
+    } else {
+        std::env::var("ONHOLD_CHAIN_RPC_URL")
+    }.unwrap_or_else(|_| state.network.rpc());
     let response = state
         .http
-        .post(std::env::var("ONHOLD_CHAIN_RPC_URL").unwrap_or_else(|_| state.network.rpc()))
+        .post(endpoint)
         .json(&json!({"jsonrpc":"2.0","id":1,"method":method,"params":params}))
         .send()
         .await

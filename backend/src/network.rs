@@ -19,7 +19,7 @@ impl Network {
             }
             if !std::env::var("ONHOLD_ORIGIN")?.starts_with("https://") {return Err("Mainnet requires HTTPS origin".into())}
         }
-        let contracts=["ONHOLD_NFT_ADDRESS","ONHOLD_MARKET_ADDRESS","ONHOLD_VERIFIER_PRIVATE_KEY","ONHOLD_BUYBACK_VAULT","ONHOLD_FLAP_BURN_TOKEN","ONHOLD_MARKET_FROM_BLOCK","ONHOLD_BUYBACK_FROM_BLOCK"];
+        let contracts=["ONHOLD_NFT_ADDRESS","ONHOLD_MARKET_ADDRESS","ONHOLD_VERIFIER_PRIVATE_KEY","ONHOLD_BUYBACK_VAULT","ONHOLD_FLAP_BURN_TOKEN","ONHOLD_MARKET_FROM_BLOCK","ONHOLD_BUYBACK_FROM_BLOCK","ONHOLD_NFT_DEPLOYMENT_TX_HASH"];
         if prepare && contracts.iter().any(|key|std::env::var(key).is_ok()){return Err("Prepare mode forbids signing and contract configuration".into())}
         if id==56 && !prepare {
             for key in ["ONHOLD_NFT_ADDRESS","ONHOLD_MARKET_ADDRESS","ONHOLD_VERIFIER_PRIVATE_KEY","ONHOLD_MARKET_FROM_BLOCK","ONHOLD_CHAIN_RPC_URL","ONHOLD_CHAIN_WS_URL"] {
