@@ -1,0 +1,20 @@
+{
+  "status": "funded",
+  "chainId": 56,
+  "from": "0xD614169363e1381D8A2FD092C1E16FA80aE3eC96",
+  "token": "0x2DCDE86543a9Cc2C9A3DD914bE3FD3AFEF6E7777",
+  "pool": "0x69aF74A7d86E0466fCC533a6eadAb3C25008FDdF",
+  "amountTokens": "100000000.0",
+  "poolBalanceTokens": "100000000.0",
+  "walletBalanceTokens": "2127577.357776463630987581",
+  "hash": "0x7a3f3d3946231ba5cabd7ce72c51a3a8fe048cbc568d72ba65a7cbe9fc4942da",
+  "block": 129134776,
+  "gasBNB": "0.00000618075",
+  "miningStartedAt": "0",
+  "verifiedAt": "2026-10-22T13:04:13.534Z",
+  "simulationOnly": false,
+  "transactionPurpose": "initial-mining-pool-funding",
+  "miningStarted": false,
+  "activation": "First positive-weight NFT stake starts the 365-day reward period",
+  "withdrawalLimit": "Current implementation has no administrator ERC20 withdrawal; users can unstake NFTs and claim accrued rewards"
+}

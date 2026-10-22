@@ -1,6 +1,8 @@
 # Production environment split and NFT activation — 2026-10-22
 
-## Current state — token and unfunded gameplay connected
+## Current state — gameplay connected and mining pool funded
+
+At 2026-10-22T13:04:13.534Z, the user authorized and completed the initial 100,000,000 OnHold funding in [transaction `0x7a3f3d3946231ba5cabd7ce72c51a3a8fe048cbc568d72ba65a7cbe9fc4942da`](https://bscscan.com/tx/0x7a3f3d3946231ba5cabd7ce72c51a3a8fe048cbc568d72ba65a7cbe9fc4942da), block 129134776. The successful receipt and token balances confirm an exact 100,000,000-token pool increase and owner debit, with no transfer tax. Gas cost: 0.00000618075 BNB. Owner token balance immediately afterward: 2127577.357776463630987581. Mining remained unstarted (`miningStartedAt=0`); the first positive-weight NFT stake will start the 365-day clock. Public evidence: `contracts/deployments/bnb-mainnet-mining-funding-20261022.json`. Earlier unfunded statements below describe deployment before this funding. No NFT was minted or staked by this operation.
 
 The user-created Flap OnHold token is `0x2dcde86543a9cc2c9a3dd914be3fd3afef6e7777`. The production site now binds the existing NFT to gameplay proxy `0x69aF74A7d86E0466fCC533a6eadAb3C25008FDdF` (implementation `0x52Ae9177B1e86914bb99E111790380D4098D36fe`). Deployment, role validation and exact Sourcify creation/runtime matches are recorded in `contracts/deployments/bnb-mainnet-gameplay-20261022.json`. Deployment transactions cost 0.0002217185 BNB. No reward tokens were transferred; the original wallet retains the allocation. A dedicated ad keeper at `0xb4d2C58C19B78803A7CFD05998f070b2ae569045` received 0.001 BNB for gas, separately from reward funding.
 

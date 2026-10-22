@@ -9,7 +9,7 @@
   "owner": "0xD614169363e1381D8A2FD092C1E16FA80aE3eC96",
   "adKeeper": "0xb4d2C58C19B78803A7CFD05998f070b2ae569045",
   "mock": false,
-  "rewardTokensTransferred": "0",
+  "rewardTokensTransferred": "100000000.0",
   "transactions": {
     "implementation": "0x48cea090db93c0b9cdd8685763a9d5714c2930a7bba6b5f17f5ee1eb6000aa1c",
     "proxy": "0x2517a8e4f7a69864d0e30eec7c19d65e9318bee4822bf5a9cb459908b4d855ac",
@@ -18,7 +18,7 @@
   "verifiedAt": "2026-10-22T12:22:25.970Z",
   "architecture": "fixed-assets-upgradeable-gameplay-v1",
   "protocol": "nft-staking-v4",
-  "miningPoolFunded": false,
+  "miningPoolFunded": true,
   "compiler": "0.8.30+commit.73712a01.Emscripten.clang",
   "compilerSettings": {
     "viaIR": true,
@@ -54,5 +54,11 @@
   "keeperGas": {
     "amountBNB": "0.001",
     "tx": "0x646cf223358e4145f732c6b459f6969452986e62dc71b8adefda42227e4d57b8"
+  },
+  "miningFunding": {
+    "amountTokens": "100000000.0",
+    "transaction": "0x7a3f3d3946231ba5cabd7ce72c51a3a8fe048cbc568d72ba65a7cbe9fc4942da",
+    "block": 129134776,
+    "verifiedAt": "2026-10-22T13:04:13.534Z"
   }
 }

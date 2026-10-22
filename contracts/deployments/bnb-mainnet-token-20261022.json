@@ -26,7 +26,13 @@
   "flapUrl": "https://flap.sh/bnb/0x2dcde86543a9cc2c9a3dd914be3fd3afef6e7777",
   "website": "https://onhold.cc",
   "gameplayVaultDeployed": true,
-  "miningPoolFunded": false,
+  "miningPoolFunded": true,
   "verifiedAt": "2026-10-22T12:02:14.249Z",
-  "gameplayVaultAddress": "0x69aF74A7d86E0466fCC533a6eadAb3C25008FDdF"
+  "gameplayVaultAddress": "0x69aF74A7d86E0466fCC533a6eadAb3C25008FDdF",
+  "miningFunding": {
+    "amountTokens": "100000000.0",
+    "transaction": "0x7a3f3d3946231ba5cabd7ce72c51a3a8fe048cbc568d72ba65a7cbe9fc4942da",
+    "block": 129134776,
+    "verifiedAt": "2026-10-22T13:04:13.534Z"
+  }
 }

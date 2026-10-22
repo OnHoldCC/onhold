@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": {
     "name": "onhold-prod",
-    "description": "BNB mainnet fixed NFT and token, upgradeable gameplay; mining pool awaiting funding"
+    "description": "BNB mainnet fixed NFT and token, upgradeable gameplay; mining pool funded, awaiting first weighted stake"
   },
   "components": [
     {
