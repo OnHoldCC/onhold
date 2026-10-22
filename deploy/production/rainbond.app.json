@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": {
     "name": "onhold-prod",
-    "description": "Isolated BNB mainnet preparation; no signing or contracts"
+    "description": "Isolated BNB mainnet NFT launch; gameplay disabled"
   },
   "components": [
     {
@@ -50,16 +50,21 @@
     {
       "name": "api",
       "role": "service",
-      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261022-production-v62",
+      "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261022-mainnet-nft-v64",
       "port": 8080,
       "env": {
         "ONHOLD_ENV": "production",
         "ONHOLD_CHAIN_ID": "56",
-        "ONHOLD_MODE": "prepare",
+        "ONHOLD_MODE": "active",
         "ONHOLD_ORIGIN": "https://onhold.cc",
         "ONHOLD_ADDR": "0.0.0.0:8080",
         "ONHOLD_DATA_DIR": "/data/prod",
-        "ONHOLD_DIST_DIR": "/app/front/dist"
+        "ONHOLD_DIST_DIR": "/app/front/dist",
+        "ONHOLD_NFT_ADDRESS": "0x930aebB5F91cdB219fE8C5178906e2e21a105E87",
+        "ONHOLD_MARKET_ADDRESS": "0x930aebB5F91cdB219fE8C5178906e2e21a105E87",
+        "ONHOLD_MARKET_FROM_BLOCK": "129093703",
+        "ONHOLD_CHAIN_RPC_URL": "https://bsc-rpc.publicnode.com",
+        "ONHOLD_CHAIN_WS_URL": "wss://bsc-rpc.publicnode.com"
       },
       "depends_on": [
         "postgres",

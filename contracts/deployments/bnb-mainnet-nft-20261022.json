@@ -1,0 +1,105 @@
+{
+  "chainId": 56,
+  "architecture": "fixed-assets-upgradeable-gameplay-v1",
+  "nftAddress": "0x930aebB5F91cdB219fE8C5178906e2e21a105E87",
+  "nftFromBlock": 129093703,
+  "rendererAddress": "0x7FFE16B57fbaC080b16A1b68e0c93dad850e46D9",
+  "owner": "0xD614169363e1381D8A2FD092C1E16FA80aE3eC96",
+  "deployer": "0xD614169363e1381D8A2FD092C1E16FA80aE3eC96",
+  "verifier": "0xF9fDEad7F2442e9176d72Df56e62354CD70a42eA",
+  "adKeeper": "0xD614169363e1381D8A2FD092C1E16FA80aE3eC96",
+  "mock": false,
+  "transactions": {
+    "nft": "0x97661acf00103c2e89cd5d3f1a2f2a462814cad63877314cfdfe41ac43f9d44a"
+  },
+  "verifiedAt": "2026-10-22T07:59:20.396Z",
+  "compiler": "0.8.30+commit.73712a01.Emscripten.clang",
+  "compilerSettings": {
+    "viaIR": true,
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "evmVersion": "paris"
+  },
+  "name": "Claude Code Ban Pass",
+  "symbol": "CCBP",
+  "deploymentGasUsed": "4189213",
+  "deploymentFeeBNB": "0.00020946065",
+  "runtimeHashes": {
+    "OnholdNFT": "0x9b25e89c8debc925497c595b64ffa6927757d9b9e5611bfaeaae4b44eeae9492",
+    "BanPassRenderer": "0x9a690b99cb93724fe2f012e395d88e627d77d9eff92a6dfc64c3d6906d9e8d1b"
+  },
+  "creationTransactionMatches": true,
+  "runtimeMatches": true,
+  "domainVerified": true,
+  "totalMinted": "0",
+  "confirmations": 448,
+  "sourceCommit": "847e50b",
+  "independentRpcVerification": {
+    "rpc": "https://bsc-rpc.publicnode.com",
+    "runtimeHashesMatch": true,
+    "rolesMatch": true
+  },
+  "deploymentScope": {
+    "nft": true,
+    "renderer": true,
+    "rewardToken": false,
+    "gameplayVault": false,
+    "websiteActivated": true
+  },
+  "sourceVerification": {
+    "OnholdNFT": {
+      "match": "exact_match",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "chainId": "56",
+      "address": "0x930aebB5F91cdB219fE8C5178906e2e21a105E87",
+      "verifiedAt": "2026-10-22T07:58:31Z",
+      "matchId": "56704148",
+      "url": "https://repo.sourcify.dev/56/0x930aebB5F91cdB219fE8C5178906e2e21a105E87",
+      "externalVerifications": {
+        "etherscan": {
+          "error": "Daily limit of 500 source code submissions reached"
+        }
+      }
+    },
+    "BanPassRenderer": {
+      "match": "exact_match",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "chainId": "56",
+      "address": "0x7FFE16B57fbaC080b16A1b68e0c93dad850e46D9",
+      "verifiedAt": "2026-10-22T08:00:02Z",
+      "matchId": "56704198",
+      "url": "https://repo.sourcify.dev/56/0x7FFE16B57fbaC080b16A1b68e0c93dad850e46D9",
+      "externalVerifications": {
+        "etherscan": {
+          "error": "Daily limit of 500 source code submissions reached"
+        }
+      }
+    }
+  },
+  "sourceHashes": {
+    "contracts/OnholdNFT.sol": "17d50a9c2e30f24de2c1e9ae4a543a19b47ef48ba3e188eabe4a840539e6137c",
+    "contracts/BanPassRenderer.sol": "92b366ada41e06e8a8167f942e24a65309e2392344db0f330fc5503325aadc2e"
+  },
+  "initialVerifier": "0x1f6C08E2CB3192a9bfB37864f2950Fe97004299d",
+  "verifierRotation": {
+    "previousVerifier": "0x1f6C08E2CB3192a9bfB37864f2950Fe97004299d",
+    "verifier": "0xF9fDEad7F2442e9176d72Df56e62354CD70a42eA",
+    "transaction": "0x99f46c969aadfdb4a5c194083a11f37f5360818ae1f8127a9af449dcd319d957",
+    "block": 129100752,
+    "feeBNB": "0.0000015146",
+    "verifiedAt": "2026-10-22T08:48:55.719Z"
+  },
+  "websiteActivation": {
+    "url": "https://onhold.cc",
+    "mode": "active",
+    "scope": "nft-only",
+    "gameplayConfigured": false,
+    "verifiedAt": "2026-10-22T08:55:56.395Z",
+    "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261022-mainnet-nft-v64",
+    "digest": "sha256:71d6225bc78d178598593cbcba01027852bdc07ab06bde4ee8a917609a546a8b"
+  }
+}

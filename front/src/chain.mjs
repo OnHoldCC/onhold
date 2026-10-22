@@ -9,6 +9,7 @@ import {pendingMining,rememberMining,confirmMining} from './mining-receipt.mjs';
 import {createInteractionTiming} from './interaction-timing.mjs';
 import {chain,mintReceiptKey} from './network.mjs';
 export {chain};
+export const gameplayAvailable=Boolean(config.marketAddress&&config.marketAddress.toLowerCase()!==config.nftAddress?.toLowerCase());
 export function storedMarket() {
   try {return config.protocol==='nft-staking-v4'&&config.marketAddress?getAddress(config.marketAddress):null;}catch{return null;}
 }
@@ -45,6 +46,7 @@ export async function readMarket(address,fresh=false){
   return {...value,ads:value.ads.map(ad=>({...ad,title:safeUrl(ad.url)?new URL(ad.url).hostname:'',empty:ad.empty||false})),financial:{...value.financial,...(value.financial?.burnedSymbol&&value.financial.burnedSymbol!=='$OnHold'?{burned:null,burnedSymbol:'$OnHold'}:{})}};
 }
 export async function placeChainBid(address,slot,version,form,timing=createInteractionTiming()) {
+  if(!gameplayAvailable)throw Error('gameplay_not_configured');
   const [{Contract},{abi},account]=await timing.measure('walletPrepare',()=>Promise.all([import('ethers'),import('./market-abi.mjs'),signer()]));const market=new Contract(address,abi,account);
   await checkWallet(account,timing);
   if(Array.from((form.tags||[]).join('')).length>10){
@@ -98,6 +100,7 @@ export async function readMining(address,wallet){
 }
 const activeMiningActions=new Set();
 export async function miningAction(address,wallet,action,tokenId,expectedReferrer,onProgress=()=>{},timing=createInteractionTiming()){
+  if(!gameplayAvailable)throw Error('gameplay_not_configured');
   const key=`${address}:${wallet}`.toLowerCase();
   if(activeMiningActions.has(key))throw Error('mining_confirmation_pending');
   activeMiningActions.add(key);
