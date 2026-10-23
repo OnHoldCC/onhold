@@ -22,7 +22,7 @@ use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::{
-    net::{IpAddr, SocketAddr},
+    net::SocketAddr,
     path::PathBuf,
     sync::{Arc, Mutex},
     time::Duration,
@@ -42,7 +42,7 @@ struct AppState {
     analytics: analytics::Cache,
     public_cache: Arc<public_cache::Cache>,
     visitor_salt: String,
-    trusted_proxies: Vec<IpAddr>,
+    trusted_proxies: Vec<analytics::TrustedProxy>,
 }
 #[derive(Debug)]
 struct ApiError(StatusCode, &'static str);
@@ -409,9 +409,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap_or_default()
         .split(',')
         .filter(|v| !v.trim().is_empty())
-        .map(|v| v.trim().parse::<IpAddr>())
+        .map(|v| v.trim().parse::<analytics::TrustedProxy>())
         .collect::<Result<Vec<_>, _>>()
-        .map_err(|_| "Invalid ONHOLD_TRUSTED_PROXIES IP address")?;
+        .map_err(|_| "Invalid ONHOLD_TRUSTED_PROXIES IP address or CIDR")?;
     let state = AppState {
         network,
         db: Arc::new(Mutex::new(connection)),

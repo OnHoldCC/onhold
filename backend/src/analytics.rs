@@ -39,14 +39,39 @@ fn normalized(ip: IpAddr) -> IpAddr {
     }
 }
 
-pub fn visitor_id(peer: IpAddr, headers: &HeaderMap, trusted: &[IpAddr], salt: &str) -> String {
+#[derive(Clone, Copy)]
+pub struct TrustedProxy { address: IpAddr, prefix: u8 }
+
+impl std::str::FromStr for TrustedProxy {
+    type Err = &'static str;
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        let (address, prefix) = value.split_once('/').map_or((value, None), |(a, p)| (a, Some(p)));
+        let address: IpAddr = address.parse().map_err(|_| "Invalid proxy IP address")?;
+        let bits = if address.is_ipv4() { 32 } else { 128 };
+        let prefix = prefix.map(|p| p.parse::<u8>()).transpose().map_err(|_| "Invalid proxy prefix")?.unwrap_or(bits);
+        if prefix > bits { return Err("Invalid proxy prefix"); }
+        Ok(Self { address, prefix })
+    }
+}
+
+impl TrustedProxy {
+    fn contains(&self, ip: IpAddr) -> bool {
+        match (self.address, normalized(ip)) {
+            (IpAddr::V4(a), IpAddr::V4(b)) => u32::from(a).checked_shr(32 - self.prefix as u32).unwrap_or(0) == u32::from(b).checked_shr(32 - self.prefix as u32).unwrap_or(0),
+            (IpAddr::V6(a), IpAddr::V6(b)) => u128::from(a).checked_shr(128 - self.prefix as u32).unwrap_or(0) == u128::from(b).checked_shr(128 - self.prefix as u32).unwrap_or(0),
+            _ => false,
+        }
+    }
+}
+
+pub fn visitor_id(peer: IpAddr, headers: &HeaderMap, trusted: &[TrustedProxy], salt: &str) -> String {
     let peer = normalized(peer);
     let mut ip = peer;
     // Only configured proxy peers may supply IPs; walk from the trusted end of the chain.
-    if trusted.contains(&ip) {
+    if trusted.iter().any(|proxy| proxy.contains(ip)) {
         if let Some(value) = headers.get("x-forwarded-for").and_then(|v| v.to_str().ok()) {
             for part in value.rsplit(',') {
-                if !trusted.contains(&ip) {
+                if !trusted.iter().any(|proxy| proxy.contains(ip)) {
                     break;
                 }
                 match part.trim().parse::<IpAddr>() {
@@ -201,6 +226,30 @@ pub fn apply_campaigns(snapshot: &Snapshot, market: &str, ads: &mut [Value]) {
 mod tests {
     use super::*;
     #[test]
+    fn cidr_proxies_unwrap_cloudflare_without_trusting_forged_client_prefixes() {
+        let trusted = ["10.42.0.1", "104.16.0.0/13", "2606:4700::/32"].map(|v| v.parse().unwrap());
+        let mut headers = HeaderMap::new();
+        let client = "198.51.100.7".parse().unwrap();
+        let expected = visitor_id(client, &HeaderMap::new(), &[], "secret");
+        for edge in ["104.16.1.2", "2606:4700::1234"] {
+            headers.insert("x-forwarded-for", format!("192.0.2.66, {client}, {edge}").parse().unwrap());
+            assert_eq!(visitor_id("10.42.0.1".parse().unwrap(), &headers, &trusted, "secret"), expected);
+            assert_eq!(visitor_id(client, &headers, &trusted, "secret"), expected);
+        }
+        headers.insert("x-forwarded-for", "198.51.100.8, 104.16.1.2".parse().unwrap());
+        assert_ne!(visitor_id("10.42.0.1".parse().unwrap(), &headers, &trusted, "secret"), expected);
+        for invalid in ["104.16.0.0/33", "2606:4700::/129", "10.42.0.1/-1", "10.42.0.1/", "not-an-ip", "10.42.0.1/8/9"] {
+            assert!(invalid.parse::<TrustedProxy>().is_err());
+        }
+        for (network, inside, outside) in [("104.16.0.0/13", "104.23.255.255", "104.24.0.0"), ("2606:4700::/32", "2606:4700:ffff::1", "2606:4701::1"), ("10.42.0.1", "10.42.0.1", "10.42.0.2")] {
+            let proxy: TrustedProxy = network.parse().unwrap();
+            assert!(proxy.contains(inside.parse().unwrap()));
+            assert!(!proxy.contains(outside.parse().unwrap()));
+        }
+        assert!("0.0.0.0/0".parse::<TrustedProxy>().unwrap().contains(client));
+        assert!("::/0".parse::<TrustedProxy>().unwrap().contains("::1".parse().unwrap()));
+    }
+    #[test]
     fn proxy_headers_require_trust_and_ipv4_mapped_addresses_deduplicate() {
         let peer = "127.0.0.1".parse().unwrap();
         let mut headers = HeaderMap::new();
@@ -213,7 +262,7 @@ mod tests {
             visitor_id(peer, &HeaderMap::new(), &[], "secret")
         );
         assert_eq!(
-            visitor_id(peer, &headers, &[peer], "secret"),
+            visitor_id(peer, &headers, &["127.0.0.1".parse().unwrap()], "secret"),
             visitor_id(
                 "203.0.113.8".parse().unwrap(),
                 &HeaderMap::new(),
@@ -225,7 +274,7 @@ mod tests {
             visitor_id(
                 peer,
                 &headers,
-                &[peer, "203.0.113.8".parse().unwrap()],
+                &["127.0.0.1".parse().unwrap(), "203.0.113.8".parse().unwrap()],
                 "secret"
             ),
             visitor_id(

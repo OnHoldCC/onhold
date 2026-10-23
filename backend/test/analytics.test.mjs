@@ -19,13 +19,13 @@ test('PostgreSQL and Redis keep exact PV/UV/clicks across duplicates, concurrent
  let postgres,cache,backend;let logs='';
  const startRedis=()=>spawn('redis-server',['--bind','127.0.0.1','--port',String(redisPort),'--save','','--appendonly','no','--dir',directory],{stdio:'ignore'});
  const env={...process.env};for(const k of Object.keys(env))if(k.startsWith('ONHOLD_'))delete env[k];
- Object.assign(env,{DATABASE_URL:pgUrl,REDIS_URL:`redis://127.0.0.1:${redisPort}`,ONHOLD_ADDR:`127.0.0.1:${apiPort}`,ONHOLD_DATA_DIR:directory,ONHOLD_DIST_DIR:'/nonexistent',ONHOLD_TRUSTED_PROXIES:'127.0.0.1'});
+ Object.assign(env,{DATABASE_URL:pgUrl,REDIS_URL:`redis://127.0.0.1:${redisPort}`,ONHOLD_ADDR:`127.0.0.1:${apiPort}`,ONHOLD_DATA_DIR:directory,ONHOLD_DIST_DIR:'/nonexistent',ONHOLD_TRUSTED_PROXIES:'127.0.0.1,104.16.0.0/13'});
  const start=()=>{const c=spawn('backend/target/debug/onhold-api',[],{env,stdio:['ignore','ignore','pipe']});c.stderr.on('data',v=>logs+=v);return c;};
  // Failover assertions need fresh reads rather than the public five-second response cache.
  const stats=async()=>{const r=await fetch(api+'/api/stats',{headers:{'Cache-Control':'no-cache'}});assert.equal(r.status,200);return{source:r.headers.get('x-analytics-source'),data:await r.json()};};
  const market='0x'+'a'.repeat(40);
  const event=(id,kind='page_view',site=null,version=null)=>({event_id:id,kind,page:'home',site_id:site,...(version?{market,campaign_version:version}:{})});
- const post=async(value,ip='198.51.100.1')=>{const r=await fetch(api+'/api/events',{method:'POST',headers:{'content-type':'application/json','x-forwarded-for':ip},body:JSON.stringify(value)});assert.equal(r.status,200);return r.json();};
+ const post=async(value,ip='198.51.100.1')=>{const r=await fetch(api+'/api/events',{method:'POST',headers:{'content-type':'application/json','x-forwarded-for':`192.0.2.66, ${ip}, 104.16.1.2`},body:JSON.stringify(value)});assert.equal(r.status,200);return r.json();};
  try{
   execFileSync('initdb',['-D',join(directory,'pg'),'-A','trust','-U','onhold_test','--no-instructions'],{stdio:'ignore'});
   postgres=spawn('postgres',['-D',join(directory,'pg'),'-h','127.0.0.1','-p',String(pgPort),'-k',directory],{stdio:'ignore'});cache=startRedis();

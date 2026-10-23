@@ -1,0 +1,273 @@
+{
+  "checkedAt": "2026-10-23T01:47:37.75364+00:00",
+  "image": {
+    "image": "registry.cn-hangzhou.aliyuncs.com/xmhxiansheng/singlespark:onhold-20261023-uv-proxies-v73",
+    "digest": "sha256:2f760ba04d4aa4e4b626dc741a99ca7ff036dbb6619d49ee6838d8034e98453a"
+  },
+  "binarySha256": "a9e34bb5b0599ac30c522e2a96c0b4e547a021097f4f41a16c883be9c6f7b8d5",
+  "replicas": 3,
+  "allReplicasReady": true,
+  "allReplicasFresh": true,
+  "frontendEntry": "app-TKWA3WEE.js",
+  "before": {
+    "pageViews": 338,
+    "pageUv": 1,
+    "walletConnections": 47,
+    "allPageVisitorIdsMatchedGateway": true
+  },
+  "after": {
+    "status": 200,
+    "source": "redis",
+    "data": {
+      "page_views": 350,
+      "page_uv": 6,
+      "ad_clicks": 6,
+      "wallet_connections": 51,
+      "clicks_by_site": [
+        6,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "uv_by_site": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "updated_at": 1792720059,
+      "daily_clicks": [
+        {
+          "date": "2026-09-24",
+          "clicks": 0
+        },
+        {
+          "date": "2026-09-25",
+          "clicks": 0
+        },
+        {
+          "date": "2026-09-26",
+          "clicks": 0
+        },
+        {
+          "date": "2026-09-27",
+          "clicks": 0
+        },
+        {
+          "date": "2026-09-28",
+          "clicks": 0
+        },
+        {
+          "date": "2026-09-29",
+          "clicks": 0
+        },
+        {
+          "date": "2026-09-30",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-01",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-02",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-03",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-04",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-05",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-06",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-07",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-08",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-09",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-10",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-11",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-12",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-13",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-14",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-15",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-16",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-17",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-18",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-19",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-20",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-21",
+          "clicks": 0
+        },
+        {
+          "date": "2026-10-22",
+          "clicks": 5
+        },
+        {
+          "date": "2026-10-23",
+          "clicks": 1
+        }
+      ],
+      "timezone": "Asia/Shanghai",
+      "financial": {
+        "burned_total": null,
+        "claimed_count": null,
+        "claimed_total": null,
+        "confirmed": false,
+        "symbol": "$OnHold"
+      }
+    }
+  },
+  "legacyRepair": {
+    "checkedAt": "2026-10-23T01:47:13.662Z",
+    "cleared_invalid_attribution": 349,
+    "page_views_kept": 350,
+    "ad_clicks_kept": 6
+  },
+  "tests": {
+    "rustUnit": 62,
+    "postgresRedisAnalyticsIntegration": true
+  },
+  "httpMonitor": {
+    "startedAt": "2026-10-23T00:11:05.970Z",
+    "samples": 234,
+    "failures": [
+      {
+        "at": "2026-10-23T00:12:17.468Z",
+        "path": "/api/ready",
+        "status": 503
+      },
+      {
+        "at": "2026-10-23T00:18:43.576Z",
+        "path": "/",
+        "error": "The operation was aborted due to timeout"
+      },
+      {
+        "at": "2026-10-23T00:18:48.603Z",
+        "path": "/api/ready",
+        "error": "fetch failed"
+      },
+      {
+        "at": "2026-10-23T00:18:48.621Z",
+        "path": "/api/stats",
+        "error": "fetch failed"
+      },
+      {
+        "at": "2026-10-23T00:18:50.146Z",
+        "path": "/",
+        "error": "fetch failed"
+      },
+      {
+        "at": "2026-10-23T00:18:50.162Z",
+        "path": "/api/ready",
+        "error": "fetch failed"
+      },
+      {
+        "at": "2026-10-23T00:18:50.179Z",
+        "path": "/api/stats",
+        "error": "fetch failed"
+      },
+      {
+        "at": "2026-10-23T00:18:51.704Z",
+        "path": "/",
+        "error": "fetch failed"
+      },
+      {
+        "at": "2026-10-23T00:18:51.725Z",
+        "path": "/api/ready",
+        "error": "fetch failed"
+      },
+      {
+        "at": "2026-10-23T00:18:51.746Z",
+        "path": "/api/stats",
+        "error": "fetch failed"
+      },
+      {
+        "at": "2026-10-23T00:18:53.271Z",
+        "path": "/",
+        "error": "fetch failed"
+      },
+      {
+        "at": "2026-10-23T00:18:53.288Z",
+        "path": "/api/ready",
+        "error": "fetch failed"
+      },
+      {
+        "at": "2026-10-23T00:18:53.303Z",
+        "path": "/api/stats",
+        "error": "fetch failed"
+      },
+      {
+        "at": "2026-10-23T00:18:54.824Z",
+        "path": "/",
+        "error": "fetch failed"
+      },
+      {
+        "at": "2026-10-23T00:18:54.846Z",
+        "path": "/api/ready",
+        "error": "fetch failed"
+      },
+      {
+        "at": "2026-10-23T00:18:54.865Z",
+        "path": "/api/stats",
+        "error": "fetch failed"
+      }
+    ],
+    "lastCheckedAt": "2026-10-23T00:18:54.865Z"
+  },
+  "cloudflareHistoricalImport": "Pending exact UV and reporting interval; no imported or fabricated visitor rows."
+}
