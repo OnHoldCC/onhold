@@ -21,7 +21,8 @@ const same=(a,b)=>getAddress(a)===getAddress(b);
 const tokenId=value=>{if(!/^[1-9][0-9]*$/.test(String(value))||BigInt(value)>=(1n<<256n))throw Error('invalid_token_id');return String(value);};
 
 export async function miningContracts(provider,assets){
- if(BigInt(await provider.send('eth_chainId',[]))!==56n)throw Error('wrong_chain');
+ const chainId=assets.chainId??56;
+ if(![56,97].includes(chainId)||BigInt(await provider.send('eth_chainId',[]))!==BigInt(chainId))throw Error('wrong_chain');
  const nft=new Contract(getAddress(assets.nft),nftAbi,provider),vault=new Contract(getAddress(assets.vault),vaultAbi,provider);
  const [nftProtocol,vaultProtocol,identity,rewardToken]=await Promise.all([nft.PROTOCOL_ID(),vault.PROTOCOL_ID(),vault.nft(),vault.claude()]);
  if(nftProtocol!==id('onhold.nft.v1')||vaultProtocol!==id('onhold.gameplay.v1')||!same(identity,assets.nft)||!same(rewardToken,assets.token))throw Error('deployment_mismatch');
@@ -32,7 +33,7 @@ export async function miningPosition(provider,assets,wallet){
  wallet=getAddress(wallet);const {nft,vault,token}=await miningContracts(provider,assets);
  const [bound,referrer,earned,stakedCount,balance,bnb]=await Promise.all([nft.referralBound(wallet),nft.referrerOf(wallet),vault.earned(wallet),vault.stakedBalanceOf(wallet),token.balanceOf(wallet),provider.getBalance(wallet)]);
  const staked=[];for(let i=0n;i<stakedCount&&i<20n;i++)staked.push(String(await vault.stakedTokenByIndex(wallet,i)));
- return {chainId:56,wallet,referralBound:bound,referrer,earnedWei:String(earned),stakedCount:String(stakedCount),stakedTokenIds:staked,tokenBalanceWei:String(balance),bnbWei:String(bnb)};
+ return {chainId:assets.chainId??56,wallet,referralBound:bound,referrer,earnedWei:String(earned),stakedCount:String(stakedCount),stakedTokenIds:staked,tokenBalanceWei:String(balance),bnbWei:String(bnb)};
 }
 
 // One preview covers one transaction; bind/approve prerequisites are confirmed separately.
@@ -70,7 +71,7 @@ export async function planMining(provider,assets,wallet,intent){
  }
  const call={from:wallet,to:getAddress(to),data,value:'0'};
  const estimatedGas=await provider.estimateGas(call);
- return {chainId:56,intent,step,...call,details,estimatedGas:String(estimatedGas),preparedBlock:await provider.getBlockNumber()};
+ return {chainId:assets.chainId??56,intent,step,...call,details,estimatedGas:String(estimatedGas),preparedBlock:await provider.getBlockNumber()};
 }
 
 export async function miningReceipt(provider,assets,plan,hash){
@@ -78,7 +79,7 @@ export async function miningReceipt(provider,assets,plan,hash){
  await miningContracts(provider,assets);
  const [tx,receipt]=await Promise.all([provider.getTransaction(hash),provider.getTransactionReceipt(hash)]);
  if(!tx)return {status:'pending',hash};
- if(tx.chainId!==56n||!same(tx.from,plan.from)||!same(tx.to,plan.to)||tx.data!==plan.data||tx.value!==0n)throw Error('transaction_mismatch');
+ if(plan.chainId!==(assets.chainId??56)||tx.chainId!==BigInt(plan.chainId)||!same(tx.from,plan.from)||!same(tx.to,plan.to)||tx.data!==plan.data||tx.value!==0n)throw Error('transaction_mismatch');
  if(!receipt)return {status:'pending',hash};
  if(receipt.blockNumber<=plan.preparedBlock)throw Error('transaction_predates_preview');
  if(receipt.status!==1)return {status:'failed',hash,blockNumber:receipt.blockNumber};

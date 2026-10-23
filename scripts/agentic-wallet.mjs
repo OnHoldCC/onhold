@@ -41,6 +41,7 @@ const canonical=plan=>JSON.stringify([plan.chainId,plan.step,plan.from,plan.to,p
 const [command,...raw]=argv,options={};
 let provider=suppliedProvider,lock;
 try{
+ if((assets.chainId??56)!==56)throw Error('binance_agentic_wallet_testnet_not_verified');
  if(!['status','positions','preview','execute','receipt'].includes(command))throw Error('Usage: status | positions | preview stake|claim|unstake [--token-id ID] [--referrer ADDRESS] | execute REQUEST_ID --confirm | receipt REQUEST_ID [--hash TX_HASH]');
  const subject=['preview','execute','receipt'].includes(command)?raw.shift():undefined;
  for(let i=0;i<raw.length;i++){

@@ -63,6 +63,7 @@ test('Agentic adapter confirms bind, token approval, stake, claim and unstake; b
   const deps={call,provider,assets,directory},run=(...args)=>runAgenticWallet(args,deps);
   const confirm=async preview=>{await provider.send('evm_mine',[]);await provider.send('evm_mine',[]);const r=await run('receipt',preview.requestId,'--hash',lastHash);assert.equal(r.status,'confirmed');return r;};
   assert.equal((await run('status')).connected,true);
+  await assert.rejects(runAgenticWallet(['positions'],{...deps,assets:{...assets,chainId:97}}),/binance_agentic_wallet_testnet_not_verified/);
   connected=false;await assert.rejects(run('positions'),/not_connected/);connected=true;
   enabled=false;await assert.rejects(run('preview','claim'),/enable_developer_mode/);enabled=true;
   await assert.rejects(miningContracts({send:async()=> '0x61'},assets),/wrong_chain/);

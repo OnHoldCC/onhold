@@ -1,0 +1,78 @@
+{
+  "chainId": 97,
+  "assets": {
+    "chainId": 97,
+    "nft": "0xe6FCaf7da63c581afc22B27D0aCf27eB26645A1f",
+    "vault": "0x6dF5e9B6c29fdA32187f34653003617EC9e1A180",
+    "token": "0xd47430c9668131AaEE37eDc34F1e768Af4412005"
+  },
+  "wallet": "0xc7667992481B310Feb5532AD6f999308CCBF5521",
+  "tokenId": "4",
+  "transactions": {
+    "fund": {
+      "hash": "0xe327168a4e2eaa3777dddc321a3d8e59cbae3b183f35b081f550171ef8b13d54",
+      "status": "confirmed",
+      "blockNumber": 138446092
+    },
+    "mint": {
+      "hash": "0xe065c72e2862f19528839c774505bff4853e49630426f65083c042959aededec",
+      "status": "confirmed",
+      "blockNumber": 138446105
+    },
+    "approve": {
+      "hash": "0x65e73d138b452f37363201042a191bf760ccba0a43dd9dee7e0ec21c7163f6b5",
+      "status": "confirmed",
+      "blockNumber": 138446122,
+      "verified": true
+    },
+    "stake": {
+      "hash": "0x8a25350d775c4bdca665cb54588d79a45006ac8c760d4edd8e7f7dd24095d77b",
+      "status": "confirmed",
+      "blockNumber": 138446142,
+      "verified": true
+    },
+    "claim": {
+      "hash": "0x6cb6b23b6facc31f3115c5e362405bb036973031a481868d04371c1c39bbf007",
+      "status": "confirmed",
+      "blockNumber": 138446163,
+      "verified": true
+    },
+    "unstake": {
+      "hash": "0xf0a364b6f90044cec6880ac86386bfefa8d712a2102c615a6578893433422326",
+      "status": "confirmed",
+      "blockNumber": 138446181,
+      "verified": true
+    }
+  },
+  "completedAt": "2026-10-23T10:32:27.857Z",
+  "claimedTokens": "11.817313782769411119",
+  "finalPosition": {
+    "chainId": 97,
+    "wallet": "0xc7667992481B310Feb5532AD6f999308CCBF5521",
+    "referralBound": true,
+    "referrer": "0x0000000000000000000000000000000000000000",
+    "earnedWei": "9453851026215528895",
+    "stakedCount": "0",
+    "stakedTokenIds": [],
+    "tokenBalanceWei": "11817313782769411119",
+    "bnbWei": "895428800000000"
+  },
+  "binanceWalletSigned": false,
+  "signerType": "dedicated-testnet-EOA",
+  "verifiedAt": "2026-10-23T10:34:49.119Z",
+  "resumptionSentNoNewTransactions": true,
+  "nonceBefore": [
+    5,
+    94
+  ],
+  "nonceAfter": [
+    5,
+    94
+  ],
+  "website": {
+    "status": 200,
+    "available": true,
+    "stale": false,
+    "testNftVisible": true
+  }
+}
