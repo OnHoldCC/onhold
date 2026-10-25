@@ -2,9 +2,9 @@
 
 React + Rust (Axum/PostgreSQL/Redis) + BNB testnet contracts. Homepage has one website card; Claim, Analytics, Burn and Docs have separate routes. The interface defaults to English and offers English, Chinese, Japanese, Korean, Spanish, French, German and Portuguese. Some advanced error/setup and tutorial copy still falls back to English outside English/Chinese.
 
-The sidebar and liquid indicator, mobile navigation, wallet button, Claim feed, and animated homepage analytics use the actual SingleSpark components. The homepage offers 1H / 4H / 7D / 30D controls over recorded financial history. Digits and recorded curves loop their visual animation even at zero without changing the displayed totals. Configured Burn totals are checked and persisted every 3 minutes; homepage history refreshes every 15 minutes.
+The sidebar and liquid indicator, mobile navigation, wallet button, Claim feed, and animated homepage analytics use the actual OnHold UI components. The homepage offers 1H / 4H / 7D / 30D controls over recorded financial history. Digits and recorded curves loop their visual animation even at zero without changing the displayed totals. Configured Burn totals are checked and persisted every 3 minutes; homepage history refreshes every 15 minutes.
 
-The UI uses the actual local SingleSpark component-atlas distribution, copied into `front/components/singlespark` with its source reference, plus its adapted TokenMediaUpload. Nunito is served locally under its OFL license. The supplied colorful $OnHold artwork is used unchanged.
+The UI uses the actual local OnHold UI component-atlas distribution, copied into `front/components/singlespark` with its source reference, plus its adapted TokenMediaUpload. Nunito is served locally under its OFL license. The supplied colorful $OnHold artwork is used unchanged.
 
 ## Project structure
 
@@ -214,7 +214,7 @@ Mining network statistics use confirmed PostgreSQL projections, without RPC call
 
 ## SingleSpark wallet integration
 
-The wallet controls reuse SingleSpark components and the vendored EIP-6963/EIP-1193 runtime under `front/components/singlespark/runtime/` (source and adaptations recorded there). Users choose their installed MetaMask, OKX, Binance, Coinbase or legacy browser wallet. First connection requests account access and a separate, explicit user signature permanently fixing the invitation source (including no inviter). Existing bindings restore without signing again; NFT minting still requests its existing authorization signature. All ethers mint, bid, staking and recovery paths use that selected provider, and account changes or logout invalidate subsequent signing. No SingleSpark backend login or cross-chain launch configuration is imported.
+The wallet controls reuse OnHold UI components and the vendored EIP-6963/EIP-1193 runtime under `front/components/singlespark/runtime/` (source and adaptations recorded there). Users choose their installed MetaMask, OKX, Binance, Coinbase or legacy browser wallet. First connection requests account access and a separate, explicit user signature permanently fixing the invitation source (including no inviter). Existing bindings restore without signing again; NFT minting still requests its existing authorization signature. All ethers mint, bid, staking and recovery paths use that selected provider, and account changes or logout invalidate subsequent signing. No SingleSpark backend login or cross-chain launch configuration is imported.
 
 An unsupported wallet network is shown with an explicit BNB Testnet switch action. Only unknown-chain error 4902 may add the pinned chain-97 profile, followed by a switch and chain check. Remembered connections restore with `eth_accounts`, without requesting new authorization. Disconnect clears the site's selected provider and prevents silent reconnection; extension-level permissions must be revoked inside the wallet if desired. WalletConnect QR sessions are not implemented.
 

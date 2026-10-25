@@ -1,4 +1,21 @@
-# singleSpark React component library
+# OnHold UI
+
+## OnHold public API (0.6.0)
+
+The package is `@onhold/ui`. Public component names use the `OnHold` prefix, for example `OnHoldButton`, `OnHoldTheme`, `OnHoldCollectibleCard` and `OnHoldTransactionProgressDialog`. Focused entrypoints remain available; `/core` and `/core.css` replace the former branded entry names in new code. Legacy named exports remain aliases of the same implementations for existing consumers.
+
+## Component documentation
+
+The gallery opens on design standards, followed by development guides and grouped component documentation. Common controls appear in the fixed navigation; enable **显示扩展组合** or search to find detailed compositions. Existing component URLs remain compatible.
+
+- [Design standards](http://localhost:4173/#/foundations/design)
+- [Component overview](http://localhost:4173/#/components/overview)
+- [Home statistics and feature cards](http://localhost:4173/#/showcase/home-cards)
+- [Token cards](http://localhost:4173/#/showcase/token-cards)
+- [NFT cards, flip, fan, carousel and marquee](http://localhost:4173/#/showcase/collectibles)
+- [Continuous curves and sparklines](http://localhost:4173/#/showcase/curves)
+
+These pages render shared library components with demo data, theme and state controls, and usage snippets. Gallery navigation lives in `docs-catalog.ts`; the compositions and gallery-only styling live in `showcase-docs.tsx` and `showcase-docs.css`. Site origin remains source metadata rather than a separate navigation system.
 
 ## Shared transaction and form controls (0.5.0)
 
@@ -6,12 +23,12 @@
 
 Closing the progress dialog only dismisses its view. Its caller keeps the pending transaction and receipt checks alive, and supplies `done` only after confirmed completion. Default labels remain English and every user-facing progress label can be overridden.
 
-The gallery follows an Ant Design-style documentation layout: categories on the left, interactive examples, usage code, TypeScript APIs and design tokens on the right. The former Paid series now uses SingleSpark names.
+The documentation follows the Element UI layout: design standards first, then development guides and grouped components in a fixed left navigation. The content area contains examples, code and TypeScript APIs.
 
 - [Button](http://localhost:4173/#/components/button), [Modal](http://localhost:4173/#/components/modal), [WalletDialog](http://localhost:4173/#/components/wallet-dialog), [Tabs](http://localhost:4173/#/components/tabs) and [List](http://localhost:4173/#/components/list).
 - [Theme configurator](http://localhost:4173/#/foundations/theme), [Colors](http://localhost:4173/#/foundations/colors), [Typography](http://localhost:4173/#/foundations/typography), [Icons](http://localhost:4173/#/foundations/icons) and [Spacing and motion](http://localhost:4173/#/foundations/spacing).
 
-The catalog contains 45 SingleSpark primitive, wallet and Web3 pages, 74 SingleSpark business compositions and 64 Backers entries. Ten of the 183 entries remain explicit unverified placeholders without production integration. Themes, icons and design variables have shared exports.
+The source audit retains 183 entries from OnHold and Backers. Ten remain explicit unverified placeholders without production integration. The unified gallery adds focused examples and shared controls without duplicating the source audit. Themes, icons and design variables have shared exports.
 
 ## Icons and loading states (0.4.0)
 
@@ -49,29 +66,29 @@ Use `AddressLink` from `/ui` for CA and Vault addresses: the short address and c
 
 `npm run build:package` builds the React package, declarations and styles without regenerating the gallery or its tracked preview assets. The frontend's dev, build, test and typecheck commands run this step for the explicit local package dependency. Use the full `npm run build` in this repository when updating the standalone gallery.
 
-`SingleSparkAssetAmount` accepts an already formatted amount and an explicit `{ symbol, name, icon, decimals }` asset. It does not convert raw integers or infer transaction currency from a network name. ARC native USDC gas (18 decimals), Argus USDC settlement (6), SOL (9) and WETH (18) must retain their owning protocol's units. Chain artwork and token artwork have separate registries.
+`OnHoldAssetAmount` accepts an already formatted amount and an explicit `{ symbol, name, icon, decimals }` asset. It does not convert raw integers or infer transaction currency from a network name. ARC native USDC gas (18 decimals), Argus USDC settlement (6), SOL (9) and WETH (18) must retain their owning protocol's units. Chain artwork and token artwork have separate registries.
 
 ```tsx
 'use client';
 import { useState } from 'react';
 import {
-  SingleSparkTheme, SingleSparkButton, SingleSparkTabs,
-  SingleSparkList, SingleSparkListItem, SingleSparkIcon,
-} from '@singlespark/component-atlas';
-import '@singlespark/component-atlas/singlespark.css';
+  OnHoldTheme, OnHoldButton, OnHoldTabs,
+  OnHoldList, OnHoldListItem, OnHoldIcon,
+} from '@onhold/ui';
+import '@onhold/ui/core.css';
 
 export function Example() {
   const [tab, setTab] = useState('Overview');
   return (
-    <SingleSparkTheme mode="dark">
-      <SingleSparkTabs values={['Overview', 'Activity']} value={tab} onChange={setTab} />
-      <SingleSparkList>
-        <SingleSparkListItem title="Project" description="Your first spark" trailing="Active" />
-      </SingleSparkList>
-      <SingleSparkButton variant="primary" onClick={() => console.log('create')}>
-        <SingleSparkIcon name="Launch" /> Create project
-      </SingleSparkButton>
-    </SingleSparkTheme>
+    <OnHoldTheme mode="dark">
+      <OnHoldTabs values={['Overview', 'Activity']} value={tab} onChange={setTab} />
+      <OnHoldList>
+        <OnHoldListItem title="Project" description="Your first spark" trailing="Active" />
+      </OnHoldList>
+      <OnHoldButton variant="primary" onClick={() => console.log('create')}>
+        <OnHoldIcon name="Launch" /> Create project
+      </OnHoldButton>
+    </OnHoldTheme>
   );
 }
 ```
@@ -81,21 +98,21 @@ Components support native attributes and controlled state without requiring Next
 ## Design foundations
 
 ```tsx
-import { SingleSparkTheme, singleSparkFonts } from '@singlespark/component-atlas';
+import { OnHoldTheme, onHoldFonts } from '@onhold/ui';
 
-<SingleSparkTheme
+<OnHoldTheme
   mode="light"
   tokens={{ primary: '#1677ff', 'primary-hover': '#4096ff',
-    'primary-text': '#fff', 'font-sans': singleSparkFonts.inter }}
+    'primary-text': '#fff', 'font-sans': onHoldFonts.inter }}
 >
   {children}
-</SingleSparkTheme>
+</OnHoldTheme>
 ```
 
 - `mode`: dark, light or system, with nested scopes. Dark preserves the reference appearance; light is a reusable extension.
 - `tokens`: semantic colors, typography, spacing, corners and motion, consumed through `--ss-*` variables.
-- `/tokens` exports singleSparkColors, singleSparkFonts, singleSparkSpacing, singleSparkRadii, singleSparkMotion and singleSparkTypeScale.
-- `/icons` exports SingleSparkIcon and singleSparkIconNames. Icons support size, color and title; untitled icons are decorative.
+- `/tokens` exports onHoldColors, onHoldFonts, onHoldSpacing, onHoldRadii, onHoldMotion and onHoldTypeScale.
+- `/icons` exports OnHoldIcon and onHoldIconNames. Icons support size, color and title; untitled icons are decorative.
 - Arial uses the system font. Geist Mono, KHTeka and Inter ship locally. Source records remain in `docs/component-audit/`.
 
 `/singlespark.css` includes themes and fonts. Import `/theme.css` for design variables alone or `/backers.css` for Backers styles.
@@ -122,7 +139,7 @@ The component API is this library's design, not a claim about private source cod
 
 ## Maintenance
 
-Repository: <https://github.com/SingleSparkfun/SingleSparkUiUx>. The product and backend live in sibling SingleSparkFront and SingleSparkBackend repositories.
+The source repository remains at <https://github.com/SingleSparkfun/SingleSparkUiUx>; the package and public component names are OnHold UI. The OnHold application consumes this package.
 
 Implementations are split into 296 independent TSX files under `react/components/<category>/<Component>.tsx`, including public and internal components. The 183 catalog entries are a different count. [source-index.json](docs/component-audit/source-index.json) maps implementations; tests verify that indexed files contain actual implementations rather than forwarding-only stubs.
 
@@ -134,13 +151,13 @@ The one-time split migration is complete; its rewriting script has been removed.
 
 ## Project-common UI
 
-Product controls and their CSS live in `react/components/ui` and are exported through `@singlespark/component-atlas/ui`. Import `@singlespark/component-atlas/ui.css` after the shared theme. This includes Button, Input/Textarea/Checkbox/RangeInput, Select, NetworkSelector, SegmentedTabs, SegProgressBar, Dialog/DetailDialog, BottomNavigation, BottomSheet, NavigationIndicator, Notice, DataTable, EmptyState, Skeleton, Sparkline and StatTile. Notice composes SingleSparkNotice with an optional icon and translated close button; the host owns live announcements, placement and dismissal timing. Pass labels and values as props; the package must not import frontend routing, translation providers, wallet state or chain execution. Application bindings remain in the frontend. Existing frontend integration tests exercise the exported controls.
+Product controls and their CSS live in `react/components/ui` and are exported through `@onhold/ui/ui`. Import `@onhold/ui/ui.css` after the shared theme. This includes Button, Input/Textarea/Checkbox/RangeInput, Select, NetworkSelector, SegmentedTabs, SegProgressBar, Dialog/DetailDialog, BottomNavigation, BottomSheet, NavigationIndicator, Notice, DataTable, EmptyState, Skeleton, Sparkline and StatTile. Notice composes OnHoldNotice with an optional icon and translated close button; the host owns live announcements, placement and dismissal timing. Pass labels and values as props; the package must not import frontend routing, translation providers, wallet state or chain execution. Application bindings remain in the frontend. Existing frontend integration tests exercise the exported controls.
 
 `npm run build:package` builds declarations, JavaScript and CSS without regenerating the gallery.
 
-Business notifications reuse `NotificationFrame` from `@singlespark/component-atlas/singlespark` inside a `.u-business` scope, with the shared theme and `singlespark.css`. Pass `title`, `children`, optional `actions` (shared `SingleSparkButton` controls), `onClose` and translated `closeLabel`. The message slot uses the existing notification frame without payout demo amounts or imagery; the original `step`-based launch preview remains compatible. Use `variant="toast"` for a compact dark message and `.ub-notification-stack` for centered placement. The application owns alert announcements, dismissal timing and recovery callbacks. Inline `Notice` is not the floating business notification.
+Business notifications reuse `NotificationFrame` from `@onhold/ui/core` inside a `.u-business` scope, with the shared theme and `singlespark.css`. Pass `title`, `children`, optional `actions` (shared `OnHoldButton` controls), `onClose` and translated `closeLabel`. The message slot uses the existing notification frame without payout demo amounts or imagery; the original `step`-based launch preview remains compatible. Use `variant="toast"` for a compact dark message and `.ub-notification-stack` for centered placement. The application owns alert announcements, dismissal timing and recovery callbacks. Inline `Notice` is not the floating business notification.
 
-`BottomNavigation` accepts a translated `label`, optional `className`, and up to five `items` with `id`, `label`, `icon`, optional `href`, `active`, `expanded`, and `onClick`. Use actual `href` values for destinations, and preserve modified clicks when binding a client router. A button with `expanded` opens overflow navigation. Positioning and page clearance belong to the host layout; shared item styles include touch targets and bottom safe-area padding. One soft, decorative droplet follows the selected icon in 240ms; labels remain stationary. Optional `overflow` supplies `title`, `closeLabel`, `items`, `onClose` and `footer`. It composes BottomSheet above the bar and moves the same droplet up to the active overflow icon. Keep overflow open when switching its routes; closing returns the droplet to the active bar item (More for overflow routes). Route changes are immediate; rapid changes retarget the same indicator. Layout/scroll changes reposition without animation, and prefers-reduced-motion disables travel. Use regular Phosphor line icons for desktop and mobile destinations. Both BottomNavigation and SingleSparkSidebar reuse NavigationIndicator: a liquid surface with a large rounded head, smaller trailing droplet and a curved connecting neck; the head travels in 240ms, the tail catches up by 420ms, and two small settling waves finish by 620ms. Desktop navigation rows have no selected or hover background. Rapid selections cancel and retarget from the current head and tail positions. Reduced motion disables travel and deformation.
+`BottomNavigation` accepts a translated `label`, optional `className`, and up to five `items` with `id`, `label`, `icon`, optional `href`, `active`, `expanded`, and `onClick`. Use actual `href` values for destinations, and preserve modified clicks when binding a client router. A button with `expanded` opens overflow navigation. Positioning and page clearance belong to the host layout; shared item styles include touch targets and bottom safe-area padding. One soft, decorative droplet follows the selected icon in 240ms; labels remain stationary. Optional `overflow` supplies `title`, `closeLabel`, `items`, `onClose` and `footer`. It composes BottomSheet above the bar and moves the same droplet up to the active overflow icon. Keep overflow open when switching its routes; closing returns the droplet to the active bar item (More for overflow routes). Route changes are immediate; rapid changes retarget the same indicator. Layout/scroll changes reposition without animation, and prefers-reduced-motion disables travel. Use regular Phosphor line icons for desktop and mobile destinations. Both BottomNavigation and OnHoldSidebar reuse NavigationIndicator: a liquid surface with a large rounded head, smaller trailing droplet and a curved connecting neck; the head travels in 240ms, the tail catches up by 420ms, and two small settling waves finish by 620ms. Desktop navigation rows have no selected or hover background. Rapid selections cancel and retarget from the current head and tail positions. Reduced motion disables travel and deformation.
 
 `BottomSheet` accepts `open`, `onClose`, `title`, `closeLabel`, `children` and an optional `bottomInset` for navigation clearance. It portals a bounded, scrollable sheet to the document body and reuses Dialog's focus containment/restoration, scroll lock, Escape and backdrop dismissal. Use `app-navigation-list` on a child nav for single-column overflow links. The frontend component catalogue includes live examples and source for both controls.
 
@@ -155,24 +172,24 @@ Business notifications reuse `NotificationFrame` from `@singlespark/component-at
 `NetworkSelector` accepts controlled `value`, `options` (`value`, `label`, optional image URL `icon` and `disabled`), `onChange`, `ariaLabel`, and translated `scrollLabels`. Its row reuses SegmentedTabs and ScrollRail; `compact` reuses Select. Disabled choices remain visible and are skipped by keyboard selection. `locked` temporarily blocks interaction during wallet work while keeping enabled network icons in color; it does not change option availability. The host supplies availability, exact chain IDs and an optional image-error handler; the UI package does not authorize chains or switch wallets.
 
 
-Shared product layouts are exported from `@singlespark/component-atlas/ui`: `LaunchFormLayout`, `TokenLaunchPreview`, `TokenCardLayout`, `TokenDetailLayout` and `TokenDetailHeader`. Their styles ship in `ui.css`. Applications supply translated labels, validated media/link slots, formatted financial values, form fields and action callbacks; the layouts have no wallet, chain RPC, launch permission or sample-balance defaults. Existing `arc-create-*` and discovery class names remain compatible with application integrations and source previews.
+Shared product layouts are exported from `@onhold/ui/ui`: `LaunchFormLayout`, `TokenLaunchPreview`, `TokenCardLayout`, `TokenDetailLayout` and `TokenDetailHeader`. Their styles ship in `ui.css`. Applications supply translated labels, validated media/link slots, formatted financial values, form fields and action callbacks; the layouts have no wallet, chain RPC, launch permission or sample-balance defaults. Existing `arc-create-*` and discovery class names remain compatible with application integrations and source previews.
 
 
 `CollectibleCard` is a presentation-only collectible frame with supplied artwork, grade and metadata slots. Its frame, pointer tilt and one-shot hover sheen are adapted from the user-supplied FWA `AssetCard`; the implementation is local and has no dependency on FWA or Next.js. The sweep plays once per mouse entry, stays idle while the pointer remains inside, and resets on leave. Touch does not capture gestures or play the sweep, and reduced motion disables tilt and the sweep. Optional labelled card flipping shows supplied information on the reverse, with the hidden face excluded from the accessibility tree. Reduced motion changes sides immediately. NFT artwork, rarity and financial data remain frontend bindings.
 
 `CollectibleFan` composes supplied card content into a circular fan of five visible cards by default, bounded to eight. Every card uses the same angular spacing and radius, including the selected card in an even-sized hand. A content render function receives the flipped state; a native button toggles the information side, and browsing resets it. Hover or keyboard focus raises a card; arrow controls and keyboard left/right cycle through the supplied batch. It measures card content to keep its controls below the fan and disables transitions for reduced motion. It is a local shared component, not an imported FWA carousel. Applications provide card identity, labels and content, and own fetching and pagination; the component has no NFT, wallet or RPC dependency.
 
-`CollectibleCarousel` provides native touch scrolling and centered scroll snapping for supplied card content, with keyboard and bounded arrow controls. It respects reduced motion, announces the visible card and handles empty collections. `CollectibleMarquee` supplies a slow, seamless right-to-left artwork strip with an inert duplicate, hover/focus pause and a translated pause/resume control. Reduced motion keeps a static, horizontally scrollable list. These card components are exported through `@singlespark/component-atlas/ui`; eligibility, random selection and confirmed results stay in the host feature. `SingleSparkIcon` includes the reusable `key` glyph; reward features supply gold/silver colors and visible labels.
+`CollectibleCarousel` provides native touch scrolling and centered scroll snapping for supplied card content, with keyboard and bounded arrow controls. It respects reduced motion, announces the visible card and handles empty collections. `CollectibleMarquee` supplies a slow, seamless right-to-left artwork strip with an inert duplicate, hover/focus pause and a translated pause/resume control. Reduced motion keeps a static, horizontally scrollable list. These card components are exported through `@onhold/ui/ui`; eligibility, random selection and confirmed results stay in the host feature. `OnHoldIcon` includes the reusable `key` glyph; reward features supply gold/silver colors and visible labels.
 
 `CollectibleReel` is the shared opening animation: `spinning` controls the waiting loop and `resultId` comes from the host's verified result. The reel slows onto that supplied card and announces its label, without generating a reward or advancing business state on a timer. Reduced motion skips scrolling. Wallets, eligibility, payment, randomness and mint finality stay outside the UI package.
 
 `CollectibleMarquee` fills wide viewports by repeating complete cycles at a fixed 24px gap; filler copies are inert and hidden from assistive technology. Each cycle uses the same spacing at its seam and the same travel speed. `CollectibleCard` sizes itself from its visible face, so long provenance on the back cannot stretch an artwork-only front.
 
-`Button` and `SingleSparkButton` share one loading behavior: pass `loading={busy}` and keep the normal action label. The last idle content remains visible while loading, followed by one decorative spinner. Loading disables repeat clicks and sets `aria-busy`; the label updates again when loading finishes. Transaction recovery and network/funding checks remain caller-owned. `ProcessSteps` accepts optional descriptions and elapsed labels alongside caller-controlled pending/active/complete/error states; it never advances or infers transaction success on a timer.
+`Button` and `OnHoldButton` share one loading behavior: pass `loading={busy}` and keep the normal action label. The last idle content remains visible while loading, followed by one decorative spinner. Loading disables repeat clicks and sets `aria-busy`; the label updates again when loading finishes. Transaction recovery and network/funding checks remain caller-owned. `ProcessSteps` accepts optional descriptions and elapsed labels alongside caller-controlled pending/active/complete/error states; it never advances or infers transaction success on a timer.
 
 ## Content-only Coming soon overlay
 
-Import `ComingSoonOverlay` from `@singlespark/component-atlas/ui` and its styles from `@singlespark/component-atlas/ui.css`:
+Import `ComingSoonOverlay` from `@onhold/ui/ui` and its styles from `@onhold/ui/ui.css`:
 
 ```tsx
 <div style={{ minHeight: 320 }}>

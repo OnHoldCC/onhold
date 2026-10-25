@@ -1,7 +1,7 @@
 import React,{useEffect,useState} from 'react';
-import {EmptyState} from '@singlespark/component-atlas/ui';
-import {SingleSparkBadge,SingleSparkList,SingleSparkListItem,SingleSparkAccordion,SingleSparkPagination,SingleSparkKeyValueList} from '@singlespark/component-atlas/primitives';
-import {SingleSparkMoney} from '@singlespark/component-atlas/singlespark';
+import {OnHoldEmptyState as EmptyState} from '@onhold/ui/ui';
+import {OnHoldBadge as SingleSparkBadge,OnHoldList as SingleSparkList,OnHoldListItem as SingleSparkListItem,OnHoldAccordion as SingleSparkAccordion,OnHoldPagination as SingleSparkPagination,OnHoldKeyValueList as SingleSparkKeyValueList} from '@onhold/ui/primitives';
+import {OnHoldMoney as SingleSparkMoney} from '@onhold/ui/core';
 import {loadAdRanking} from '../../src/ad-ranking.mjs';
 import {formatEth,safeUrl} from '../../src/market.mjs';
 import {TokenUnit} from './Feedback';

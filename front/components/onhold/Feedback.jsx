@@ -1,7 +1,7 @@
 import React from 'react';
-import {Button,DataValue as SharedDataValue} from '@singlespark/component-atlas/ui';
-import {NotificationFrame,SingleSparkMoney} from '@singlespark/component-atlas/singlespark';
-import {SingleSparkTokenIcon} from '@singlespark/component-atlas/assets';
+import {OnHoldButton as Button,OnHoldDataValue as SharedDataValue} from '@onhold/ui/ui';
+import {OnHoldNotificationFrame as NotificationFrame,OnHoldMoney as SingleSparkMoney} from '@onhold/ui/core';
+import {OnHoldTokenIcon as SingleSparkTokenIcon} from '@onhold/ui/assets';
 
 // Same 520 ms navigation transition used by SingleSparkFront.
 export function RouteNavigationProgress({page,label}){

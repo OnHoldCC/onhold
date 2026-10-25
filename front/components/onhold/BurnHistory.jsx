@@ -1,11 +1,11 @@
 import React from 'react';
 import flame from '../../src/assets/burn/burn-flame-icon.webp';
 import flameStill from '../../src/assets/burn/burn-flame-still.png';
-import {BurnCard} from '@singlespark/component-atlas/singlespark';
-import {SingleSparkKeyValueList,SingleSparkPanel} from '@singlespark/component-atlas/primitives';
-import {SingleSparkTokenIcon} from '@singlespark/component-atlas/assets';
-import {SingleSparkIcon} from '@singlespark/component-atlas/icons';
-import {SingleSparkSkeleton} from '@singlespark/component-atlas/feedback';
+import {OnHoldBurnCard as BurnCard} from '@onhold/ui/core';
+import {OnHoldKeyValueList as SingleSparkKeyValueList,OnHoldPanel as SingleSparkPanel} from '@onhold/ui/primitives';
+import {OnHoldTokenIcon as SingleSparkTokenIcon} from '@onhold/ui/assets';
+import {OnHoldIcon as SingleSparkIcon} from '@onhold/ui/icons';
+import {OnHoldSkeleton as SingleSparkSkeleton} from '@onhold/ui/feedback';
 import {formatBanTime} from '../../src/format.mjs';
 
 export function BurnExecution({data,official,status,loading,amount,t,tokenSymbol}) {

@@ -1,7 +1,7 @@
 import React,{useEffect,useRef,useState} from 'react';
-import {Button,Dialog,Select} from '@singlespark/component-atlas/ui';
-import {SingleSparkIcon} from '@singlespark/component-atlas/icons';
-import {SingleSparkSkeleton} from '@singlespark/component-atlas/feedback';
+import {OnHoldButton as Button,OnHoldDialog as Dialog,OnHoldSelect as Select} from '@onhold/ui/ui';
+import {OnHoldIcon as SingleSparkIcon} from '@onhold/ui/icons';
+import {OnHoldSkeleton as SingleSparkSkeleton} from '@onhold/ui/feedback';
 import {welcomePortraits} from '../../src/welcome-portraits.mjs';
 import './welcome-letter.css';
 import {supportedLocales} from '../../src/i18n.mjs';

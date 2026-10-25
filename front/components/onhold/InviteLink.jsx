@@ -1,7 +1,7 @@
 import React,{useEffect,useState} from 'react';
-import {Button,CopyLinkField} from '@singlespark/component-atlas/ui';
-import {SingleSparkPanel} from '@singlespark/component-atlas/primitives';
-import {SingleSparkSkeleton} from '@singlespark/component-atlas/feedback';
+import {OnHoldButton as Button,OnHoldCopyLinkField as CopyLinkField} from '@onhold/ui/ui';
+import {OnHoldPanel as SingleSparkPanel} from '@onhold/ui/primitives';
+import {OnHoldSkeleton as SingleSparkSkeleton} from '@onhold/ui/feedback';
 import {createInvite} from '../../src/claims-api.mjs';
 import {Notice} from './Feedback';
 

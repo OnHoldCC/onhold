@@ -12,7 +12,7 @@ test('compact dialog keeps visible SVG and text close controls, with full timing
   const outfile=join(dir,'render.mjs');
   await build({stdin:{resolveDir:resolve('front'),contents:`
    import React from 'react';import {renderToStaticMarkup} from 'react-dom/server';
-   import {TransactionProgressDialog as InteractionProgressDialog} from '@singlespark/component-atlas/ui';
+   import {OnHoldTransactionProgressDialog as InteractionProgressDialog} from '@onhold/ui/ui';
    import {timingLabels} from './components/onhold/InteractionTimings.jsx';
    import {compactTimingSteps,timingSteps} from './src/interaction-timing.mjs';
    import {translate} from './src/i18n.mjs';

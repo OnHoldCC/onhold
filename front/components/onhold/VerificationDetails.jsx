@@ -1,5 +1,5 @@
 import React from 'react';
-import {SingleSparkPanel,SingleSparkKeyValueList} from '@singlespark/component-atlas/primitives';
+import {OnHoldPanel as SingleSparkPanel,OnHoldKeyValueList as SingleSparkKeyValueList} from '@onhold/ui/primitives';
 import {formatBanTime} from '../../src/format.mjs';
 export function VerificationDetails({details,t}){
   if(!details)return null;

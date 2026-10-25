@@ -1,6 +1,6 @@
 import React,{useEffect,useState} from 'react';
-import {SegmentedTabs} from '@singlespark/component-atlas/ui';
-import {SingleSparkHomeAnalyticsVisual} from '@singlespark/component-atlas/singlespark';
+import {OnHoldSegmentedTabs as SegmentedTabs} from '@onhold/ui/ui';
+import {OnHoldHomeAnalyticsVisual as SingleSparkHomeAnalyticsVisual} from '@onhold/ui/core';
 import {loadMiningStats,summaryHistory} from '../../src/mining-stats.mjs';
 import {compactAmount} from '../../src/format.mjs';
 

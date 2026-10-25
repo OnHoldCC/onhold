@@ -1,8 +1,8 @@
 import React,{useEffect,useState} from 'react';
-import {Button,Dialog,EmptyState} from '@singlespark/component-atlas/ui';
-import {SingleSparkPanel,SingleSparkPagination} from '@singlespark/component-atlas/primitives';
-import {SingleSparkIcon} from '@singlespark/component-atlas/icons';
-import {SingleSparkSkeleton} from '@singlespark/component-atlas/feedback';
+import {OnHoldButton as Button,OnHoldDialog as Dialog,OnHoldEmptyState as EmptyState} from '@onhold/ui/ui';
+import {OnHoldPanel as SingleSparkPanel,OnHoldPagination as SingleSparkPagination} from '@onhold/ui/primitives';
+import {OnHoldIcon as SingleSparkIcon} from '@onhold/ui/icons';
+import {OnHoldSkeleton as SingleSparkSkeleton} from '@onhold/ui/feedback';
 import {loadNftPage} from '../../src/nft-gallery.mjs';
 import {BanPassCard} from './BanPassCard';
 import {Notice} from './Feedback';

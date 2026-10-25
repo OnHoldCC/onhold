@@ -1,7 +1,7 @@
 import React,{useEffect,useState} from 'react';
-import {SegmentedTabs} from '@singlespark/component-atlas/ui';
-import {AnalyticsCharts} from '@singlespark/component-atlas/singlespark';
-import {SingleSparkSkeleton} from '@singlespark/component-atlas/feedback';
+import {OnHoldSegmentedTabs as SegmentedTabs} from '@onhold/ui/ui';
+import {OnHoldAnalyticsCharts as AnalyticsCharts} from '@onhold/ui/core';
+import {OnHoldSkeleton as SingleSparkSkeleton} from '@onhold/ui/feedback';
 import {TokenUnit,Notice} from './Feedback';
 import {loadMiningStats,miningPeriods} from '../../src/mining-stats.mjs';
 

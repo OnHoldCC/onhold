@@ -14,8 +14,8 @@ test('loading, zero, cached values and failures remain distinct with SingleSpark
     await build({stdin:{resolveDir:fileURLToPath(new URL('../',import.meta.url)),contents:`
       import React from 'react';import {renderToStaticMarkup as render} from 'react-dom/server';
       import {DataValue,Notice} from './components/onhold/Feedback.jsx';
-      import {SingleSparkList,SingleSparkListItem,SingleSparkAccordion} from '@singlespark/component-atlas/primitives';
-      import {SingleSparkHomeGraph} from '@singlespark/component-atlas/singlespark';
+      import {OnHoldList as SingleSparkList,OnHoldListItem as SingleSparkListItem,OnHoldAccordion as SingleSparkAccordion} from '@onhold/ui/primitives';
+      import {OnHoldHomeGraph as SingleSparkHomeGraph} from '@onhold/ui/core';
       import {NftGallery} from './components/onhold/NftGallery.jsx';
       import {NftMining} from './components/onhold/NftMining.jsx';
       import {NftStaking} from './components/onhold/NftStaking.jsx';

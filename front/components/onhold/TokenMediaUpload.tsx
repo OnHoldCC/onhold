@@ -1,1 +1,1 @@
-export {TokenMediaUpload} from '@singlespark/component-atlas/ui';
+export {TokenMediaUpload} from '@onhold/ui/ui';

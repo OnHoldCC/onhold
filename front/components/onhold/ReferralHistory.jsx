@@ -1,6 +1,6 @@
 import React,{useEffect,useState} from 'react';
-import {DataTable,SegmentedTabs} from '@singlespark/component-atlas/ui';
-import {SingleSparkPanel,SingleSparkKeyValueList,SingleSparkPagination} from '@singlespark/component-atlas/primitives';
+import {OnHoldDataTable as DataTable,OnHoldSegmentedTabs as SegmentedTabs} from '@onhold/ui/ui';
+import {OnHoldPanel as SingleSparkPanel,OnHoldKeyValueList as SingleSparkKeyValueList,OnHoldPagination as SingleSparkPagination} from '@onhold/ui/primitives';
 import {DataValue,Notice} from './Feedback';
 import {loadReferralHistory} from '../../src/referral-history.mjs';
 import {chain} from '../../src/chain.mjs';

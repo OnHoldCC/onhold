@@ -1,5 +1,5 @@
 import React,{useState} from 'react';
-import {Button,ContractAddressList} from '@singlespark/component-atlas/ui';
+import {OnHoldButton as Button,OnHoldContractAddressList as ContractAddressList} from '@onhold/ui/ui';
 import {Notice} from './Feedback';
 import {assets,addWalletToken} from '../../src/wallet-assets.mjs';
 import {chain} from '../../src/network.mjs';

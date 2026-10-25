@@ -6,7 +6,7 @@ const source=resolve(process.argv[2]||fileURLToPath(new URL('../../../SingleSpar
 const target=fileURLToPath(new URL('../components/singlespark',import.meta.url));
 if(source===resolve(target))throw Error('The source must be the UIUX repository, not the generated vendor copy');
 const manifest=JSON.parse(await readFile(join(source,'package.json'),'utf8'));
-if(manifest.name!=='@singlespark/component-atlas')throw Error('Expected the SingleSpark component library');
+if(manifest.name!=='@onhold/ui')throw Error('Expected the OnHold UI component library');
 await readFile(join(source,'dist/components/ui/TransactionProgressDialog.d.ts'));
 // Replace only generated package output; runtime wallet adapters remain owned by OnHold.
 await rm(join(target,'dist'),{recursive:true,force:true});

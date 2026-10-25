@@ -1,9 +1,9 @@
 import {createInteractionTiming} from '../../src/interaction-timing.mjs';
 import React,{useEffect,useState,useRef,useId,lazy,Suspense} from 'react';
-import {Button,SegmentedTabs,EmptyState} from '@singlespark/component-atlas/ui';
-import {SingleSparkPanel,SingleSparkKeyValueList} from '@singlespark/component-atlas/primitives';
-import {SingleSparkIcon} from '@singlespark/component-atlas/icons';
-import {SingleSparkSkeleton} from '@singlespark/component-atlas/feedback';
+import {OnHoldButton as Button,OnHoldSegmentedTabs as SegmentedTabs,OnHoldEmptyState as EmptyState} from '@onhold/ui/ui';
+import {OnHoldPanel as SingleSparkPanel,OnHoldKeyValueList as SingleSparkKeyValueList} from '@onhold/ui/primitives';
+import {OnHoldIcon as SingleSparkIcon} from '@onhold/ui/icons';
+import {OnHoldSkeleton as SingleSparkSkeleton} from '@onhold/ui/feedback';
 import {DataValue,Notice} from './Feedback';
 import {BanPassCard} from './BanPassCard';
 import {NftStaking} from './NftStaking';

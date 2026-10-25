@@ -2,7 +2,7 @@ import React,{useMemo} from 'react';
 import {banPassDisplayImage} from '../../src/nft-display.mjs';
 import mascot from '../../src/assets/claude-code.svg';
 import {formatBanTime} from '../../src/format.mjs';
-import {CollectibleCard} from '@singlespark/component-atlas/ui';
+import {OnHoldCollectibleCard as CollectibleCard} from '@onhold/ui/ui';
 export function BanPassCard({id,tier,record,image,t}){
  const displayImage=useMemo(()=>banPassDisplayImage(image),[image]);
  const weight=tier===1?'1':tier===2?'3':tier===0?'0':t('notAvailable');

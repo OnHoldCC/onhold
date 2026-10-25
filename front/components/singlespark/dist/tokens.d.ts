@@ -66,3 +66,5 @@ export declare const singleSparkTypeScale: {
 export type SingleSparkColorToken = keyof typeof singleSparkColors.dark;
 export type SingleSparkThemeMode = "dark" | "light" | "system";
 export type SingleSparkTokens = Partial<Record<SingleSparkColorToken | `font-${keyof typeof singleSparkFonts}` | `space-${keyof typeof singleSparkSpacing}` | `radius-${keyof typeof singleSparkRadii}` | `motion-${keyof typeof singleSparkMotion}`, string>>;
+export { singleSparkColors as onHoldColors, singleSparkFonts as onHoldFonts, singleSparkSpacing as onHoldSpacing, singleSparkRadii as onHoldRadii, singleSparkMotion as onHoldMotion, singleSparkTypeScale as onHoldTypeScale, };
+export type { SingleSparkColorToken as OnHoldColorToken, SingleSparkThemeMode as OnHoldThemeMode, SingleSparkTokens as OnHoldTokens, };

@@ -1,5 +1,5 @@
 import React,{useEffect,useState} from 'react';
-import {TransactionRecovery,TransactionProgressDialog} from '@singlespark/component-atlas/ui';
+import {OnHoldTransactionRecovery as TransactionRecovery,OnHoldTransactionProgressDialog as TransactionProgressDialog} from '@onhold/ui/ui';
 import {useInteractionTimings,timingLabels} from './InteractionTimings';
 export const mintStages=['mintUpload','mintSignature','mintAuthorize','mintTransaction','mintConfirm'];
 export function NftMintProgress({progress,t,onClose,onRefresh,busy,explorer}){

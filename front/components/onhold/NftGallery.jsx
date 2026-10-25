@@ -1,7 +1,7 @@
 import React,{useEffect,useState} from 'react';
-import {SegmentedTabs} from '@singlespark/component-atlas/ui';
-import {SingleSparkPagination} from '@singlespark/component-atlas/primitives';
-import {SingleSparkSkeleton} from '@singlespark/component-atlas/feedback';
+import {OnHoldSegmentedTabs as SegmentedTabs} from '@onhold/ui/ui';
+import {OnHoldPagination as SingleSparkPagination} from '@onhold/ui/primitives';
+import {OnHoldSkeleton as SingleSparkSkeleton} from '@onhold/ui/feedback';
 import {Notice} from './Feedback';
 import {BanPassCard} from './BanPassCard';
 import {loadNftPage} from '../../src/nft-gallery.mjs';

@@ -1,6 +1,6 @@
 import tokenIcon from '../../src/assets/claude-token-108.webp';
 import React,{useId,useState} from 'react';
-import {Button} from '@singlespark/component-atlas/ui';
+import {OnHoldButton as Button} from '@onhold/ui/ui';
 
 const steps=[[50,9.85],[85.63,29.55],[85.63,68.94],[50,88.64],[14.38,68.94],[14.38,29.55]];
 const arrows=['M508 65 Q603 82 650 135','M700 255 Q742 325 700 395','M650 515 Q603 568 508 585','M292 585 Q197 568 150 515','M100 395 Q58 325 100 255','M150 135 Q197 82 292 65'];

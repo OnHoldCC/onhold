@@ -1,6 +1,6 @@
 {
-  "name": "@singlespark/component-atlas",
-  "version": "0.5.0",
+  "name": "@onhold/ui",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "sideEffects": [
@@ -71,7 +71,12 @@
       "types": "./dist/ui.d.ts",
       "import": "./dist/ui.js"
     },
-    "./ui.css": "./dist/ui.css"
+    "./ui.css": "./dist/ui.css",
+    "./core": {
+      "types": "./dist/singlespark.d.ts",
+      "import": "./dist/singlespark.js"
+    },
+    "./core.css": "./dist/singlespark.css"
   },
   "peerDependencies": {
     "react": ">=18 <20",

@@ -13,7 +13,7 @@
     "ethers": "^6.17.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "@singlespark/component-atlas": "file:components/singlespark"
+    "@onhold/ui": "file:components/singlespark"
   },
   "devDependencies": {
     "esbuild": "^0.25.10"
