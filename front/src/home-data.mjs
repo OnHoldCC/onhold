@@ -36,6 +36,8 @@ export function readHome(path){
   if(Date.now()-current.capturedAt>=5000)void refresh().catch(()=>{});
   return Promise.resolve(structuredClone(current.paths[key]));
  }
+ // A cold aggregate also waits for chain/mining reads; let statistics use its own endpoint.
+ if(key==='/api/stats')return null;
  return refresh().then(value=>structuredClone(value.paths[key]));
 }
 export function invalidateHome(){generation++;current=undefined;loaded=true;pending=undefined;try{sessionStorage.removeItem(storageKey);}catch{}}

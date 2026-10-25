@@ -624,6 +624,8 @@ for(const [lang,labels]of Object.entries({en:["Spotlight","Mining pool"],zh:["�
 
 for(const [lang,label]of Object.entries({en:"Promoted websites",zh:"投流官网",ja:"掲載サイト",ko:"광고 웹사이트",es:"Sitios promocionados",fr:"Sites promus",de:"Beworbene Websites",pt:"Sites promovidos"}))messages[lang].promotedSites=label;
 
+for(const [lang,text]of Object.entries({en:"Statistics could not be refreshed. Please retry.",zh:"统计数据暂时无法刷新，请重试。",ja:"統計を更新できませんでした。再試行してください。",ko:"통계를 새로고침하지 못했습니다. 다시 시도하세요.",es:"No se pudieron actualizar las estadísticas. Inténtalo de nuevo.",fr:"Impossible d’actualiser les statistiques. Réessayez.",de:"Die Statistik konnte nicht aktualisiert werden. Bitte erneut versuchen.",pt:"Não foi possível atualizar as estatísticas. Tente novamente."}))messages[lang].statsReadError=text;
+
 for(const [lang,copy]of Object.entries({
  en:["No wallet detected","Open OnHold in your wallet’s browser, or use a desktop browser with a wallet extension.","Claude bans you. OnHold pays you. Verify your restricted account, mint an NFT, and stake to mine $OnHold."],
  zh:["未检测到钱包","请在钱包内置浏览器中打开 OnHold，或使用已安装钱包插件的桌面浏览器。","Claude 封你，OnHold 赔付你。核验封禁账号，铸造 NFT，质押挖取 $OnHold。"],

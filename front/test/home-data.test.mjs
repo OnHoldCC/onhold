@@ -25,9 +25,19 @@ test('stale browser snapshot shows immediately, refreshes once for a burst and n
 });
 test('expired and unavailable snapshots are rejected; invalidation discards late refresh',async t=>{
  const now=Date.now();environment(t,snapshot(now-16000,1));let complete;t.mock.method(globalThis,'fetch',()=>new Promise(resolve=>complete=()=>resolve(Response.json(snapshot(now,2)))));
- const {readHome,invalidateHome}=await import('../src/home-data.mjs?expired');const request=readHome('/api/stats');invalidateHome();complete();await assert.rejects(request,/home_changed/);
+ const {readHome,invalidateHome}=await import('../src/home-data.mjs?expired');assert.equal(readHome('/api/stats'),null);const request=readHome(chain);invalidateHome();complete();await assert.rejects(request,/home_changed/);
  let calls=0;t.mock.method(globalThis,'fetch',async()=>{calls++;return Response.json({...snapshot(now,3),paths:{}});});
- await assert.rejects(readHome('/api/stats'),/invalid_home/);assert.equal(calls,1);
+ await assert.rejects(readHome(chain),/invalid_home/);assert.equal(calls,1);
+});
+
+test('cold statistics bypass an in-flight aggregate instead of waiting for unrelated chain reads',async t=>{
+ environment(t,null);let complete,calls=0;
+ t.mock.method(globalThis,'fetch',()=>{calls++;return new Promise(resolve=>complete=()=>resolve(Response.json(snapshot(Date.now(),2))));});
+ const {readHome}=await import('../src/home-data.mjs?independent-stats');
+ assert.equal(readHome('/api/stats'),null);assert.equal(calls,0);
+ const chainRead=readHome(chain);assert.equal(calls,1);
+ assert.equal(readHome('/api/stats'),null);assert.equal(calls,1);
+ complete();await chainRead;assert.equal((await readHome('/api/stats')).n,2);
 });
 
 test('confirmed chain snapshot keeps its source stale flag in browser cache',async t=>{

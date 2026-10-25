@@ -19,7 +19,7 @@ test('loading, zero, cached values and failures remain distinct with SingleSpark
       import {NftGallery} from './components/onhold/NftGallery.jsx';
       import {NftMining} from './components/onhold/NftMining.jsx';
       import {NftStaking} from './components/onhold/NftStaking.jsx';
-      import {App,SummaryCards,GuideRequestMarkers,Home,Locale} from './components/onhold/App.jsx';
+      import {App,Analytics,SummaryCards,GuideRequestMarkers,Home,Locale} from './components/onhold/App.jsx';
       import {MiningNetworkHistory} from './components/onhold/MiningNetworkHistory.jsx';
       import {VerificationDetails} from './components/onhold/VerificationDetails.jsx';
       import {Docs} from './components/onhold/Docs.jsx';
@@ -31,9 +31,11 @@ test('loading, zero, cached values and failures remain distinct with SingleSpark
       const pages=Object.fromEntries(['home','burn','analytics','claim'].map(page=>{location.pathname=page==='home'?'/':'/'+page;return [page,render(React.createElement(App))];}));
       const t=key=>translate('zh',key),value=props=>render(React.createElement(DataValue,{t,...props}));
       const home=(url,ad={},props={})=>render(React.createElement(Locale.Provider,{value:{t,lang:'zh'}},React.createElement(Home,{state:{ads:[{...seedMarket().ads[0],url,description:'TEST price decay every sixty seconds',tags:[],...ad}]},financial:{burned:0,claimed:0,recipients:0,claims:[]},loading:false,statsLoading:false,...props})));
+      const analytics=props=>render(React.createElement(Locale.Provider,{value:{t,lang:'zh'}},React.createElement(Analytics,{loading:false,statsLoading:false,...props})));
       location.pathname='/';location.search='?setup=1';window.ethereum={isOnholdTestWallet:true,onholdTestMarket:'0x'+'1'.repeat(40)};localStorage.getItem=()=>JSON.stringify({marketAddress:'0x'+'2'.repeat(40)});
       const cleanHome=render(React.createElement(App));
       console.log(JSON.stringify({
+        analyticsLoaded:analytics({liveStats:{page_views:500,page_uv:50,ad_clicks:7}}),analyticsZero:analytics({liveStats:{page_views:0,page_uv:0,ad_clicks:0}}),analyticsFailed:analytics({statsError:true}),analyticsStale:analytics({liveStats:{page_views:500,page_uv:50,ad_clicks:7},statsError:true}),analyticsRetrying:analytics({statsError:true,statsLoading:true}),
         cleanHome,configuredAddresses:{market:storedMarket(),nft:storedNft(),expectedMarket:config.marketAddress,expectedNft:config.nftAddress},
         loopingGraph:render(React.createElement(SingleSparkHomeGraph,{history:[0,10,30],label:'History',loop:true})),flatGraph:render(React.createElement(SingleSparkHomeGraph,{history:[0,0],loop:true})),staticGraph:render(React.createElement(SingleSparkHomeGraph,{history:[0,30]})),invalidGraph:render(React.createElement(SingleSparkHomeGraph,{history:[0,NaN],loop:true})),
         stakingDisabled:render(React.createElement(NftStaking,{enabled:false,wallet:{address:'0x'+'1'.repeat(40),referralBound:true},market:'0x'+'2'.repeat(40),t})),
@@ -52,6 +54,11 @@ test('loading, zero, cached values and failures remain distinct with SingleSpark
       }));
     `},outfile,bundle:true,jsx:'automatic',platform:'node',format:'esm',logLevel:'silent',loader:{'.svg':'dataurl','.jpg':'dataurl','.png':'file','.webp':'file','.css':'empty'},define:{'process.env.NODE_ENV':'"production"'},banner:{js:"import {createRequire} from 'node:module'; const require=createRequire(import.meta.url);"}});
     const html=JSON.parse(execFileSync(process.execPath,[outfile],{encoding:'utf8'}));
+    for(const name of ['analyticsLoaded','analyticsStale'])for(const count of [500,50,7])assert.match(html[name],new RegExp('>'+count+'<'));
+    assert.doesNotMatch(html.analyticsLoaded,/暂无数据|统计数据暂时无法刷新/);assert.doesNotMatch(html.analyticsZero,/暂无数据/);
+    assert.equal((html.analyticsFailed.match(/暂无数据/g)||[]).length,3);
+    for(const name of ['analyticsFailed','analyticsStale']){assert.match(html[name],/role="alert"/);assert.match(html[name],/统计数据暂时无法刷新/);assert.match(html[name],/>重试</);}
+    assert.match(html.analyticsRetrying,/<button[^>]*disabled/);assert.match(html.analyticsRetrying,/ss-skeleton-layout/);
     assert.match(html.homeNftOnly,/<button[^>]*disabled[^>]*>[\s\S]*?参与竞价/);
     assert.doesNotMatch(html.cleanHome,/setup-deploy|setup-result|部署测试代币|Deploy test token/);
     assert.match(html.pages.home,/href="https:\/\/github\.com\/SingleSparkfun\/OnHold-Contracts"/);assert.match(html.pages.home,/aria-label="OnHold contracts on GitHub"/);
