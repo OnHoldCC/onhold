@@ -1,5 +1,5 @@
 import React,{useState} from 'react';
-import {Button} from '@singlespark/component-atlas/ui';
+import {Button,ContractAddressList} from '@singlespark/component-atlas/ui';
 import {Notice} from './Feedback';
 import {assets,addWalletToken} from '../../src/wallet-assets.mjs';
 import {chain} from '../../src/network.mjs';
@@ -13,9 +13,9 @@ export function ContractAssets({wallet,t}){
   catch(cause){setError(true);setMessage(cause.message==='walletChanged'?'walletChanged':cause.code===4001?'assetCancelled':'assetFailed');}
   finally{setBusy(false);}
  }
- return <section className="contract-assets" aria-label={t('assetContracts')}>
-  <div className="contract-assets__heading"><span>{chain.label}</span><Button size="sm" disabled={busy} loading={busy} onClick={()=>void add()}>{t('assetAddToken')}</Button></div>
-  <details><summary>{t('assetContracts')}</summary><dl className="contract-assets__list">{assets.contracts.map(([key,address])=><div key={key}><dt>{t('asset.'+key)}</dt><dd><a href={`${chain.explorer}/address/${address}`} target="_blank" rel="noreferrer"><code>{address}</code> ↗</a></dd></div>)}</dl></details>
+ return <ContractAddressList network={chain.label} label={t('assetContracts')}
+  entries={assets.contracts.map(([key,address])=>({label:t('asset.'+key),address,href:`${chain.explorer}/address/${address}`}))}
+  actions={<Button size="sm" disabled={busy} loading={busy} onClick={()=>void add()}>{t('assetAddToken')}</Button>}>
   <Notice error={error}>{message&&t(message)}</Notice>
- </section>;
+ </ContractAddressList>;
 }

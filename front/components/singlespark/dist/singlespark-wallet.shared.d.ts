@@ -35,10 +35,10 @@ export interface SingleSparkWalletStatusProps {
     wallet?: string;
     address?: string;
     message?: ReactNode;
-    walletIcon?: ReactNode;
     onDisconnect?: () => void;
     onRetry?: () => void;
     className?: string;
+    walletIcon?: ReactNode;
 }
 export interface SingleSparkWalletDialogProps extends PreviewProps {
     open?: boolean;

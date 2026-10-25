@@ -39,10 +39,10 @@ export interface AnalyticsPreviewProps extends PreviewProps {
     metric?: {
         label: string;
         value: string | null;
-        valueTitle?: string;
         period: string;
         history: number[];
         format?: 'count';
+        valueTitle?: string;
         unavailable?: boolean;
     };
     controls?: ReactNode;
@@ -129,7 +129,6 @@ export interface SingleSparkTopbarProps extends PreviewProps {
     active?: string;
     actions?: ReactNode;
     brandHref?: string;
-    brandLabel?: string;
     onConnectWallet?: () => void;
     defaultMenuOpen?: boolean;
     search?: SingleSparkGlobalSearchProps;
@@ -145,6 +144,7 @@ export interface SingleSparkSidebarProps extends PreviewProps {
     defaultCollapsed?: boolean;
     onCollapsedChange?: (collapsed: boolean) => void;
     navigation?: SingleSparkNavigationItem[];
+    brandLabel?: string;
 }
 export interface SingleSparkFooterProps extends PreviewProps {
     year?: number;

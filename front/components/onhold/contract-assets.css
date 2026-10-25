@@ -1,15 +1,4 @@
 .footer{flex-wrap:wrap}
-.contract-assets{flex-basis:100%;min-width:0;font-size:12px;color:var(--muted);line-height:1.6}
-.contract-assets__heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.contract-assets__heading{justify-content:space-between;margin-bottom:12px}
-.contract-assets summary{cursor:pointer;width:fit-content;min-height:36px;align-content:center;color:var(--text)}
-.contract-assets__list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 24px;margin:12px 0}
-.contract-assets__list dt{font-weight:700;color:var(--text)}
-.contract-assets__list dd{margin:3px 0 0}
-.contract-assets__list a{color:inherit;text-decoration:underline;text-underline-offset:3px}
-.contract-assets code{font-size:12px;overflow-wrap:anywhere;user-select:all}
-@media(max-width:1100px){.contract-assets__list{grid-template-columns:1fr}}
-
 .header-actions{display:flex;align-items:center;gap:8px;min-width:0}
 .header-actions:empty{display:none}
 .swap-onhold{white-space:nowrap}

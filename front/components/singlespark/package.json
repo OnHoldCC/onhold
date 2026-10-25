@@ -1,6 +1,6 @@
 {
   "name": "@singlespark/component-atlas",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "sideEffects": [
@@ -12,6 +12,7 @@
     "react",
     "README.md",
     "docs/component-audit/web3-integration.md",
+    "docs/component-audit/onhold-controls.md",
     "docs/component-audit/source-index.json"
   ],
   "exports": {

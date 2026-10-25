@@ -1,18 +1,16 @@
 'use client';
 import {
-  NavigationIndicator
-} from "./chunk-JAX6RWZ6.js";
-import {
   SingleSparkBondingProgress,
   SingleSparkPriceChange,
   SingleSparkSparkline,
   SingleSparkStatCard,
   SingleSparkStatGrid,
   SingleSparkTradesTable
-} from "./chunk-TBO6LKPX.js";
+} from "./chunk-OKNQGOBV.js";
 import {
   SingleSparkAccordion,
   SingleSparkButton,
+  SingleSparkCheckboxInput,
   SingleSparkCopyButton,
   SingleSparkField,
   SingleSparkIconButton,
@@ -22,8 +20,10 @@ import {
   SingleSparkPagination,
   SingleSparkPanel,
   SingleSparkSearchInput,
-  SingleSparkTabs
-} from "./chunk-K6TMLM72.js";
+  SingleSparkTabs,
+  SingleSparkTextInput,
+  SingleSparkTextarea
+} from "./chunk-TFIRYEHT.js";
 import {
   SingleSparkLoading,
   SingleSparkSkeleton
@@ -33,7 +33,7 @@ import {
 } from "./chunk-C5AITWP6.js";
 import {
   SingleSparkIcon
-} from "./chunk-DRA3EEEB.js";
+} from "./chunk-I46M5C7U.js";
 import {
   SingleSparkChainIcon,
   SingleSparkMoney,
@@ -931,7 +931,7 @@ function Digit({ duration }) {
 // react/components/singlespark-home/Graph.tsx
 import { useId as useId3 } from "react";
 import { jsx as jsx20, jsxs as jsxs12 } from "react/jsx-runtime";
-function Graph({ history, label = "Activity history" }) {
+function Graph({ history, label = "Activity history", loop = false }) {
   const gradientId = useId3();
   const live = history !== void 0;
   if (live && (history.length < 2 || history.some((value) => !Number.isFinite(value)))) {
@@ -961,7 +961,7 @@ function Graph({ history, label = "Activity history" }) {
           /* @__PURE__ */ jsx20("stop", { offset: "0%", stopColor: color, stopOpacity: ".18" }),
           /* @__PURE__ */ jsx20("stop", { offset: "100%", stopColor: color, stopOpacity: ".01" })
         ] }) }),
-        /* @__PURE__ */ jsxs12("g", { className: live ? "uh-history-reveal" : "uh-stream-pan", children: [
+        /* @__PURE__ */ jsx20("g", { className: loop && live ? "uh-history-loop" : live ? "uh-history-reveal" : "uh-stream-pan", children: (loop && live ? [0, 1, 2] : [0]).map((tile) => /* @__PURE__ */ jsxs12("g", { className: "uh-history-tile", transform: tile === 1 ? "translate(840 0) scale(-1 1)" : `translate(${tile * 420} 0)`, children: [
           /* @__PURE__ */ jsx20(
             "path",
             {
@@ -981,8 +981,9 @@ function Graph({ history, label = "Activity history" }) {
               vectorEffect: "non-scaling-stroke",
               strokeLinecap: "round"
             }
-          )
-        ] }, live ? curve : void 0)
+          ),
+          loop && live && /* @__PURE__ */ jsx20("path", { className: "uh-history-highlight", d: curve, fill: "none", stroke: color, strokeOpacity: ".25", strokeWidth: "2", pathLength: "420", strokeDasharray: "14 126", vectorEffect: "non-scaling-stroke", strokeLinecap: "round" })
+        ] }, tile)) }, loop && live ? "history-loop" : live ? curve : void 0)
       ]
     }
   );
@@ -1005,7 +1006,7 @@ function AnalyticsVisual({
         /* @__PURE__ */ jsx21("span", { children: metric.label }),
         controls ?? /* @__PURE__ */ jsx21("span", { children: metric.period })
       ] }),
-      /* @__PURE__ */ jsx21("div", { className: "uh-fee-number", children: metric.unavailable ? unavailable : metric.value == null ? /* @__PURE__ */ jsx21(SingleSparkSkeleton, { variant: "input", width: 140, height: 48, label: `Loading ${metric.label}` }) : /* @__PURE__ */ jsx21(SingleSparkMoney, { value: metric.value }) }),
+      /* @__PURE__ */ jsx21("div", { className: "uh-fee-number", children: metric.unavailable ? unavailable : metric.value == null ? /* @__PURE__ */ jsx21(SingleSparkSkeleton, { variant: "input", width: 140, height: 48, label: `Loading ${metric.label}` }) : /* @__PURE__ */ jsx21(SingleSparkMoney, { value: metric.value, title: metric.valueTitle, "aria-label": metric.valueTitle }) }),
       stats && /* @__PURE__ */ jsx21("dl", { className: "uh-analytics-stats", children: stats.map((stat) => /* @__PURE__ */ jsxs13("div", { children: [
         /* @__PURE__ */ jsx21("dt", { children: stat.label }),
         /* @__PURE__ */ jsxs13("dd", { children: [
@@ -1016,7 +1017,7 @@ function AnalyticsVisual({
     ] }),
     /* @__PURE__ */ jsxs13("div", { className: `uh-graph uh-graph-live ${stats ? "uh-graph-summary" : ""}`, children: [
       /* @__PURE__ */ jsx21("div", { className: "uh-graph-grid" }),
-      /* @__PURE__ */ jsx21(Graph, { history: metric.history, label: `${metric.label} history` }, metric.period),
+      /* @__PURE__ */ jsx21(Graph, { history: metric.history, loop: true, label: `${metric.label} history` }),
       /* @__PURE__ */ jsx21("div", { className: "uh-graph-fade uh-graph-left" }),
       /* @__PURE__ */ jsx21("div", { className: "uh-graph-fade uh-graph-right" })
     ] })
@@ -1027,7 +1028,7 @@ function AnalyticsVisual({
         /* @__PURE__ */ jsx21("span", { children: metric?.label ?? "Fees" }),
         metric ? controls ?? /* @__PURE__ */ jsx21("span", { children: metric.period }) : /* @__PURE__ */ jsx21("div", { children: /* @__PURE__ */ jsx21("div", { className: "uh-timeframes", children: ["1D", "30D", "All time", "1D"].map((label, i) => /* @__PURE__ */ jsx21("span", { children: label }, i)) }) })
       ] }),
-      /* @__PURE__ */ jsx21("div", { className: "uh-fee-number", children: metric?.unavailable ? unavailable : metric && metric.value == null ? /* @__PURE__ */ jsx21(SingleSparkSkeleton, { variant: "input", width: 140, height: 48, label: `Loading ${metric.label}` }) : metric?.format === "count" ? /* @__PURE__ */ jsx21(SingleSparkMoney, { value: metric.value }) : metric ? /* @__PURE__ */ jsxs13("div", { className: "uh-animated-metric", "aria-label": metric.value, title: metric.value, children: [
+      /* @__PURE__ */ jsx21("div", { className: "uh-fee-number", children: metric?.unavailable ? unavailable : metric && metric.value == null ? /* @__PURE__ */ jsx21(SingleSparkSkeleton, { variant: "input", width: 140, height: 48, label: `Loading ${metric.label}` }) : metric?.format === "count" ? /* @__PURE__ */ jsx21(SingleSparkMoney, { value: metric.value, title: metric.valueTitle, "aria-label": metric.valueTitle }) : metric ? /* @__PURE__ */ jsxs13("div", { className: "uh-animated-metric", "aria-label": metric.value, title: metric.value, children: [
         /* @__PURE__ */ jsx21("span", { className: "singlespark-sr-only", children: metric.value }),
         Number(metric.value.replaceAll(",", "")) >= 1 ? /* @__PURE__ */ jsxs13("span", { "aria-hidden": "true", children: [
           metric.value.split(".")[0],
@@ -1485,11 +1486,155 @@ function SingleSparkMobileMenu({
 }
 
 // react/components/singlespark-home/SingleSparkSidebar.tsx
-import { useRef as useRef4, useState as useState5 } from "react";
+import { useRef as useRef5, useState as useState5 } from "react";
+
+// react/components/ui/NavigationIndicator.tsx
+import { useEffect as useEffect4, useLayoutEffect, useRef as useRef4 } from "react";
+import { createPortal } from "react-dom";
 import { jsx as jsx35, jsxs as jsxs21 } from "react/jsx-runtime";
+var mix = (from, to, progress) => ({
+  x: from.x + (to.x - from.x) * progress,
+  y: from.y + (to.y - from.y) * progress
+});
+var ease = (progress) => 1 - (1 - Math.min(1, Math.max(0, progress))) ** 3;
+var pose = (from, to, elapsed) => {
+  const settling = Math.min(1, Math.max(0, (elapsed - 400) / 220));
+  return {
+    head: mix(from.head, to, ease(elapsed / 240)),
+    tail: mix(from.tail, to, ease((elapsed - 120) / 300)),
+    wobble: elapsed === 0 ? from.wobble : Math.sin(settling * Math.PI * 4) * (1 - settling) * 0.12
+  };
+};
+function NavigationIndicator({ targetRef, clipSelector = "nav", className = "", zIndex = 50 }) {
+  const indicatorRef = useRef4(null);
+  const headRef = useRef4(null);
+  const tailRef = useRef4(null);
+  const bridgeRef = useRef4(null);
+  const previousTarget = useRef4(null);
+  const destination = useRef4(null);
+  const surface = useRef4(null);
+  const origin = useRef4({ x: 0, y: 0 });
+  const animations = useRef4([]);
+  const motion = useRef4(null);
+  const cancel = () => {
+    for (const animation of animations.current) {
+      animation.onfinish = null;
+      animation.cancel();
+    }
+    animations.current = [];
+    motion.current = null;
+  };
+  const bounds = (...points) => {
+    const indicator = indicatorRef.current;
+    if (!indicator) return;
+    const left = Math.min(...points.map((point) => point.x)) - 34;
+    const top = Math.min(...points.map((point) => point.y)) - 30;
+    origin.current = { x: left, y: top };
+    indicator.style.transform = `translate3d(${left}px, ${top}px, 0px)`;
+    indicator.style.width = `${Math.max(...points.map((point) => point.x)) - left + 34}px`;
+    indicator.style.height = `${Math.max(...points.map((point) => point.y)) - top + 30}px`;
+  };
+  const transforms = ({ head, tail, wobble }) => {
+    const hx = head.x - origin.current.x;
+    const hy = head.y - origin.current.y;
+    const tx = tail.x - origin.current.x;
+    const ty = tail.y - origin.current.y;
+    const distance = Math.hypot(hx - tx, hy - ty);
+    return [
+      `translate3d(${hx - 22}px, ${hy - 17}px, 0px) scale(${1 + wobble}, ${1 - wobble})`,
+      `translate3d(${tx - 8}px, ${ty - 8}px, 0px)`,
+      `translate3d(${tx}px, ${ty - 19}px, 0px) rotate(${Math.atan2(hy - ty, hx - tx)}rad) scaleX(${distance < 20 ? 0 : distance / 100})`
+    ];
+  };
+  const draw = (next) => {
+    surface.current = next;
+    const values = transforms(next);
+    [headRef.current, tailRef.current, bridgeRef.current].forEach((element, index) => {
+      if (element) element.style.transform = values[index];
+    });
+  };
+  const snap = () => {
+    cancel();
+    if (destination.current) {
+      bounds(destination.current);
+      draw({ head: destination.current, tail: destination.current, wobble: 0 });
+    }
+  };
+  useEffect4(() => {
+    const preference = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    preference?.addEventListener("change", snap);
+    return () => {
+      preference?.removeEventListener("change", snap);
+      cancel();
+    };
+  }, []);
+  useLayoutEffect(() => {
+    const measure = () => {
+      const target = targetRef.current;
+      const icon = target?.getBoundingClientRect();
+      const clip = target?.closest(clipSelector)?.getBoundingClientRect();
+      const indicator = indicatorRef.current;
+      if (!indicator) return;
+      const visible = !!icon?.width && !!icon.height && (!clip || icon.top >= clip.top && icon.bottom <= clip.bottom && icon.left >= clip.left && icon.right <= clip.right);
+      if (icon) {
+        const next = { x: Math.round((icon.left + icon.width / 2) * 100) / 100, y: Math.round((icon.top + icon.height / 2) * 100) / 100 };
+        if (next.x !== destination.current?.x || next.y !== destination.current?.y) {
+          const travel = previousTarget.current !== target && previousTarget.current !== null;
+          const from = motion.current ? pose(motion.current.from, motion.current.to, Number(animations.current[0]?.currentTime ?? 0)) : surface.current;
+          destination.current = next;
+          cancel();
+          if (travel && from && visible && headRef.current?.animate && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+            bounds(from.head, from.tail, next);
+            draw(from);
+            const frames = Array.from({ length: 63 }, (_, index) => transforms(pose(from, next, index * 10)));
+            motion.current = { from, to: next };
+            animations.current = [headRef.current, tailRef.current, bridgeRef.current].map((element, index) => element.animate(frames.map((values) => ({ transform: values[index] })), { duration: 620, fill: "forwards" }));
+            animations.current[0].onfinish = snap;
+          } else {
+            bounds(next);
+            draw({ head: next, tail: next, wobble: 0 });
+          }
+        }
+      }
+      if (!visible) snap();
+      indicator.style.visibility = visible ? "visible" : "hidden";
+      previousTarget.current = target;
+    };
+    measure();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+    const nav = targetRef.current?.closest("nav");
+    if (nav) observer?.observe(nav);
+    if (targetRef.current) observer?.observe(targetRef.current);
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, true);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure, true);
+    };
+  });
+  return typeof document === "undefined" ? null : createPortal(/* @__PURE__ */ jsx35(
+    "span",
+    {
+      ref: indicatorRef,
+      className: `app-navigation-indicator ${className}`.trim(),
+      "aria-hidden": "true",
+      style: { zIndex },
+      children: /* @__PURE__ */ jsxs21("span", { className: "app-navigation-indicator__liquid", children: [
+        /* @__PURE__ */ jsx35("span", { ref: bridgeRef, className: "app-navigation-indicator__neck", children: /* @__PURE__ */ jsx35("svg", { viewBox: "0 0 100 38", width: "100", height: "38", focusable: "false", children: /* @__PURE__ */ jsx35("path", { d: "M 0 26 C 30 23 50 23 93 38 L 93 0 C 50 15 30 15 0 12 Z" }) }) }),
+        /* @__PURE__ */ jsx35("span", { ref: tailRef, className: "app-navigation-indicator__tail" }),
+        /* @__PURE__ */ jsx35("span", { ref: headRef, className: "app-navigation-indicator__head" })
+      ] })
+    }
+  ), document.body);
+}
+
+// react/components/singlespark-home/SingleSparkSidebar.tsx
+import { jsx as jsx36, jsxs as jsxs22 } from "react/jsx-runtime";
 function SingleSparkSidebar({
   className,
   brandHref = "/",
+  brandLabel = "SingleSpark",
   brand,
   localLinks = false,
   footer,
@@ -1501,25 +1646,25 @@ function SingleSparkSidebar({
   navigation = singleSparkNavigation
 } = {}) {
   const [internalCollapsed, setInternalCollapsed] = useState5(defaultCollapsed);
-  const activeIconRef = useRef4(null);
+  const activeIconRef = useRef5(null);
   const isCollapsed = collapsed ?? internalCollapsed;
-  return /* @__PURE__ */ jsxs21(Root, { className, children: [
-    /* @__PURE__ */ jsxs21(
+  return /* @__PURE__ */ jsxs22(Root, { className, children: [
+    /* @__PURE__ */ jsxs22(
       "aside",
       {
         className: `uh-sidebar ${isCollapsed ? "uh-sidebar-collapsed" : ""}`,
         children: [
-          /* @__PURE__ */ jsxs21("div", { children: [
-            /* @__PURE__ */ jsx35(
+          /* @__PURE__ */ jsxs22("div", { children: [
+            /* @__PURE__ */ jsx36(
               NavigationLink,
               {
                 path: brandHref,
                 local: localLinks,
-                label: "SingleSpark",
+                label: brandLabel,
                 component: "SingleSparkHero",
                 onNavigate,
                 className: "uh-brand",
-                children: brand ?? /* @__PURE__ */ jsx35(
+                children: brand ?? /* @__PURE__ */ jsx36(
                   Image,
                   {
                     src: "singlespark-logo.svg",
@@ -1529,7 +1674,7 @@ function SingleSparkSidebar({
                 )
               }
             ),
-            /* @__PURE__ */ jsx35("nav", { "aria-label": "Primary", children: navigation.map((item) => /* @__PURE__ */ jsxs21(
+            /* @__PURE__ */ jsx36("nav", { "aria-label": "Primary", children: navigation.map((item) => /* @__PURE__ */ jsxs22(
               NavigationLink,
               {
                 ...item,
@@ -1538,14 +1683,14 @@ function SingleSparkSidebar({
                 current: item.label === active,
                 className: `uh-nav-link ${item.label === active ? "uh-active" : ""}`,
                 children: [
-                  /* @__PURE__ */ jsx35("div", { ref: item.label === active ? activeIconRef : void 0, className: "uh-nav-icon", "aria-hidden": "true", children: item.iconContent ?? /* @__PURE__ */ jsx35(Icon, { name: item.icon || item.label }) }),
-                  /* @__PURE__ */ jsx35("span", { children: item.label })
+                  /* @__PURE__ */ jsx36("div", { ref: item.label === active ? activeIconRef : void 0, className: "uh-nav-icon", "aria-hidden": "true", children: item.iconContent ?? /* @__PURE__ */ jsx36(Icon, { name: item.icon || item.label }) }),
+                  /* @__PURE__ */ jsx36("span", { children: item.label })
                 ]
               },
               item.path
             )) })
           ] }),
-          footer !== void 0 ? footer : /* @__PURE__ */ jsxs21(
+          footer !== void 0 ? footer : /* @__PURE__ */ jsxs22(
             "a",
             {
               className: "uh-account",
@@ -1553,16 +1698,16 @@ function SingleSparkSidebar({
               target: "_blank",
               rel: "noreferrer",
               children: [
-                /* @__PURE__ */ jsx35("span", { children: /* @__PURE__ */ jsx35(Image, { src: "singlespark-logo.svg", alt: "singleSpark" }) }),
-                /* @__PURE__ */ jsxs21("div", { children: [
-                  /* @__PURE__ */ jsx35("b", { children: "singleSpark" }),
-                  /* @__PURE__ */ jsx35("small", { children: "@singleSpark" })
+                /* @__PURE__ */ jsx36("span", { children: /* @__PURE__ */ jsx36(Image, { src: "singlespark-logo.svg", alt: "singleSpark" }) }),
+                /* @__PURE__ */ jsxs22("div", { children: [
+                  /* @__PURE__ */ jsx36("b", { children: "singleSpark" }),
+                  /* @__PURE__ */ jsx36("small", { children: "@singleSpark" })
                 ] }),
-                /* @__PURE__ */ jsx35("strong", { children: "\u2026" })
+                /* @__PURE__ */ jsx36("strong", { children: "\u2026" })
               ]
             }
           ),
-          /* @__PURE__ */ jsx35(
+          /* @__PURE__ */ jsx36(
             "button",
             {
               className: "uh-sidebar-collapse",
@@ -1573,7 +1718,7 @@ function SingleSparkSidebar({
                 setInternalCollapsed(!isCollapsed);
                 onCollapsedChange?.(!isCollapsed);
               },
-              children: /* @__PURE__ */ jsx35("svg", { viewBox: "0 0 20 20", "aria-hidden": "true", fill: "currentColor", children: /* @__PURE__ */ jsx35(
+              children: /* @__PURE__ */ jsx36("svg", { viewBox: "0 0 20 20", "aria-hidden": "true", fill: "currentColor", children: /* @__PURE__ */ jsx36(
                 "path",
                 {
                   fillRule: "evenodd",
@@ -1586,12 +1731,12 @@ function SingleSparkSidebar({
         ]
       }
     ),
-    /* @__PURE__ */ jsx35(NavigationIndicator, { targetRef: activeIconRef, className: "uh-navigation-indicator" })
+    /* @__PURE__ */ jsx36(NavigationIndicator, { targetRef: activeIconRef, className: "uh-navigation-indicator" })
   ] });
 }
 
 // react/components/singlespark-home/SingleSparkFooter.tsx
-import { jsx as jsx36, jsxs as jsxs22 } from "react/jsx-runtime";
+import { jsx as jsx37, jsxs as jsxs23 } from "react/jsx-runtime";
 function SingleSparkFooter({
   className,
   onNavigate,
@@ -1631,16 +1776,16 @@ function SingleSparkFooter({
       ]
     }
   ];
-  return /* @__PURE__ */ jsx36(Root, { className, children: /* @__PURE__ */ jsxs22("footer", { className: "uh-footer", children: [
-    /* @__PURE__ */ jsxs22("div", { className: "uh-footer-brand", children: [
-      /* @__PURE__ */ jsx36("strong", { children: "singleSpark" }),
-      /* @__PURE__ */ jsxs22("small", { children: [
+  return /* @__PURE__ */ jsx37(Root, { className, children: /* @__PURE__ */ jsxs23("footer", { className: "uh-footer", children: [
+    /* @__PURE__ */ jsxs23("div", { className: "uh-footer-brand", children: [
+      /* @__PURE__ */ jsx37("strong", { children: "singleSpark" }),
+      /* @__PURE__ */ jsxs23("small", { children: [
         "\xA9 ",
         year,
         " singleSpark"
       ] }),
-      /* @__PURE__ */ jsxs22("div", { children: [
-        /* @__PURE__ */ jsx36(
+      /* @__PURE__ */ jsxs23("div", { children: [
+        /* @__PURE__ */ jsx37(
           "a",
           {
             href: "https://x.com/UsePaid",
@@ -1650,28 +1795,28 @@ function SingleSparkFooter({
             children: "X"
           }
         ),
-        /* @__PURE__ */ jsx36(
+        /* @__PURE__ */ jsx37(
           "a",
           {
             href: "https://t.me/usepaidapp",
             target: "_blank",
             rel: "noreferrer",
             "aria-label": "singleSpark on Telegram",
-            children: /* @__PURE__ */ jsx36(Image, { src: "telegram.svg" })
+            children: /* @__PURE__ */ jsx37(Image, { src: "telegram.svg" })
           }
         ),
-        /* @__PURE__ */ jsx36(
+        /* @__PURE__ */ jsx37(
           "a",
           {
             href: "https://discord.gg/usepaidapp",
             target: "_blank",
             rel: "noreferrer",
             "aria-label": "singleSpark on Discord",
-            children: /* @__PURE__ */ jsx36(Image, { src: "discord.svg" })
+            children: /* @__PURE__ */ jsx37(Image, { src: "discord.svg" })
           }
         )
       ] }),
-      /* @__PURE__ */ jsx36(
+      /* @__PURE__ */ jsx37(
         NavigationLink,
         {
           path: "/legal/disclosures#affiliation",
@@ -1681,9 +1826,9 @@ function SingleSparkFooter({
         }
       )
     ] }),
-    /* @__PURE__ */ jsx36("div", { className: "uh-footer-columns", children: columns.map((column) => /* @__PURE__ */ jsxs22("div", { children: [
-      /* @__PURE__ */ jsx36("b", { children: column.label }),
-      column.links.map((item) => /* @__PURE__ */ jsx36(
+    /* @__PURE__ */ jsx37("div", { className: "uh-footer-columns", children: columns.map((column) => /* @__PURE__ */ jsxs23("div", { children: [
+      /* @__PURE__ */ jsx37("b", { children: column.label }),
+      column.links.map((item) => /* @__PURE__ */ jsx37(
         NavigationLink,
         {
           ...item,
@@ -2598,113 +2743,123 @@ var feeBarSnapshot = [
 ];
 
 // react/components/singlespark-business/Surface.tsx
-import { jsx as jsx37 } from "react/jsx-runtime";
+import { jsx as jsx38 } from "react/jsx-runtime";
 function Surface({
   children,
   className = ""
 }) {
-  return /* @__PURE__ */ jsx37("div", { className: "u-business " + className, children });
+  return /* @__PURE__ */ jsx38("div", { className: "u-business " + className, children });
+}
+
+// react/components/ui/AddressLink.tsx
+import { jsx as jsx39, jsxs as jsxs24 } from "react/jsx-runtime";
+function AddressLink({ address, href, label = "Copy address", onError }) {
+  const short = address.length > 12 ? `${address.slice(0, 6)}\u2026${address.slice(-4)}` : address;
+  return /* @__PURE__ */ jsxs24("span", { className: "address-link", children: [
+    /* @__PURE__ */ jsx39(SingleSparkCopyButton, { value: address, label, onError, className: "contract-copy", children: /* @__PURE__ */ jsx39("code", { title: address, children: short }) }, address),
+    href && /* @__PURE__ */ jsx39("a", { className: "address-link__explorer", href, title: address, "aria-label": `View address ${address}`, target: "_blank", rel: "noopener noreferrer", children: /* @__PURE__ */ jsx39("i", { className: "ph ph-arrow-up-right", "aria-hidden": "true" }) })
+  ] });
 }
 
 // react/components/singlespark-business/Icon.tsx
-import { jsx as jsx38 } from "react/jsx-runtime";
+import { jsx as jsx40 } from "react/jsx-runtime";
 function Icon2({ name, size = 16 }) {
-  return /* @__PURE__ */ jsx38(SingleSparkIcon, { name, size });
+  return /* @__PURE__ */ jsx40(SingleSparkIcon, { name, size });
 }
 
 // react/components/singlespark-business/Badge.tsx
-import { jsx as jsx39 } from "react/jsx-runtime";
+import { jsx as jsx41 } from "react/jsx-runtime";
 function Badge() {
-  return /* @__PURE__ */ jsx39(
+  return /* @__PURE__ */ jsx41(
     "svg",
     {
       className: "ub-account-badge",
       viewBox: "0 0 22 22",
       fill: "currentColor",
       "aria-hidden": "true",
-      children: /* @__PURE__ */ jsx39("path", { d: "M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z" })
+      children: /* @__PURE__ */ jsx41("path", { d: "M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z" })
     }
   );
 }
 
 // react/components/singlespark-business/External.tsx
-import { jsx as jsx40 } from "react/jsx-runtime";
+import { jsx as jsx42 } from "react/jsx-runtime";
 function External({
   children,
   href,
   className = ""
 }) {
-  return /* @__PURE__ */ jsx40("a", { href, className, target: "_blank", rel: "noreferrer", children });
+  return /* @__PURE__ */ jsx42("a", { href, className, target: "_blank", rel: "noreferrer", children });
 }
 
 // react/components/singlespark-business/TokenCardCore.tsx
-import { Fragment as Fragment12, jsx as jsx41, jsxs as jsxs23 } from "react/jsx-runtime";
+import { Fragment as Fragment12, jsx as jsx43, jsxs as jsxs25 } from "react/jsx-runtime";
 function TokenCardCore({
   token: p,
   onRecipientClick,
   catalog = false
 }) {
-  return /* @__PURE__ */ jsxs23("article", { className: "ub-token-card " + (catalog ? "ub-catalog-card" : ""), children: [
-    /* @__PURE__ */ jsxs23("div", { className: "ub-token-photo", children: [
-      /* @__PURE__ */ jsx41(External, { href: "https://usepaid.app" + p.href, children: /* @__PURE__ */ jsx41("img", { src: asset(p.image), alt: p.name }) }),
-      /* @__PURE__ */ jsx41("span", { className: "ub-platform-badge", children: /* @__PURE__ */ jsx41(
+  return /* @__PURE__ */ jsxs25("article", { className: "ub-token-card " + (catalog ? "ub-catalog-card" : ""), children: [
+    /* @__PURE__ */ jsxs25("div", { className: "ub-token-photo", children: [
+      /* @__PURE__ */ jsx43(External, { href: "https://usepaid.app" + p.href, children: /* @__PURE__ */ jsx43("img", { src: asset(p.image), alt: p.name }) }),
+      /* @__PURE__ */ jsx43("span", { className: "ub-platform-badge", children: /* @__PURE__ */ jsx43(
         "img",
         {
           src: asset(p.platform.toLowerCase() + "-logo.png"),
           alt: p.platform
         }
       ) }),
-      /* @__PURE__ */ jsx41("span", { className: "ub-token-age", children: p.age }),
-      p.handle && /* @__PURE__ */ jsxs23(
+      /* @__PURE__ */ jsx43("span", { className: "ub-token-age", children: p.age }),
+      p.handle && /* @__PURE__ */ jsxs25(
         SingleSparkButton,
         {
           className: "ub-recipient-chip",
           "aria-label": "Show tokens routed to @" + p.handle,
           onClick: () => onRecipientClick?.(p.handle),
           children: [
-            /* @__PURE__ */ jsx41(Icon2, { name: "wallet", size: 14 }),
-            p.avatar && /* @__PURE__ */ jsx41("img", { className: "ub-avatar", src: asset(p.avatar), alt: "" }),
-            /* @__PURE__ */ jsx41("span", { children: p.recipient }),
-            p.badge && /* @__PURE__ */ jsx41(Badge, {})
+            /* @__PURE__ */ jsx43(Icon2, { name: "wallet", size: 14 }),
+            p.avatar && /* @__PURE__ */ jsx43("img", { className: "ub-avatar", src: asset(p.avatar), alt: "" }),
+            /* @__PURE__ */ jsx43("span", { children: p.recipient }),
+            p.badge && /* @__PURE__ */ jsx43(Badge, {})
           ]
         }
       )
     ] }),
-    /* @__PURE__ */ jsxs23("div", { className: "ub-token-caption", children: [
-      /* @__PURE__ */ jsxs23("div", { children: [
-        /* @__PURE__ */ jsx41("span", { children: p.name }),
-        /* @__PURE__ */ jsx41("code", { children: p.ticker })
+    /* @__PURE__ */ jsxs25("div", { className: "ub-token-caption", children: [
+      /* @__PURE__ */ jsxs25("div", { children: [
+        /* @__PURE__ */ jsx43("span", { children: p.name }),
+        /* @__PURE__ */ jsx43("code", { children: p.ticker })
       ] }),
-      catalog ? /* @__PURE__ */ jsxs23(Fragment12, { children: [
-        /* @__PURE__ */ jsxs23("div", { className: "ub-catalog-values", children: [
-          /* @__PURE__ */ jsxs23("span", { children: [
-            /* @__PURE__ */ jsx41("strong", { children: p.mc }),
-            /* @__PURE__ */ jsx41("small", { children: "MC" })
+      catalog ? /* @__PURE__ */ jsxs25(Fragment12, { children: [
+        /* @__PURE__ */ jsxs25("div", { className: "ub-catalog-values", children: [
+          /* @__PURE__ */ jsxs25("span", { children: [
+            /* @__PURE__ */ jsx43("strong", { children: p.mc }),
+            /* @__PURE__ */ jsx43("small", { children: "MC" })
           ] }),
-          /* @__PURE__ */ jsxs23("span", { children: [
-            /* @__PURE__ */ jsx41(Icon2, { name: "wallet" }),
-            /* @__PURE__ */ jsx41("strong", { children: p.amount }),
-            /* @__PURE__ */ jsx41("small", { children: "Sent" })
+          /* @__PURE__ */ jsxs25("span", { children: [
+            /* @__PURE__ */ jsx43(Icon2, { name: "wallet" }),
+            /* @__PURE__ */ jsx43("strong", { children: p.amount }),
+            /* @__PURE__ */ jsx43("small", { children: "Sent" })
           ] })
         ] }),
-        /* @__PURE__ */ jsx41(SingleSparkCopyButton, { value: p.address || "", className: "ub-contract-button", children: /* @__PURE__ */ jsx41("code", { children: p.shortAddress }) })
-      ] }) : /* @__PURE__ */ jsxs23("div", { children: [
-        /* @__PURE__ */ jsx41("strong", { children: p.mc }),
-        /* @__PURE__ */ jsx41("small", { children: "MC" })
+        /* @__PURE__ */ jsx43(AddressLink, { address: p.address || "" })
+      ] }) : /* @__PURE__ */ jsxs25("div", { children: [
+        /* @__PURE__ */ jsx43("strong", { children: p.mc }),
+        /* @__PURE__ */ jsx43("small", { children: "MC" })
       ] })
     ] })
   ] });
 }
 
 // react/components/singlespark-business/SingleSparkTokenCard.tsx
-import { jsx as jsx42 } from "react/jsx-runtime";
+import { jsx as jsx44 } from "react/jsx-runtime";
 function SingleSparkTokenCard({
   token = singleSparkBusinessSnapshot.topTokens[0],
   onRecipientClick,
   className,
   onNavigate
 }) {
-  return /* @__PURE__ */ jsx42(Surface, { className, children: /* @__PURE__ */ jsx42("div", { className: "ub-single-token", children: /* @__PURE__ */ jsx42(
+  return /* @__PURE__ */ jsx44(Surface, { className, children: /* @__PURE__ */ jsx44("div", { className: "ub-single-token", children: /* @__PURE__ */ jsx44(
     TokenCardCore,
     {
       token,
@@ -2714,7 +2869,7 @@ function SingleSparkTokenCard({
 }
 
 // react/components/singlespark-business/Launchpads.tsx
-import { jsx as jsx43, jsxs as jsxs24 } from "react/jsx-runtime";
+import { jsx as jsx45, jsxs as jsxs26 } from "react/jsx-runtime";
 function Launchpads({
   value,
   onChange,
@@ -2722,14 +2877,14 @@ function Launchpads({
   pumpOnly = false
 }) {
   const values = pumpOnly ? ["Pump"] : includeAll ? ["Pump", "Pons", "All"] : ["Pump", "Pons"];
-  return /* @__PURE__ */ jsx43("div", { className: "ub-launchpads", role: "group", "aria-label": "Launchpad", children: values.map((v) => /* @__PURE__ */ jsxs24(
+  return /* @__PURE__ */ jsx45("div", { className: "ub-launchpads", role: "group", "aria-label": "Launchpad", children: values.map((v) => /* @__PURE__ */ jsxs26(
     SingleSparkButton,
     {
       "aria-pressed": value === v,
       className: value === v ? "ub-selected" : "",
       onClick: () => onChange(v),
       children: [
-        v !== "All" && /* @__PURE__ */ jsx43("img", { src: asset(v.toLowerCase() + "-logo.png"), alt: "" }),
+        v !== "All" && /* @__PURE__ */ jsx45("img", { src: asset(v.toLowerCase() + "-logo.png"), alt: "" }),
         v
       ]
     },
@@ -2738,7 +2893,7 @@ function Launchpads({
 }
 
 // react/components/singlespark-business/LaunchpadFilter.tsx
-import { jsx as jsx44 } from "react/jsx-runtime";
+import { jsx as jsx46 } from "react/jsx-runtime";
 function LaunchpadFilter({
   value,
   defaultValue = "All",
@@ -2747,11 +2902,11 @@ function LaunchpadFilter({
   className
 }) {
   const [v, set] = useValue(value, defaultValue, onChange);
-  return /* @__PURE__ */ jsx44(Surface, { className, children: /* @__PURE__ */ jsx44(Launchpads, { value: v, onChange: set, includeAll }) });
+  return /* @__PURE__ */ jsx46(Surface, { className, children: /* @__PURE__ */ jsx46(Launchpads, { value: v, onChange: set, includeAll }) });
 }
 
 // react/components/singlespark-business/SectionPagination.tsx
-import { jsx as jsx45 } from "react/jsx-runtime";
+import { jsx as jsx47 } from "react/jsx-runtime";
 function SectionPagination({
   page,
   totalPages = 5,
@@ -2759,12 +2914,12 @@ function SectionPagination({
   className
 }) {
   const [p, set] = useValue(page, 1, onPageChange);
-  return /* @__PURE__ */ jsx45(Surface, { className, children: /* @__PURE__ */ jsx45(SingleSparkPagination, { page: p, totalPages, onPageChange: set }) });
+  return /* @__PURE__ */ jsx47(Surface, { className, children: /* @__PURE__ */ jsx47(SingleSparkPagination, { page: p, totalPages, onPageChange: set }) });
 }
 
 // react/components/singlespark-business/TopTokenGrid.tsx
 import { useState as useState7 } from "react";
-import { jsx as jsx46, jsxs as jsxs25 } from "react/jsx-runtime";
+import { jsx as jsx48, jsxs as jsxs27 } from "react/jsx-runtime";
 function TopTokenGrid({
   tokens = singleSparkBusinessSnapshot.topTokens,
   className
@@ -2775,11 +2930,11 @@ function TopTokenGrid({
   const filtered = tokens.filter(
     (p) => (platform === "All" || p.platform === platform) && (!profile || p.handle === profile)
   );
-  return /* @__PURE__ */ jsx46(Surface, { className, children: /* @__PURE__ */ jsxs25("section", { className: "ub-top-token-section", children: [
-    /* @__PURE__ */ jsxs25("div", { className: "ub-heading", children: [
-      /* @__PURE__ */ jsxs25("div", { children: [
-        /* @__PURE__ */ jsx46("h2", { children: "Top Tokens" }),
-        /* @__PURE__ */ jsx46(
+  return /* @__PURE__ */ jsx48(Surface, { className, children: /* @__PURE__ */ jsxs27("section", { className: "ub-top-token-section", children: [
+    /* @__PURE__ */ jsxs27("div", { className: "ub-heading", children: [
+      /* @__PURE__ */ jsxs27("div", { children: [
+        /* @__PURE__ */ jsx48("h2", { children: "Top Tokens" }),
+        /* @__PURE__ */ jsx48(
           Launchpads,
           {
             value: platform,
@@ -2791,7 +2946,7 @@ function TopTokenGrid({
           }
         )
       ] }),
-      /* @__PURE__ */ jsx46(
+      /* @__PURE__ */ jsx48(
         SingleSparkPagination,
         {
           page,
@@ -2800,7 +2955,7 @@ function TopTokenGrid({
         }
       )
     ] }),
-    /* @__PURE__ */ jsx46("div", { className: "ub-token-grid", children: filtered.slice((page - 1) * 20, page * 20).map((p) => /* @__PURE__ */ jsx46(
+    /* @__PURE__ */ jsx48("div", { className: "ub-token-grid", children: filtered.slice((page - 1) * 20, page * 20).map((p) => /* @__PURE__ */ jsx48(
       TokenCardCore,
       {
         token: p,
@@ -2811,7 +2966,7 @@ function TopTokenGrid({
       },
       p.href
     )) }),
-    !filtered.length && /* @__PURE__ */ jsx46("p", { className: "ub-empty", children: "No tokens found." })
+    !filtered.length && /* @__PURE__ */ jsx48("p", { className: "ub-empty", children: "No tokens found." })
   ] }) });
 }
 
@@ -2819,29 +2974,29 @@ function TopTokenGrid({
 import { useState as useState8 } from "react";
 
 // react/components/singlespark-business/Heading.tsx
-import { jsx as jsx47, jsxs as jsxs26 } from "react/jsx-runtime";
+import { jsx as jsx49, jsxs as jsxs28 } from "react/jsx-runtime";
 function Heading({
   children,
   right
 }) {
-  return /* @__PURE__ */ jsxs26("div", { className: "ub-heading", children: [
-    /* @__PURE__ */ jsx47("h2", { children }),
+  return /* @__PURE__ */ jsxs28("div", { className: "ub-heading", children: [
+    /* @__PURE__ */ jsx49("h2", { children }),
     right
   ] });
 }
 
 // react/components/singlespark-business/TopProfileList.tsx
-import { jsx as jsx48, jsxs as jsxs27 } from "react/jsx-runtime";
+import { jsx as jsx50, jsxs as jsxs29 } from "react/jsx-runtime";
 function TopProfileList({
   profiles = singleSparkBusinessSnapshot.profiles,
   className
 }) {
   const [page, setPage] = useState8(1);
-  return /* @__PURE__ */ jsxs27(Surface, { className, children: [
-    /* @__PURE__ */ jsx48(
+  return /* @__PURE__ */ jsxs29(Surface, { className, children: [
+    /* @__PURE__ */ jsx50(
       Heading,
       {
-        right: /* @__PURE__ */ jsx48(
+        right: /* @__PURE__ */ jsx50(
           SingleSparkPagination,
           {
             page,
@@ -2852,15 +3007,15 @@ function TopProfileList({
         children: "Top X Profiles"
       }
     ),
-    /* @__PURE__ */ jsx48("div", { className: "ub-profile-cards", children: profiles.slice((page - 1) * 5, page * 5).map((p) => /* @__PURE__ */ jsxs27(
+    /* @__PURE__ */ jsx50("div", { className: "ub-profile-cards", children: profiles.slice((page - 1) * 5, page * 5).map((p) => /* @__PURE__ */ jsxs29(
       External,
       {
         className: "ub-profile-card",
         href: "https://usepaid.app/profile/" + p.handle,
         children: [
-          /* @__PURE__ */ jsx48("div", { className: "ub-profile-banner", children: /* @__PURE__ */ jsx48("img", { src: asset(p.banner), alt: "" }) }),
-          /* @__PURE__ */ jsxs27("div", { className: "ub-profile-card-body", children: [
-            /* @__PURE__ */ jsx48(
+          /* @__PURE__ */ jsx50("div", { className: "ub-profile-banner", children: /* @__PURE__ */ jsx50("img", { src: asset(p.banner), alt: "" }) }),
+          /* @__PURE__ */ jsxs29("div", { className: "ub-profile-card-body", children: [
+            /* @__PURE__ */ jsx50(
               "img",
               {
                 className: "ub-profile-card-avatar",
@@ -2868,24 +3023,24 @@ function TopProfileList({
                 alt: ""
               }
             ),
-            /* @__PURE__ */ jsx48("strong", { children: p.name }),
-            /* @__PURE__ */ jsxs27("small", { children: [
+            /* @__PURE__ */ jsx50("strong", { children: p.name }),
+            /* @__PURE__ */ jsxs29("small", { children: [
               "@",
               p.handle
             ] }),
-            /* @__PURE__ */ jsxs27("span", { className: "ub-profile-tag", children: [
-              /* @__PURE__ */ jsx48(Icon2, { name: "wallet" }),
+            /* @__PURE__ */ jsxs29("span", { className: "ub-profile-tag", children: [
+              /* @__PURE__ */ jsx50(Icon2, { name: "wallet" }),
               "SingleSpark Profile"
             ] }),
-            /* @__PURE__ */ jsxs27("div", { className: "ub-profile-card-stats", children: [
-              /* @__PURE__ */ jsxs27("span", { children: [
-                /* @__PURE__ */ jsx48("b", { children: p.tokens }),
+            /* @__PURE__ */ jsxs29("div", { className: "ub-profile-card-stats", children: [
+              /* @__PURE__ */ jsxs29("span", { children: [
+                /* @__PURE__ */ jsx50("b", { children: p.tokens }),
                 " Tokens"
               ] }),
-              /* @__PURE__ */ jsxs27("span", { children: [
-                /* @__PURE__ */ jsx48(Icon2, { name: "wallet", size: 18 }),
-                /* @__PURE__ */ jsx48("b", { children: p.amount }),
-                /* @__PURE__ */ jsx48("small", { children: "Recorded transfers" })
+              /* @__PURE__ */ jsxs29("span", { children: [
+                /* @__PURE__ */ jsx50(Icon2, { name: "wallet", size: 18 }),
+                /* @__PURE__ */ jsx50("b", { children: p.amount }),
+                /* @__PURE__ */ jsx50("small", { children: "Recorded transfers" })
               ] })
             ] })
           ] })
@@ -2898,17 +3053,17 @@ function TopProfileList({
 
 // react/components/singlespark-business/TopSingleSparkTokenList.tsx
 import { useState as useState9 } from "react";
-import { jsx as jsx49, jsxs as jsxs28 } from "react/jsx-runtime";
+import { jsx as jsx51, jsxs as jsxs30 } from "react/jsx-runtime";
 function TopSingleSparkTokenList({
   payments = singleSparkBusinessSnapshot.paid,
   className
 }) {
   const [page, setPage] = useState9(1);
-  return /* @__PURE__ */ jsxs28(Surface, { className, children: [
-    /* @__PURE__ */ jsx49(
+  return /* @__PURE__ */ jsxs30(Surface, { className, children: [
+    /* @__PURE__ */ jsx51(
       Heading,
       {
-        right: /* @__PURE__ */ jsx49(
+        right: /* @__PURE__ */ jsx51(
           SingleSparkPagination,
           {
             page,
@@ -2919,16 +3074,16 @@ function TopSingleSparkTokenList({
         children: "Top paid tokens"
       }
     ),
-    /* @__PURE__ */ jsx49("div", { className: "ub-stack", children: payments.slice((page - 1) * 6, page * 6).map((p, i) => /* @__PURE__ */ jsxs28(
+    /* @__PURE__ */ jsx51("div", { className: "ub-stack", children: payments.slice((page - 1) * 6, page * 6).map((p, i) => /* @__PURE__ */ jsxs30(
       "article",
       {
         className: "ub-payment ub-top-paid",
         style: { animationDelay: i * 45 + "ms" },
         children: [
-          /* @__PURE__ */ jsxs28("div", { className: "ub-singlespark-avatars", children: [
-            /* @__PURE__ */ jsxs28(External, { href: "https://usepaid.app" + p.href, children: [
-              /* @__PURE__ */ jsx49("img", { src: asset(p.image), alt: p.ticker }),
-              /* @__PURE__ */ jsx49("span", { children: /* @__PURE__ */ jsx49(
+          /* @__PURE__ */ jsxs30("div", { className: "ub-singlespark-avatars", children: [
+            /* @__PURE__ */ jsxs30(External, { href: "https://usepaid.app" + p.href, children: [
+              /* @__PURE__ */ jsx51("img", { src: asset(p.image), alt: p.ticker }),
+              /* @__PURE__ */ jsx51("span", { children: /* @__PURE__ */ jsx51(
                 "img",
                 {
                   src: asset(p.platform.toLowerCase() + "-logo.png"),
@@ -2936,15 +3091,15 @@ function TopSingleSparkTokenList({
                 }
               ) })
             ] }),
-            /* @__PURE__ */ jsx49(Icon2, { name: "wallet", size: 20 }),
-            /* @__PURE__ */ jsxs28(External, { href: "https://usepaid.app" + p.profile, children: [
-              /* @__PURE__ */ jsx49("img", { src: asset(p.avatar), alt: p.name }),
-              /* @__PURE__ */ jsx49("span", { children: "X" })
+            /* @__PURE__ */ jsx51(Icon2, { name: "wallet", size: 20 }),
+            /* @__PURE__ */ jsxs30(External, { href: "https://usepaid.app" + p.profile, children: [
+              /* @__PURE__ */ jsx51("img", { src: asset(p.avatar), alt: p.name }),
+              /* @__PURE__ */ jsx51("span", { children: "X" })
             ] })
           ] }),
-          /* @__PURE__ */ jsxs28("div", { className: "ub-top-singlespark-amount", children: [
-            /* @__PURE__ */ jsx49("strong", { children: p.amount }),
-            /* @__PURE__ */ jsx49("small", { children: p.unsent })
+          /* @__PURE__ */ jsxs30("div", { className: "ub-top-singlespark-amount", children: [
+            /* @__PURE__ */ jsx51("strong", { children: p.amount }),
+            /* @__PURE__ */ jsx51("small", { children: p.unsent })
           ] })
         ]
       },
@@ -2954,13 +3109,13 @@ function TopSingleSparkTokenList({
 }
 
 // react/components/singlespark-business/ExploreFiltersCore.tsx
-import { jsx as jsx50, jsxs as jsxs29 } from "react/jsx-runtime";
+import { jsx as jsx52, jsxs as jsxs31 } from "react/jsx-runtime";
 function ExploreFiltersCore({
   value,
   onChange
 }) {
-  return /* @__PURE__ */ jsxs29("div", { className: "ub-explore-filters", children: [
-    /* @__PURE__ */ jsx50("div", { className: "ub-explore-venues", role: "group", "aria-label": "Launchpad", children: ["Pump", "Pons"].map((v) => /* @__PURE__ */ jsxs29(
+  return /* @__PURE__ */ jsxs31("div", { className: "ub-explore-filters", children: [
+    /* @__PURE__ */ jsx52("div", { className: "ub-explore-venues", role: "group", "aria-label": "Launchpad", children: ["Pump", "Pons"].map((v) => /* @__PURE__ */ jsxs31(
       "button",
       {
         type: "button",
@@ -2971,15 +3126,15 @@ function ExploreFiltersCore({
           venues: value.venues.includes(v) ? value.venues.filter((p) => p !== v) : [...value.venues, v]
         }),
         children: [
-          /* @__PURE__ */ jsx50("span", { children: /* @__PURE__ */ jsx50("img", { src: asset(v.toLowerCase() + "-logo.png"), alt: "" }) }),
+          /* @__PURE__ */ jsx52("span", { children: /* @__PURE__ */ jsx52("img", { src: asset(v.toLowerCase() + "-logo.png"), alt: "" }) }),
           v
         ]
       },
       v
     )) }),
-    /* @__PURE__ */ jsxs29("label", { className: "ub-search", children: [
-      /* @__PURE__ */ jsx50(Icon2, { name: "search" }),
-      /* @__PURE__ */ jsx50(
+    /* @__PURE__ */ jsxs31("label", { className: "ub-search", children: [
+      /* @__PURE__ */ jsx52(Icon2, { name: "search" }),
+      /* @__PURE__ */ jsx52(
         "input",
         {
           placeholder: "Search by contract address",
@@ -2989,7 +3144,7 @@ function ExploreFiltersCore({
         }
       )
     ] }),
-    /* @__PURE__ */ jsx50(
+    /* @__PURE__ */ jsx52(
       SingleSparkTabs,
       {
         values: ["Total X Payments", "Market Cap", "Recent"],
@@ -3001,18 +3156,18 @@ function ExploreFiltersCore({
 }
 
 // react/components/singlespark-business/ExploreFilters.tsx
-import { jsx as jsx51 } from "react/jsx-runtime";
+import { jsx as jsx53 } from "react/jsx-runtime";
 function ExploreFilters({
   value,
   onChange,
   className
 }) {
   const [v, set] = useValue(value, initialExplore, onChange);
-  return /* @__PURE__ */ jsx51(Surface, { className, children: /* @__PURE__ */ jsx51(ExploreFiltersCore, { value: v, onChange: set }) });
+  return /* @__PURE__ */ jsx53(Surface, { className, children: /* @__PURE__ */ jsx53(ExploreFiltersCore, { value: v, onChange: set }) });
 }
 
 // react/components/singlespark-business/TokenCatalog.tsx
-import { jsx as jsx52, jsxs as jsxs30 } from "react/jsx-runtime";
+import { jsx as jsx54, jsxs as jsxs32 } from "react/jsx-runtime";
 function TokenCatalog({
   tokens = singleSparkBusinessSnapshot.catalog,
   filters,
@@ -3031,10 +3186,10 @@ function TokenCatalog({
   records.sort(
     (a, b) => v.sort === "Market Cap" ? cap(b.mc) - cap(a.mc) : v.sort === "Recent" ? age(a.age) - age(b.age) : parseFloat((b.amount || "0").replace(/,/g, "")) - parseFloat((a.amount || "0").replace(/,/g, ""))
   );
-  return /* @__PURE__ */ jsx52(Surface, { className, children: /* @__PURE__ */ jsxs30("section", { className: "ub-catalog", children: [
-    /* @__PURE__ */ jsx52("h2", { children: "All launches" }),
-    /* @__PURE__ */ jsx52(ExploreFiltersCore, { value: v, onChange: set }),
-    /* @__PURE__ */ jsx52("div", { className: "ub-catalog-grid", children: records.map((p) => /* @__PURE__ */ jsx52(
+  return /* @__PURE__ */ jsx54(Surface, { className, children: /* @__PURE__ */ jsxs32("section", { className: "ub-catalog", children: [
+    /* @__PURE__ */ jsx54("h2", { children: "All launches" }),
+    /* @__PURE__ */ jsx54(ExploreFiltersCore, { value: v, onChange: set }),
+    /* @__PURE__ */ jsx54("div", { className: "ub-catalog-grid", children: records.map((p) => /* @__PURE__ */ jsx54(
       TokenCardCore,
       {
         token: p,
@@ -3043,34 +3198,34 @@ function TokenCatalog({
       },
       p.href
     )) }),
-    !records.length && /* @__PURE__ */ jsx52("p", { className: "ub-empty", children: "No tokens found." })
+    !records.length && /* @__PURE__ */ jsx54("p", { className: "ub-empty", children: "No tokens found." })
   ] }) });
 }
 
 // react/components/singlespark-business/TrendingStrip.tsx
-import { jsx as jsx53, jsxs as jsxs31 } from "react/jsx-runtime";
+import { jsx as jsx55, jsxs as jsxs33 } from "react/jsx-runtime";
 function TrendingStrip({
   tokens = singleSparkBusinessSnapshot.trending,
   className,
   onNavigate,
   motionPaused = false
 }) {
-  return /* @__PURE__ */ jsx53(Surface, { className, children: /* @__PURE__ */ jsxs31("section", { className: "ub-trending-section", children: [
-    /* @__PURE__ */ jsxs31("div", { children: [
-      /* @__PURE__ */ jsx53("h2", { children: "Trending" }),
-      /* @__PURE__ */ jsx53(SingleSparkButton, { onClick: () => onNavigate?.("TokenCatalog"), children: "View all" })
+  return /* @__PURE__ */ jsx55(Surface, { className, children: /* @__PURE__ */ jsxs33("section", { className: "ub-trending-section", children: [
+    /* @__PURE__ */ jsxs33("div", { children: [
+      /* @__PURE__ */ jsx55("h2", { children: "Trending" }),
+      /* @__PURE__ */ jsx55(SingleSparkButton, { onClick: () => onNavigate?.("TokenCatalog"), children: "View all" })
     ] }),
-    /* @__PURE__ */ jsx53("div", { className: "ub-trending-window", children: /* @__PURE__ */ jsx53(
+    /* @__PURE__ */ jsx55("div", { className: "ub-trending-window", children: /* @__PURE__ */ jsx55(
       "div",
       {
         className: "ub-trending-track",
         style: motionPaused ? { animationPlayState: "paused" } : void 0,
-        children: [false, true].map((copy) => /* @__PURE__ */ jsx53(
+        children: [false, true].map((copy) => /* @__PURE__ */ jsx55(
           "div",
           {
             className: "ub-trending-group",
             "aria-hidden": copy || void 0,
-            children: tokens.map((p) => /* @__PURE__ */ jsxs31(
+            children: tokens.map((p) => /* @__PURE__ */ jsxs33(
               "a",
               {
                 href: "https://usepaid.app" + p.href,
@@ -3078,15 +3233,15 @@ function TrendingStrip({
                 rel: "noreferrer",
                 tabIndex: copy ? -1 : void 0,
                 children: [
-                  /* @__PURE__ */ jsx53("img", { src: asset(p.image), alt: "" }),
-                  /* @__PURE__ */ jsxs31("span", { children: [
-                    /* @__PURE__ */ jsx53("strong", { children: p.name }),
-                    /* @__PURE__ */ jsx53("code", { children: p.ticker })
+                  /* @__PURE__ */ jsx55("img", { src: asset(p.image), alt: "" }),
+                  /* @__PURE__ */ jsxs33("span", { children: [
+                    /* @__PURE__ */ jsx55("strong", { children: p.name }),
+                    /* @__PURE__ */ jsx55("code", { children: p.ticker })
                   ] }),
-                  /* @__PURE__ */ jsxs31("span", { className: "ub-trending-amount", children: [
-                    /* @__PURE__ */ jsx53("small", { children: "Sent" }),
-                    /* @__PURE__ */ jsxs31("strong", { children: [
-                      /* @__PURE__ */ jsx53(Icon2, { name: "wallet", size: 14 }),
+                  /* @__PURE__ */ jsxs33("span", { className: "ub-trending-amount", children: [
+                    /* @__PURE__ */ jsx55("small", { children: "Sent" }),
+                    /* @__PURE__ */ jsxs33("strong", { children: [
+                      /* @__PURE__ */ jsx55(Icon2, { name: "wallet", size: 14 }),
                       p.amount
                     ] })
                   ] })
@@ -3106,40 +3261,40 @@ function TrendingStrip({
 import { useId as useId5 } from "react";
 
 // react/components/singlespark-business/AssetTransferCore.tsx
-import { jsx as jsx54, jsxs as jsxs32 } from "react/jsx-runtime";
+import { jsx as jsx56, jsxs as jsxs34 } from "react/jsx-runtime";
 function AssetTransferCore({ transfer }) {
-  return /* @__PURE__ */ jsxs32(SingleSparkListRow, { label: /* @__PURE__ */ jsx54("span", { className: "ub-muted", children: transfer.asset }), children: [
-    /* @__PURE__ */ jsx54("strong", { children: transfer.amount }),
-    /* @__PURE__ */ jsx54(External, { href: transfer.transactionUrl, children: /* @__PURE__ */ jsx54(Icon2, { name: "external", size: 14 }) })
+  return /* @__PURE__ */ jsxs34(SingleSparkListRow, { label: /* @__PURE__ */ jsx56("span", { className: "ub-muted", children: transfer.asset }), children: [
+    /* @__PURE__ */ jsx56("strong", { children: transfer.amount }),
+    /* @__PURE__ */ jsx56(External, { href: transfer.transactionUrl, children: /* @__PURE__ */ jsx56(Icon2, { name: "external", size: 14 }) })
   ] });
 }
 
 // react/components/singlespark-business/BreakdownCore.tsx
-import { Fragment as Fragment13, jsx as jsx55, jsxs as jsxs33 } from "react/jsx-runtime";
+import { Fragment as Fragment13, jsx as jsx57, jsxs as jsxs35 } from "react/jsx-runtime";
 function BreakdownCore({
   data,
   defaultOpen = false
 }) {
-  return /* @__PURE__ */ jsx55(
+  return /* @__PURE__ */ jsx57(
     SingleSparkAccordion,
     {
       className: "ub-breakdown",
       defaultOpen,
-      label: /* @__PURE__ */ jsxs33(Fragment13, { children: [
-        /* @__PURE__ */ jsxs33("span", { className: "ub-breakdown-name", children: [
-          /* @__PURE__ */ jsx55("img", { src: asset(data.image), alt: "" }),
+      label: /* @__PURE__ */ jsxs35(Fragment13, { children: [
+        /* @__PURE__ */ jsxs35("span", { className: "ub-breakdown-name", children: [
+          /* @__PURE__ */ jsx57("img", { src: asset(data.image), alt: "" }),
           "$",
           data.ticker
         ] }),
-        /* @__PURE__ */ jsx55("strong", { className: "ub-push", children: data.amount })
+        /* @__PURE__ */ jsx57("strong", { className: "ub-push", children: data.amount })
       ] }),
-      children: /* @__PURE__ */ jsx55("div", { className: "ub-asset-transfer", children: data.transfers.map((t, i) => /* @__PURE__ */ jsx55(AssetTransferCore, { transfer: t }, i)) })
+      children: /* @__PURE__ */ jsx57("div", { className: "ub-asset-transfer", children: data.transfers.map((t, i) => /* @__PURE__ */ jsx57(AssetTransferCore, { transfer: t }, i)) })
     }
   );
 }
 
 // react/components/singlespark-business/PaymentCore.tsx
-import { jsx as jsx56, jsxs as jsxs34 } from "react/jsx-runtime";
+import { jsx as jsx58, jsxs as jsxs36 } from "react/jsx-runtime";
 function PaymentCore({
   payment,
   recipientLabel = "claimed by",
@@ -3151,16 +3306,16 @@ function PaymentCore({
   const p = payment || defaultSingleSparkPayment;
   const [open, setOpen] = useValue(expanded, false, onExpandedChange);
   const id = useId5();
-  return /* @__PURE__ */ jsxs34("article", { className: "ub-payment ub-expand " + (open ? "ub-open" : ""), children: [
-    /* @__PURE__ */ jsxs34("div", { className: "ub-payment-main", children: [
-      /* @__PURE__ */ jsxs34("div", { className: "ub-payment-text", children: [
-        /* @__PURE__ */ jsx56("p", { children: p.amount }),
-        /* @__PURE__ */ jsxs34("div", { children: [
-          /* @__PURE__ */ jsx56("span", { children: recipientLabel }),
-          /* @__PURE__ */ jsx56("strong", { children: p.recipient })
+  return /* @__PURE__ */ jsxs36("article", { className: "ub-payment ub-expand " + (open ? "ub-open" : ""), children: [
+    /* @__PURE__ */ jsxs36("div", { className: "ub-payment-main", children: [
+      /* @__PURE__ */ jsxs36("div", { className: "ub-payment-text", children: [
+        /* @__PURE__ */ jsx58("p", { children: p.amount }),
+        /* @__PURE__ */ jsxs36("div", { children: [
+          /* @__PURE__ */ jsx58("span", { children: recipientLabel }),
+          /* @__PURE__ */ jsx58("strong", { children: p.recipient })
         ] })
       ] }),
-      /* @__PURE__ */ jsx56("span", { className: "ub-payment-avatar", children: avatar ?? /* @__PURE__ */ jsx56(
+      /* @__PURE__ */ jsx58("span", { className: "ub-payment-avatar", children: avatar ?? /* @__PURE__ */ jsx58(
         "img",
         {
           className: "ub-avatar",
@@ -3168,8 +3323,8 @@ function PaymentCore({
           alt: p.recipient
         }
       ) }),
-      /* @__PURE__ */ jsx56("span", { className: "ub-time", children: p.age }),
-      /* @__PURE__ */ jsx56(
+      /* @__PURE__ */ jsx58("span", { className: "ub-time", children: p.age }),
+      /* @__PURE__ */ jsx58(
         "button",
         {
           type: "button",
@@ -3180,9 +3335,9 @@ function PaymentCore({
           onClick: () => setOpen(!open)
         }
       ),
-      /* @__PURE__ */ jsx56("span", { className: "ub-card-chevron", children: /* @__PURE__ */ jsx56(Icon2, { name: "chevron" }) })
+      /* @__PURE__ */ jsx58("span", { className: "ub-card-chevron", children: /* @__PURE__ */ jsx58(Icon2, { name: "chevron" }) })
     ] }),
-    /* @__PURE__ */ jsx56("div", { className: "ub-expand-grid", children: /* @__PURE__ */ jsx56("div", { children: /* @__PURE__ */ jsx56(
+    /* @__PURE__ */ jsx58("div", { className: "ub-expand-grid", children: /* @__PURE__ */ jsx58("div", { children: /* @__PURE__ */ jsx58(
       "div",
       {
         className: "ub-expand-body",
@@ -3191,38 +3346,38 @@ function PaymentCore({
           if (node) node.inert = !open;
         },
         "aria-hidden": !open,
-        children: children ?? p.breakdowns.map((b, i) => /* @__PURE__ */ jsx56(BreakdownCore, { data: b }, i))
+        children: children ?? p.breakdowns.map((b, i) => /* @__PURE__ */ jsx58(BreakdownCore, { data: b }, i))
       }
     ) }) })
   ] });
 }
 
 // react/components/singlespark-business/PaymentRow.tsx
-import { jsx as jsx57 } from "react/jsx-runtime";
+import { jsx as jsx59 } from "react/jsx-runtime";
 function PaymentRow({ className, ...props }) {
-  return /* @__PURE__ */ jsx57(Surface, { className, children: /* @__PURE__ */ jsx57(PaymentCore, { ...props }) });
+  return /* @__PURE__ */ jsx59(Surface, { className, children: /* @__PURE__ */ jsx59(PaymentCore, { ...props }) });
 }
 
 // react/components/singlespark-business/PaymentBreakdown.tsx
-import { jsx as jsx58 } from "react/jsx-runtime";
+import { jsx as jsx60 } from "react/jsx-runtime";
 function PaymentBreakdown({
   breakdown = demoBreakdown,
   className
 }) {
-  return /* @__PURE__ */ jsx58(Surface, { className, children: /* @__PURE__ */ jsx58(SingleSparkPanel, { className: "ub-breakdown-panel", children: /* @__PURE__ */ jsx58(BreakdownCore, { data: breakdown, defaultOpen: true }) }) });
+  return /* @__PURE__ */ jsx60(Surface, { className, children: /* @__PURE__ */ jsx60(SingleSparkPanel, { className: "ub-breakdown-panel", children: /* @__PURE__ */ jsx60(BreakdownCore, { data: breakdown, defaultOpen: true }) }) });
 }
 
 // react/components/singlespark-business/AssetTransferRow.tsx
-import { jsx as jsx59 } from "react/jsx-runtime";
+import { jsx as jsx61 } from "react/jsx-runtime";
 function AssetTransferRow({
   transfer = demoTransfer,
   className
 }) {
-  return /* @__PURE__ */ jsx59(Surface, { className, children: /* @__PURE__ */ jsx59(AssetTransferCore, { transfer }) });
+  return /* @__PURE__ */ jsx61(Surface, { className, children: /* @__PURE__ */ jsx61(AssetTransferCore, { transfer }) });
 }
 
 // react/components/singlespark-business/PaymentSummary.tsx
-import { jsx as jsx60, jsxs as jsxs35 } from "react/jsx-runtime";
+import { jsx as jsx62, jsxs as jsxs37 } from "react/jsx-runtime";
 function PaymentSummary({
   payouts = "$1,918,920.59",
   claims = "$564,531.81",
@@ -3231,52 +3386,52 @@ function PaymentSummary({
   unit,
   className
 }) {
-  return /* @__PURE__ */ jsx60(Surface, { className, children: /* @__PURE__ */ jsxs35("div", { className: "ub-payment-summary", children: [
-    /* @__PURE__ */ jsxs35("div", { className: "ub-intro-grid", "aria-hidden": "true", children: [
-      /* @__PURE__ */ jsx60("span", {}),
-      /* @__PURE__ */ jsx60("span", {})
+  return /* @__PURE__ */ jsx62(Surface, { className, children: /* @__PURE__ */ jsxs37("div", { className: "ub-payment-summary", children: [
+    /* @__PURE__ */ jsxs37("div", { className: "ub-intro-grid", "aria-hidden": "true", children: [
+      /* @__PURE__ */ jsx62("span", {}),
+      /* @__PURE__ */ jsx62("span", {})
     ] }),
-    /* @__PURE__ */ jsxs35("div", { children: [
-      /* @__PURE__ */ jsx60("small", { children: payoutsLabel }),
-      /* @__PURE__ */ jsxs35("strong", { children: [
-        /* @__PURE__ */ jsx60(SingleSparkMoney, { value: payouts }),
-        unit && /* @__PURE__ */ jsx60("span", { className: "ub-summary-unit", children: unit })
+    /* @__PURE__ */ jsxs37("div", { children: [
+      /* @__PURE__ */ jsx62("small", { children: payoutsLabel }),
+      /* @__PURE__ */ jsxs37("strong", { children: [
+        /* @__PURE__ */ jsx62(SingleSparkMoney, { value: payouts }),
+        unit && /* @__PURE__ */ jsx62("span", { className: "ub-summary-unit", children: unit })
       ] })
     ] }),
-    /* @__PURE__ */ jsxs35("div", { children: [
-      /* @__PURE__ */ jsx60("small", { children: claimsLabel }),
-      /* @__PURE__ */ jsxs35("strong", { children: [
-        /* @__PURE__ */ jsx60(SingleSparkMoney, { value: claims }),
-        unit && /* @__PURE__ */ jsx60("span", { className: "ub-summary-unit", children: unit })
+    /* @__PURE__ */ jsxs37("div", { children: [
+      /* @__PURE__ */ jsx62("small", { children: claimsLabel }),
+      /* @__PURE__ */ jsxs37("strong", { children: [
+        /* @__PURE__ */ jsx62(SingleSparkMoney, { value: claims }),
+        unit && /* @__PURE__ */ jsx62("span", { className: "ub-summary-unit", children: unit })
       ] })
     ] })
   ] }) });
 }
 
 // react/components/singlespark-business/HistoricalReceiptDetails.tsx
-import { jsx as jsx61, jsxs as jsxs36 } from "react/jsx-runtime";
+import { jsx as jsx63, jsxs as jsxs38 } from "react/jsx-runtime";
 function HistoricalReceiptDetails({ className }) {
-  return /* @__PURE__ */ jsxs36(Surface, { className, children: [
-    /* @__PURE__ */ jsx61(
+  return /* @__PURE__ */ jsxs38(Surface, { className, children: [
+    /* @__PURE__ */ jsx63(
       SingleSparkKeyValueList,
       {
         entries: [
           ["Recipient", "Beff (e/acc) @beffjezos"],
-          ["Token address", /* @__PURE__ */ jsx61("code", { children: tokenMint })],
+          ["Token address", /* @__PURE__ */ jsx63("code", { children: tokenMint })],
           ["Date & time", "Sep 26, 2026, 3:10 PM"],
           ["Amount", "$ 8260.16"],
           ["Transaction ID", "CfSGHkYYK6rb8zDdDkmVH"]
         ]
       }
     ),
-    /* @__PURE__ */ jsxs36(
+    /* @__PURE__ */ jsxs38(
       External,
       {
         href: "https://usepaid.app/api/payout/68e8caf5-9dac-4936-9e12-ec4644aef57c/receipt",
         className: "ub-button ub-primary ub-full",
         children: [
           "View receipt ",
-          /* @__PURE__ */ jsx61(Icon2, { name: "external", size: 14 })
+          /* @__PURE__ */ jsx63(Icon2, { name: "external", size: 14 })
         ]
       }
     )
@@ -3284,29 +3439,29 @@ function HistoricalReceiptDetails({ className }) {
 }
 
 // react/components/singlespark-business/RampDetailsCore.tsx
-import { Fragment as Fragment14, jsx as jsx62, jsxs as jsxs37 } from "react/jsx-runtime";
+import { Fragment as Fragment14, jsx as jsx64, jsxs as jsxs39 } from "react/jsx-runtime";
 function RampDetailsCore() {
-  return /* @__PURE__ */ jsxs37(Fragment14, { children: [
-    /* @__PURE__ */ jsx62(
+  return /* @__PURE__ */ jsxs39(Fragment14, { children: [
+    /* @__PURE__ */ jsx64(
       SingleSparkKeyValueList,
       {
         entries: [
           ["Amount", "20.308300108 SOL"],
-          ["To", /* @__PURE__ */ jsx62("code", { children: "7bnp7SDB63bDvFKaMuALBpNiJRzjzwyHSk7gA1NAUfJW" })],
-          ["Transaction", /* @__PURE__ */ jsx62("code", { children: rampTx })],
+          ["To", /* @__PURE__ */ jsx64("code", { children: "7bnp7SDB63bDvFKaMuALBpNiJRzjzwyHSk7gA1NAUfJW" })],
+          ["Transaction", /* @__PURE__ */ jsx64("code", { children: rampTx })],
           ["Sent", "Sep 27, 2026, 7:56 AM"],
           ["Credited at Kraken", "Waiting for Kraken"]
         ]
       }
     ),
-    /* @__PURE__ */ jsxs37(
+    /* @__PURE__ */ jsxs39(
       External,
       {
         href: "https://solscan.io/tx/" + rampTx,
         className: "ub-button ub-primary ub-full",
         children: [
           "View on Solscan ",
-          /* @__PURE__ */ jsx62(Icon2, { name: "external", size: 14 })
+          /* @__PURE__ */ jsx64(Icon2, { name: "external", size: 14 })
         ]
       }
     )
@@ -3314,9 +3469,9 @@ function RampDetailsCore() {
 }
 
 // react/components/singlespark-business/RampEventDetails.tsx
-import { jsx as jsx63 } from "react/jsx-runtime";
+import { jsx as jsx65 } from "react/jsx-runtime";
 function RampEventDetails({ className }) {
-  return /* @__PURE__ */ jsx63(Surface, { className, children: /* @__PURE__ */ jsx63(SingleSparkPanel, { children: /* @__PURE__ */ jsx63(RampDetailsCore, {}) }) });
+  return /* @__PURE__ */ jsx65(Surface, { className, children: /* @__PURE__ */ jsx65(SingleSparkPanel, { children: /* @__PURE__ */ jsx65(RampDetailsCore, {}) }) });
 }
 
 // react/components/singlespark-business/OffRampList.tsx
@@ -3326,9 +3481,9 @@ import { useState as useState11 } from "react";
 import { useState as useState10 } from "react";
 
 // react/components/singlespark-business/Sol.tsx
-import { jsx as jsx64 } from "react/jsx-runtime";
+import { jsx as jsx66 } from "react/jsx-runtime";
 function Sol() {
-  return /* @__PURE__ */ jsx64(
+  return /* @__PURE__ */ jsx66(
     "svg",
     {
       width: "22",
@@ -3336,15 +3491,15 @@ function Sol() {
       viewBox: "0 0 397.7 311.7",
       fill: "currentColor",
       "aria-hidden": "true",
-      children: /* @__PURE__ */ jsx64("path", { d: "M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7zM64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8zM333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z" })
+      children: /* @__PURE__ */ jsx66("path", { d: "M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7zM64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8zM333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z" })
     }
   );
 }
 
 // react/components/singlespark-business/Kraken.tsx
-import { jsx as jsx65 } from "react/jsx-runtime";
+import { jsx as jsx67 } from "react/jsx-runtime";
 function Kraken() {
-  return /* @__PURE__ */ jsx65(
+  return /* @__PURE__ */ jsx67(
     "svg",
     {
       viewBox: "0 0 24 24",
@@ -3352,13 +3507,13 @@ function Kraken() {
       height: "20",
       fill: "#fff",
       "aria-hidden": "true",
-      children: /* @__PURE__ */ jsx65("path", { d: "M2 18.8V12a10 10 0 0 1 20 0v6.8a2.2 2.2 0 0 1-4.4 0v-3.1a1.7 1.7 0 0 0-3.4 0v3.1a2.2 2.2 0 0 1-4.4 0v-3.1a1.7 1.7 0 0 0-3.4 0v3.1a2.2 2.2 0 0 1-4.4 0Z" })
+      children: /* @__PURE__ */ jsx67("path", { d: "M2 18.8V12a10 10 0 0 1 20 0v6.8a2.2 2.2 0 0 1-4.4 0v-3.1a1.7 1.7 0 0 0-3.4 0v3.1a2.2 2.2 0 0 1-4.4 0v-3.1a1.7 1.7 0 0 0-3.4 0v3.1a2.2 2.2 0 0 1-4.4 0Z" })
     }
   );
 }
 
 // react/components/singlespark-business/RampCard.tsx
-import { jsx as jsx66, jsxs as jsxs38 } from "react/jsx-runtime";
+import { jsx as jsx68, jsxs as jsxs40 } from "react/jsx-runtime";
 function RampCard({ type }) {
   const [open, setOpen] = useState10(false);
   const incoming = type === "On-ramp", swap = type === "Swaps", ach = type === "ACH";
@@ -3387,32 +3542,32 @@ function RampCard({ type }) {
     ["Kraken reference", "FTE6glV-TiwbdLlRW6JkShWgqdkeKR"],
     ["Initiated", "Sep 27, 2026, 7:51 AM"]
   ];
-  return /* @__PURE__ */ jsxs38("article", { className: "ub-payment ub-expand " + (open ? "ub-open" : ""), children: [
-    /* @__PURE__ */ jsxs38("div", { className: "ub-burn-main", children: [
-      /* @__PURE__ */ jsxs38("div", { className: "ub-payment-text", children: [
-        /* @__PURE__ */ jsx66("p", { children: amount }),
-        /* @__PURE__ */ jsxs38("div", { children: [
-          /* @__PURE__ */ jsx66("span", { children: verb }),
-          /* @__PURE__ */ jsx66("strong", { children: recipient })
+  return /* @__PURE__ */ jsxs40("article", { className: "ub-payment ub-expand " + (open ? "ub-open" : ""), children: [
+    /* @__PURE__ */ jsxs40("div", { className: "ub-burn-main", children: [
+      /* @__PURE__ */ jsxs40("div", { className: "ub-payment-text", children: [
+        /* @__PURE__ */ jsx68("p", { children: amount }),
+        /* @__PURE__ */ jsxs40("div", { children: [
+          /* @__PURE__ */ jsx68("span", { children: verb }),
+          /* @__PURE__ */ jsx68("strong", { children: recipient })
         ] })
       ] }),
-      /* @__PURE__ */ jsxs38("div", { className: "ub-burn-route", children: [
-        /* @__PURE__ */ jsx66("span", { children: incoming || ach ? "$" : /* @__PURE__ */ jsx66(Sol, {}) }),
-        /* @__PURE__ */ jsx66(Icon2, { name: "arrow" }),
-        /* @__PURE__ */ jsx66("span", { className: ach ? "ub-xmoney-icon" : "ub-kraken-icon", children: ach ? "X" : /* @__PURE__ */ jsx66(Kraken, {}) })
+      /* @__PURE__ */ jsxs40("div", { className: "ub-burn-route", children: [
+        /* @__PURE__ */ jsx68("span", { children: incoming || ach ? "$" : /* @__PURE__ */ jsx68(Sol, {}) }),
+        /* @__PURE__ */ jsx68(Icon2, { name: "arrow" }),
+        /* @__PURE__ */ jsx68("span", { className: ach ? "ub-xmoney-icon" : "ub-kraken-icon", children: ach ? "X" : /* @__PURE__ */ jsx68(Kraken, {}) })
       ] }),
-      /* @__PURE__ */ jsxs38(
+      /* @__PURE__ */ jsxs40(
         "span",
         {
           className: "ub-burn-status " + (!incoming && !swap ? "ub-sent-status" : ""),
           children: [
             incoming ? "Received" : swap ? "Swapped" : "Sent",
             " ",
-            /* @__PURE__ */ jsx66("small", { children: incoming ? "11d" : "10d" })
+            /* @__PURE__ */ jsx68("small", { children: incoming ? "11d" : "10d" })
           ]
         }
       ),
-      /* @__PURE__ */ jsx66(
+      /* @__PURE__ */ jsx68(
         "button",
         {
           type: "button",
@@ -3422,9 +3577,9 @@ function RampCard({ type }) {
           onClick: () => setOpen(!open)
         }
       ),
-      /* @__PURE__ */ jsx66("span", { className: "ub-card-chevron", children: /* @__PURE__ */ jsx66(Icon2, { name: "chevron" }) })
+      /* @__PURE__ */ jsx68("span", { className: "ub-card-chevron", children: /* @__PURE__ */ jsx68(Icon2, { name: "chevron" }) })
     ] }),
-    /* @__PURE__ */ jsx66("div", { className: "ub-expand-grid", children: /* @__PURE__ */ jsx66("div", { children: /* @__PURE__ */ jsx66(
+    /* @__PURE__ */ jsx68("div", { className: "ub-expand-grid", children: /* @__PURE__ */ jsx68("div", { children: /* @__PURE__ */ jsx68(
       "div",
       {
         className: "ub-expand-body",
@@ -3432,19 +3587,19 @@ function RampCard({ type }) {
         ref: (node) => {
           if (node) node.inert = !open;
         },
-        children: type === "Deposits" ? /* @__PURE__ */ jsx66(RampDetailsCore, {}) : /* @__PURE__ */ jsx66(SingleSparkKeyValueList, { entries: details })
+        children: type === "Deposits" ? /* @__PURE__ */ jsx68(RampDetailsCore, {}) : /* @__PURE__ */ jsx68(SingleSparkKeyValueList, { entries: details })
       }
     ) }) })
   ] });
 }
 
 // react/components/singlespark-business/OffRampList.tsx
-import { jsx as jsx67, jsxs as jsxs39 } from "react/jsx-runtime";
+import { jsx as jsx69, jsxs as jsxs41 } from "react/jsx-runtime";
 function OffRampList({ className }) {
   const [tab, setTab] = useState11("All");
-  return /* @__PURE__ */ jsxs39(Surface, { className, children: [
-    /* @__PURE__ */ jsx67(Heading, { children: "Off-ramp" }),
-    /* @__PURE__ */ jsx67(
+  return /* @__PURE__ */ jsxs41(Surface, { className, children: [
+    /* @__PURE__ */ jsx69(Heading, { children: "Off-ramp" }),
+    /* @__PURE__ */ jsx69(
       SingleSparkTabs,
       {
         values: ["All", "Deposits", "Swaps", "ACH"],
@@ -3452,32 +3607,32 @@ function OffRampList({ className }) {
         onChange: setTab
       }
     ),
-    /* @__PURE__ */ jsx67("div", { className: "ub-stack", children: (tab === "All" ? ["Deposits", "ACH", "Swaps"] : [tab]).map((t) => /* @__PURE__ */ jsx67(RampCard, { type: t }, t)) })
+    /* @__PURE__ */ jsx69("div", { className: "ub-stack", children: (tab === "All" ? ["Deposits", "ACH", "Swaps"] : [tab]).map((t) => /* @__PURE__ */ jsx69(RampCard, { type: t }, t)) })
   ] });
 }
 
 // react/components/singlespark-business/OnRampList.tsx
-import { jsx as jsx68, jsxs as jsxs40 } from "react/jsx-runtime";
+import { jsx as jsx70, jsxs as jsxs42 } from "react/jsx-runtime";
 function OnRampList({ className }) {
-  return /* @__PURE__ */ jsxs40(Surface, { className, children: [
-    /* @__PURE__ */ jsx68(Heading, { children: "On-ramp" }),
-    /* @__PURE__ */ jsx68(RampCard, { type: "On-ramp" })
+  return /* @__PURE__ */ jsxs42(Surface, { className, children: [
+    /* @__PURE__ */ jsx70(Heading, { children: "On-ramp" }),
+    /* @__PURE__ */ jsx70(RampCard, { type: "On-ramp" })
   ] });
 }
 
 // react/components/singlespark-business/SingleSparkTokenHeader.tsx
-import { jsx as jsx69, jsxs as jsxs41 } from "react/jsx-runtime";
+import { jsx as jsx71, jsxs as jsxs43 } from "react/jsx-runtime";
 function SingleSparkTokenHeader({
   token = singleSparkBusinessSnapshot.topTokens[0],
   marketCap,
   className
 }) {
   const mint = token.href.split("/").at(-1) || tokenMint;
-  return /* @__PURE__ */ jsx69(Surface, { className, children: /* @__PURE__ */ jsxs41(SingleSparkPanel, { className: "ub-identity-panel", children: [
-    /* @__PURE__ */ jsxs41("div", { className: "ub-token-identity", children: [
-      /* @__PURE__ */ jsxs41("span", { className: "ub-framed-avatar ub-green-frame", children: [
-        /* @__PURE__ */ jsx69("img", { src: asset(token.image), alt: token.ticker }),
-        /* @__PURE__ */ jsx69("i", { children: /* @__PURE__ */ jsx69(
+  return /* @__PURE__ */ jsx71(Surface, { className, children: /* @__PURE__ */ jsxs43(SingleSparkPanel, { className: "ub-identity-panel", children: [
+    /* @__PURE__ */ jsxs43("div", { className: "ub-token-identity", children: [
+      /* @__PURE__ */ jsxs43("span", { className: "ub-framed-avatar ub-green-frame", children: [
+        /* @__PURE__ */ jsx71("img", { src: asset(token.image), alt: token.ticker }),
+        /* @__PURE__ */ jsx71("i", { children: /* @__PURE__ */ jsx71(
           "img",
           {
             src: asset(token.platform.toLowerCase() + "-logo.png"),
@@ -3485,30 +3640,30 @@ function SingleSparkTokenHeader({
           }
         ) })
       ] }),
-      /* @__PURE__ */ jsxs41("div", { children: [
-        /* @__PURE__ */ jsxs41("h1", { children: [
-          /* @__PURE__ */ jsx69("strong", { children: token.ticker }),
-          /* @__PURE__ */ jsx69("span", { children: token.name }),
-          /* @__PURE__ */ jsx69(SingleSparkCopyButton, { value: mint })
+      /* @__PURE__ */ jsxs43("div", { children: [
+        /* @__PURE__ */ jsxs43("h1", { children: [
+          /* @__PURE__ */ jsx71("strong", { children: token.ticker }),
+          /* @__PURE__ */ jsx71("span", { children: token.name }),
+          /* @__PURE__ */ jsx71(AddressLink, { address: mint })
         ] }),
-        /* @__PURE__ */ jsxs41("p", { children: [
-          /* @__PURE__ */ jsx69("span", { className: "ub-success", children: "Sep 25" }),
+        /* @__PURE__ */ jsxs43("p", { children: [
+          /* @__PURE__ */ jsx71("span", { className: "ub-success", children: "Sep 25" }),
           " ",
-          /* @__PURE__ */ jsx69(External, { href: "https://x.com/" + (token.handle || "singleSpark"), children: "X" }),
+          /* @__PURE__ */ jsx71(External, { href: "https://x.com/" + (token.handle || "singleSpark"), children: "X" }),
           " ",
-          /* @__PURE__ */ jsx69(External, { href: "https://pump.fun/coin/" + mint, children: /* @__PURE__ */ jsx69(Icon2, { name: "external" }) })
+          /* @__PURE__ */ jsx71(External, { href: "https://pump.fun/coin/" + mint, children: /* @__PURE__ */ jsx71(Icon2, { name: "external" }) })
         ] })
       ] })
     ] }),
-    /* @__PURE__ */ jsxs41("div", { className: "ub-recorded", children: [
-      /* @__PURE__ */ jsx69("strong", { children: marketCap || token.mc }),
-      /* @__PURE__ */ jsx69("small", { children: "MC" })
+    /* @__PURE__ */ jsxs43("div", { className: "ub-recorded", children: [
+      /* @__PURE__ */ jsx71("strong", { children: marketCap || token.mc }),
+      /* @__PURE__ */ jsx71("small", { children: "MC" })
     ] })
   ] }) });
 }
 
 // react/components/singlespark-business/RecipientSummary.tsx
-import { jsx as jsx70, jsxs as jsxs42 } from "react/jsx-runtime";
+import { jsx as jsx72, jsxs as jsxs44 } from "react/jsx-runtime";
 function RecipientSummary({
   name = "Beff (e/acc)",
   handle = "beffjezos",
@@ -3516,26 +3671,26 @@ function RecipientSummary({
   recorded = "152,362.48",
   className
 }) {
-  return /* @__PURE__ */ jsx70(Surface, { className, children: /* @__PURE__ */ jsxs42(SingleSparkPanel, { className: "ub-identity-panel", children: [
-    /* @__PURE__ */ jsxs42("div", { className: "ub-token-identity", children: [
-      /* @__PURE__ */ jsxs42("span", { className: "ub-framed-avatar", children: [
-        /* @__PURE__ */ jsx70("img", { className: "ub-avatar", src: asset(avatar), alt: "" }),
-        /* @__PURE__ */ jsx70("i", { children: "X" })
+  return /* @__PURE__ */ jsx72(Surface, { className, children: /* @__PURE__ */ jsxs44(SingleSparkPanel, { className: "ub-identity-panel", children: [
+    /* @__PURE__ */ jsxs44("div", { className: "ub-token-identity", children: [
+      /* @__PURE__ */ jsxs44("span", { className: "ub-framed-avatar", children: [
+        /* @__PURE__ */ jsx72("img", { className: "ub-avatar", src: asset(avatar), alt: "" }),
+        /* @__PURE__ */ jsx72("i", { children: "X" })
       ] }),
-      /* @__PURE__ */ jsxs42("div", { children: [
-        /* @__PURE__ */ jsx70("h1", { children: /* @__PURE__ */ jsx70("strong", { children: name }) }),
-        /* @__PURE__ */ jsx70("p", { children: /* @__PURE__ */ jsx70(External, { href: "https://x.com/" + handle, children: "X" }) })
+      /* @__PURE__ */ jsxs44("div", { children: [
+        /* @__PURE__ */ jsx72("h1", { children: /* @__PURE__ */ jsx72("strong", { children: name }) }),
+        /* @__PURE__ */ jsx72("p", { children: /* @__PURE__ */ jsx72(External, { href: "https://x.com/" + handle, children: "X" }) })
       ] })
     ] }),
-    /* @__PURE__ */ jsxs42("div", { className: "ub-recorded", children: [
-      /* @__PURE__ */ jsx70("strong", { children: recorded }),
-      /* @__PURE__ */ jsx70("small", { children: "Recorded" })
+    /* @__PURE__ */ jsxs44("div", { className: "ub-recorded", children: [
+      /* @__PURE__ */ jsx72("strong", { children: recorded }),
+      /* @__PURE__ */ jsx72("small", { children: "Recorded" })
     ] })
   ] }) });
 }
 
 // react/components/singlespark-business/ClaimEligibilityCard.tsx
-import { jsx as jsx71, jsxs as jsxs43 } from "react/jsx-runtime";
+import { jsx as jsx73, jsxs as jsxs45 } from "react/jsx-runtime";
 function ClaimEligibilityCard({
   handle = "beffjezos",
   balance = "$7,594.60",
@@ -3544,17 +3699,17 @@ function ClaimEligibilityCard({
   className,
   onNavigate
 }) {
-  return /* @__PURE__ */ jsx71(Surface, { className, children: /* @__PURE__ */ jsxs43(SingleSparkPanel, { children: [
-    /* @__PURE__ */ jsxs43("div", { className: "ub-claim-heading", children: [
-      /* @__PURE__ */ jsxs43("div", { children: [
-        /* @__PURE__ */ jsxs43("strong", { children: [
+  return /* @__PURE__ */ jsx73(Surface, { className, children: /* @__PURE__ */ jsxs45(SingleSparkPanel, { children: [
+    /* @__PURE__ */ jsxs45("div", { className: "ub-claim-heading", children: [
+      /* @__PURE__ */ jsxs45("div", { children: [
+        /* @__PURE__ */ jsxs45("strong", { children: [
           "Are you @",
           handle,
           "?"
         ] }),
-        /* @__PURE__ */ jsx71("p", { children: "Claim all your creator fees - SOL and original quote assets - to a wallet you control." })
+        /* @__PURE__ */ jsx73("p", { children: "Claim all your creator fees - SOL and original quote assets - to a wallet you control." })
       ] }),
-      /* @__PURE__ */ jsx71(
+      /* @__PURE__ */ jsx73(
         SingleSparkButton,
         {
           className: "ub-primary",
@@ -3563,31 +3718,31 @@ function ClaimEligibilityCard({
         }
       )
     ] }),
-    /* @__PURE__ */ jsxs43("div", { className: "ub-claim-balance", children: [
-      /* @__PURE__ */ jsx71("small", { children: "Claimable Balance \xB7 all tokens" }),
-      /* @__PURE__ */ jsx71("strong", { children: balance }),
-      /* @__PURE__ */ jsx71("p", { children: "SOL balance is across all your tokens; original quote assets below are for this token. USD is the fee value recorded at collection, not current market value." }),
-      /* @__PURE__ */ jsx71(SingleSparkListRow, { label: "SOL", children: solBalance })
+    /* @__PURE__ */ jsxs45("div", { className: "ub-claim-balance", children: [
+      /* @__PURE__ */ jsx73("small", { children: "Claimable Balance \xB7 all tokens" }),
+      /* @__PURE__ */ jsx73("strong", { children: balance }),
+      /* @__PURE__ */ jsx73("p", { children: "SOL balance is across all your tokens; original quote assets below are for this token. USD is the fee value recorded at collection, not current market value." }),
+      /* @__PURE__ */ jsx73(SingleSparkListRow, { label: "SOL", children: solBalance })
     ] })
   ] }) });
 }
 
 // react/components/singlespark-business/HistoricalBalanceCard.tsx
-import { jsx as jsx72, jsxs as jsxs44 } from "react/jsx-runtime";
+import { jsx as jsx74, jsxs as jsxs46 } from "react/jsx-runtime";
 function HistoricalBalanceCard({
   balance = "$25,200.27",
   className
 }) {
-  return /* @__PURE__ */ jsx72(Surface, { className, children: /* @__PURE__ */ jsxs44("div", { className: "ub-historical", children: [
-    /* @__PURE__ */ jsx72("strong", { children: "Earlier X Money balance" }),
-    /* @__PURE__ */ jsx72("strong", { className: "ub-historical-value", children: balance }),
-    /* @__PURE__ */ jsx72("p", { children: "Kept separate from the SOL claim." })
+  return /* @__PURE__ */ jsx74(Surface, { className, children: /* @__PURE__ */ jsxs46("div", { className: "ub-historical", children: [
+    /* @__PURE__ */ jsx74("strong", { children: "Earlier X Money balance" }),
+    /* @__PURE__ */ jsx74("strong", { className: "ub-historical-value", children: balance }),
+    /* @__PURE__ */ jsx74("p", { children: "Kept separate from the SOL claim." })
   ] }) });
 }
 
 // react/components/singlespark-business/MarketChartCore.tsx
-import { useEffect as useEffect4, useRef as useRef5, useState as useState12 } from "react";
-import { jsx as jsx73, jsxs as jsxs45 } from "react/jsx-runtime";
+import { useEffect as useEffect5, useRef as useRef6, useState as useState12 } from "react";
+import { jsx as jsx75, jsxs as jsxs47 } from "react/jsx-runtime";
 function MarketChartCore({
   interval: controlled,
   onIntervalChange,
@@ -3600,13 +3755,13 @@ function MarketChartCore({
     "5m",
     onIntervalChange
   );
-  const canvas = useRef5(null);
+  const canvas = useRef6(null);
   const [status, setStatus] = useState12("Loading\u2026");
   const [ohlc, setOhlc] = useState12();
   const [beams, setBeams] = useState12([]);
-  const callback = useRef5(onCandleChange);
+  const callback = useRef6(onCandleChange);
   callback.current = onCandleChange;
-  useEffect4(() => {
+  useEffect5(() => {
     const element = canvas.current;
     if (!element) return;
     const controller = new AbortController();
@@ -3733,8 +3888,8 @@ function MarketChartCore({
     };
   }, [interval, candles]);
   const delta = ohlc ? (ohlc.close - ohlc.open) / ohlc.open * 100 : 0;
-  return /* @__PURE__ */ jsxs45("div", { className: "ub-market ub-real-market", children: [
-    /* @__PURE__ */ jsx73("div", { className: "ub-market-toolbar", children: /* @__PURE__ */ jsx73(
+  return /* @__PURE__ */ jsxs47("div", { className: "ub-market ub-real-market", children: [
+    /* @__PURE__ */ jsx75("div", { className: "ub-market-toolbar", children: /* @__PURE__ */ jsx75(
       SingleSparkTabs,
       {
         values: ["1m", "5m", "15m", "1h", "4h", "1D"],
@@ -3742,13 +3897,13 @@ function MarketChartCore({
         onChange: setIntervalValue
       }
     ) }),
-    /* @__PURE__ */ jsxs45("div", { className: "ub-chart-stage", children: [
-      /* @__PURE__ */ jsxs45("div", { className: "ub-chart-legend", children: [
-        /* @__PURE__ */ jsxs45("strong", { children: [
+    /* @__PURE__ */ jsxs47("div", { className: "ub-chart-stage", children: [
+      /* @__PURE__ */ jsxs47("div", { className: "ub-chart-legend", children: [
+        /* @__PURE__ */ jsxs47("strong", { children: [
           symbol,
           " Market Cap (USD)"
         ] }),
-        ohlc && /* @__PURE__ */ jsxs45("span", { children: [
+        ohlc && /* @__PURE__ */ jsxs47("span", { children: [
           "O",
           chartFormat(ohlc.open),
           " H",
@@ -3758,7 +3913,7 @@ function MarketChartCore({
           " C",
           chartFormat(ohlc.close),
           " ",
-          /* @__PURE__ */ jsxs45("span", { className: delta >= 0 ? "ub-success" : "ub-loss", children: [
+          /* @__PURE__ */ jsxs47("span", { className: delta >= 0 ? "ub-success" : "ub-loss", children: [
             "(",
             delta >= 0 ? "+" : "",
             delta.toFixed(2),
@@ -3766,8 +3921,8 @@ function MarketChartCore({
           ] })
         ] })
       ] }),
-      /* @__PURE__ */ jsx73("div", { className: "ub-chart-canvas", ref: canvas }),
-      /* @__PURE__ */ jsx73("div", { className: "ub-chart-beams", "aria-hidden": "true", children: beams.map((y, i) => /* @__PURE__ */ jsx73("div", { style: { top: y }, children: /* @__PURE__ */ jsx73(
+      /* @__PURE__ */ jsx75("div", { className: "ub-chart-canvas", ref: canvas }),
+      /* @__PURE__ */ jsx75("div", { className: "ub-chart-beams", "aria-hidden": "true", children: beams.map((y, i) => /* @__PURE__ */ jsx75("div", { style: { top: y }, children: /* @__PURE__ */ jsx75(
         "span",
         {
           style: {
@@ -3778,39 +3933,39 @@ function MarketChartCore({
           }
         }
       ) }, i)) }),
-      status && /* @__PURE__ */ jsx73("span", { className: "ub-chart-loading", children: status })
+      status && /* @__PURE__ */ jsx75("span", { className: "ub-chart-loading", children: status })
     ] })
   ] });
 }
 
 // react/components/singlespark-business/SingleSparkMarketChart.tsx
-import { jsx as jsx74 } from "react/jsx-runtime";
+import { jsx as jsx76 } from "react/jsx-runtime";
 function SingleSparkMarketChart({ className, ...props }) {
-  return /* @__PURE__ */ jsx74(Surface, { className, children: /* @__PURE__ */ jsx74(MarketChartCore, { ...props }) });
+  return /* @__PURE__ */ jsx76(Surface, { className, children: /* @__PURE__ */ jsx76(MarketChartCore, { ...props }) });
 }
 
 // react/components/singlespark-business/FeeClaimCore.tsx
-import { jsx as jsx75, jsxs as jsxs46 } from "react/jsx-runtime";
+import { jsx as jsx77, jsxs as jsxs48 } from "react/jsx-runtime";
 function FeeClaimCore() {
-  return /* @__PURE__ */ jsxs46("div", { className: "ub-fee-row", children: [
-    /* @__PURE__ */ jsx75("strong", { children: "0.006046603 SOL" }),
-    /* @__PURE__ */ jsx75("span", { children: "Claimed creator fees" }),
-    /* @__PURE__ */ jsxs46(External, { href: "https://solscan.io/tx/Jz75gxjcxnsfyRnSLmSJjq3xHXmzqjXkG6HdFRzDBHextukT3k9DV7G5kXjDA9GJX3hjEtwhwSYHLCJxCdK7FdL", children: [
+  return /* @__PURE__ */ jsxs48("div", { className: "ub-fee-row", children: [
+    /* @__PURE__ */ jsx77("strong", { children: "0.006046603 SOL" }),
+    /* @__PURE__ */ jsx77("span", { children: "Claimed creator fees" }),
+    /* @__PURE__ */ jsxs48(External, { href: "https://solscan.io/tx/Jz75gxjcxnsfyRnSLmSJjq3xHXmzqjXkG6HdFRzDBHextukT3k9DV7G5kXjDA9GJX3hjEtwhwSYHLCJxCdK7FdL", children: [
       "View transaction ",
-      /* @__PURE__ */ jsx75(Icon2, { name: "external", size: 14 })
+      /* @__PURE__ */ jsx77(Icon2, { name: "external", size: 14 })
     ] })
   ] });
 }
 
 // react/components/singlespark-business/FeeClaimRow.tsx
-import { jsx as jsx76 } from "react/jsx-runtime";
+import { jsx as jsx78 } from "react/jsx-runtime";
 function FeeClaimRow({ className }) {
-  return /* @__PURE__ */ jsx76(Surface, { className, children: /* @__PURE__ */ jsx76(FeeClaimCore, {}) });
+  return /* @__PURE__ */ jsx78(Surface, { className, children: /* @__PURE__ */ jsx78(FeeClaimCore, {}) });
 }
 
 // react/components/singlespark-business/TokenActivityTabs.tsx
 import { useState as useState13 } from "react";
-import { jsx as jsx77, jsxs as jsxs47 } from "react/jsx-runtime";
+import { jsx as jsx79, jsxs as jsxs49 } from "react/jsx-runtime";
 function TokenActivityTabs({
   payments = [defaultSingleSparkPayment],
   claims,
@@ -3819,8 +3974,8 @@ function TokenActivityTabs({
   const [tab, setTab] = useState13(
     "Payments (25)"
   );
-  return /* @__PURE__ */ jsxs47(Surface, { className, children: [
-    /* @__PURE__ */ jsx77(
+  return /* @__PURE__ */ jsxs49(Surface, { className, children: [
+    /* @__PURE__ */ jsx79(
       SingleSparkTabs,
       {
         values: ["Payments (25)", "Claims (40)"],
@@ -3828,67 +3983,67 @@ function TokenActivityTabs({
         onChange: setTab
       }
     ),
-    /* @__PURE__ */ jsx77("div", { className: "ub-stack", children: tab === "Claims (40)" ? claims || /* @__PURE__ */ jsx77(FeeClaimCore, {}) : payments.map((p, i) => /* @__PURE__ */ jsx77(PaymentCore, { payment: p }, i)) })
+    /* @__PURE__ */ jsx79("div", { className: "ub-stack", children: tab === "Claims (40)" ? claims || /* @__PURE__ */ jsx79(FeeClaimCore, {}) : payments.map((p, i) => /* @__PURE__ */ jsx79(PaymentCore, { payment: p }, i)) })
   ] });
 }
 
 // react/components/singlespark-business/ProfileUnavailable.tsx
-import { jsx as jsx78, jsxs as jsxs48 } from "react/jsx-runtime";
+import { jsx as jsx80, jsxs as jsxs50 } from "react/jsx-runtime";
 function ProfileUnavailable({ className }) {
-  return /* @__PURE__ */ jsx78(Surface, { className, children: /* @__PURE__ */ jsxs48("div", { className: "ub-error", children: [
-    /* @__PURE__ */ jsx78("h1", { children: "This page is unavailable" }),
-    /* @__PURE__ */ jsx78("p", { children: "We could not reach the ledger. Please try again in a moment." })
+  return /* @__PURE__ */ jsx80(Surface, { className, children: /* @__PURE__ */ jsxs50("div", { className: "ub-error", children: [
+    /* @__PURE__ */ jsx80("h1", { children: "This page is unavailable" }),
+    /* @__PURE__ */ jsx80("p", { children: "We could not reach the ledger. Please try again in a moment." })
   ] }) });
 }
 
 // react/components/singlespark-business/Unavailable.tsx
-import { jsx as jsx79, jsxs as jsxs49 } from "react/jsx-runtime";
+import { jsx as jsx81, jsxs as jsxs51 } from "react/jsx-runtime";
 function Unavailable({
   title,
   children
 }) {
-  return /* @__PURE__ */ jsxs49("div", { className: "ub-unverified", children: [
-    /* @__PURE__ */ jsx79("span", { children: "No verifiable interface captured" }),
-    /* @__PURE__ */ jsx79("h3", { children: title }),
-    /* @__PURE__ */ jsx79("p", { children })
+  return /* @__PURE__ */ jsxs51("div", { className: "ub-unverified", children: [
+    /* @__PURE__ */ jsx81("span", { children: "No verifiable interface captured" }),
+    /* @__PURE__ */ jsx81("h3", { children: title }),
+    /* @__PURE__ */ jsx81("p", { children })
   ] });
 }
 
 // react/components/singlespark-business/SingleSparkProfileContent.tsx
-import { jsx as jsx80 } from "react/jsx-runtime";
+import { jsx as jsx82 } from "react/jsx-runtime";
 function SingleSparkProfileContent({ className }) {
-  return /* @__PURE__ */ jsx80(Surface, { className, children: /* @__PURE__ */ jsx80(Unavailable, { title: "Normal profile unverified", children: "The source returned a ledger error. No normal profile was obtained, so no speculative visual is provided." }) });
+  return /* @__PURE__ */ jsx82(Surface, { className, children: /* @__PURE__ */ jsx82(Unavailable, { title: "Normal profile unverified", children: "The source returned a ledger error. No normal profile was obtained, so no speculative visual is provided." }) });
 }
 
 // react/components/singlespark-business/ClaimNotice.tsx
-import { jsx as jsx81, jsxs as jsxs50 } from "react/jsx-runtime";
+import { jsx as jsx83, jsxs as jsxs52 } from "react/jsx-runtime";
 function ClaimNotice() {
-  return /* @__PURE__ */ jsxs50("div", { className: "ub-claim-notice", children: [
-    /* @__PURE__ */ jsx81("strong", { children: "Updated claim terms." }),
+  return /* @__PURE__ */ jsxs52("div", { className: "ub-claim-notice", children: [
+    /* @__PURE__ */ jsx83("strong", { children: "Updated claim terms." }),
     " The manual-claim window is 14 days from availability. Existing balances receive a full 14 days after notice. Eligible unclaimed allocations then return to singleSpark\u2019s treasury, subject to existing rights, timely requests and holds. The Terms also describe fee ownership and discretionary distributions.",
     " ",
-    /* @__PURE__ */ jsx81(External, { href: "https://usepaid.app/legal/terms", children: "Read the updated Terms" })
+    /* @__PURE__ */ jsx83(External, { href: "https://usepaid.app/legal/terms", children: "Read the updated Terms" })
   ] });
 }
 
 // react/components/singlespark-business/ClaimTermsNotice.tsx
-import { jsx as jsx82 } from "react/jsx-runtime";
+import { jsx as jsx84 } from "react/jsx-runtime";
 function ClaimTermsNotice({ className }) {
-  return /* @__PURE__ */ jsx82(Surface, { className, children: /* @__PURE__ */ jsx82(ClaimNotice, {}) });
+  return /* @__PURE__ */ jsx84(Surface, { className, children: /* @__PURE__ */ jsx84(ClaimNotice, {}) });
 }
 
 // react/components/singlespark-business/ClaimSignIn.tsx
-import { jsx as jsx83, jsxs as jsxs51 } from "react/jsx-runtime";
+import { jsx as jsx85, jsxs as jsxs53 } from "react/jsx-runtime";
 function ClaimSignIn({
   className,
   onAction,
   onSignIn
 }) {
-  return /* @__PURE__ */ jsx83(Surface, { className, children: /* @__PURE__ */ jsxs51("section", { className: "ub-claim-signin", children: [
-    /* @__PURE__ */ jsx83("h1", { children: "Claim your fees" }),
-    /* @__PURE__ */ jsx83("p", { children: "Claim one original recipient or deployer asset at a time to a wallet you control. The protocol share continues through its existing buyback policy. Historical X Money balances remain separate." }),
-    /* @__PURE__ */ jsx83(ClaimNotice, {}),
-    /* @__PURE__ */ jsx83(
+  return /* @__PURE__ */ jsx85(Surface, { className, children: /* @__PURE__ */ jsxs53("section", { className: "ub-claim-signin", children: [
+    /* @__PURE__ */ jsx85("h1", { children: "Claim your fees" }),
+    /* @__PURE__ */ jsx85("p", { children: "Claim one original recipient or deployer asset at a time to a wallet you control. The protocol share continues through its existing buyback policy. Historical X Money balances remain separate." }),
+    /* @__PURE__ */ jsx85(ClaimNotice, {}),
+    /* @__PURE__ */ jsx85(
       SingleSparkButton,
       {
         className: "ub-primary ub-full",
@@ -3896,88 +4051,88 @@ function ClaimSignIn({
         children: "X\u3000 Sign in with X"
       }
     ),
-    /* @__PURE__ */ jsxs51("small", { children: [
+    /* @__PURE__ */ jsxs53("small", { children: [
       "singleSpark is independent of X and X Money. X sign-in identifies your recipient account; it does not imply endorsement.",
       " ",
-      /* @__PURE__ */ jsx83(External, { href: "https://usepaid.app/legal/terms", children: "Terms of Service" })
+      /* @__PURE__ */ jsx85(External, { href: "https://usepaid.app/legal/terms", children: "Terms of Service" })
     ] })
   ] }) });
 }
 
 // react/components/singlespark-business/ClaimAssetPicker.tsx
-import { jsx as jsx84 } from "react/jsx-runtime";
+import { jsx as jsx86 } from "react/jsx-runtime";
 function ClaimAssetPicker({ className }) {
-  return /* @__PURE__ */ jsx84(Surface, { className, children: /* @__PURE__ */ jsx84(Unavailable, { title: "Claim asset selection", children: "The public guide permits SOL or one original asset; the authenticated control layout remains unverified." }) });
+  return /* @__PURE__ */ jsx86(Surface, { className, children: /* @__PURE__ */ jsx86(Unavailable, { title: "Claim asset selection", children: "The public guide permits SOL or one original asset; the authenticated control layout remains unverified." }) });
 }
 
 // react/components/singlespark-business/ClaimWalletForm.tsx
-import { jsx as jsx85 } from "react/jsx-runtime";
+import { jsx as jsx87 } from "react/jsx-runtime";
 function ClaimWalletForm({ className }) {
-  return /* @__PURE__ */ jsx85(Surface, { className, children: /* @__PURE__ */ jsx85(Unavailable, { title: "Claim wallet form", children: "The public guide requires a personal Solana wallet; the authenticated interface has not been obtained." }) });
+  return /* @__PURE__ */ jsx87(Surface, { className, children: /* @__PURE__ */ jsx87(Unavailable, { title: "Claim wallet form", children: "The public guide requires a personal Solana wallet; the authenticated interface has not been obtained." }) });
 }
 
 // react/components/singlespark-business/ClaimStatusTracker.tsx
-import { jsx as jsx86 } from "react/jsx-runtime";
+import { jsx as jsx88 } from "react/jsx-runtime";
 function ClaimStatusTracker({ className }) {
-  return /* @__PURE__ */ jsx86(Surface, { className, children: /* @__PURE__ */ jsx86(Unavailable, { title: "Claim status", children: "The public guide lists queued, processing, submitted and confirmed; the actual status component remains unverified." }) });
+  return /* @__PURE__ */ jsx88(Surface, { className, children: /* @__PURE__ */ jsx88(Unavailable, { title: "Claim status", children: "The public guide lists queued, processing, submitted and confirmed; the actual status component remains unverified." }) });
 }
 
 // react/components/singlespark-business/SingleSparkMark.tsx
-import { jsx as jsx87 } from "react/jsx-runtime";
+import { jsx as jsx89 } from "react/jsx-runtime";
 function SingleSparkMark() {
-  return /* @__PURE__ */ jsx87("img", { className: "ub-singlespark-icon", src: asset("paid.svg"), alt: "PAID" });
+  return /* @__PURE__ */ jsx89("img", { className: "ub-singlespark-icon", src: asset("paid.svg"), alt: "PAID" });
 }
 
 // react/components/singlespark-business/CurrencyCore.tsx
-import { jsx as jsx88, jsxs as jsxs52 } from "react/jsx-runtime";
+import { jsx as jsx90, jsxs as jsxs54 } from "react/jsx-runtime";
 function CurrencyCore({
   value,
   onChange
 }) {
-  return /* @__PURE__ */ jsxs52("fieldset", { className: "ub-currency", children: [
-    /* @__PURE__ */ jsx88("legend", { children: "Launch currency" }),
-    /* @__PURE__ */ jsx88("div", { children: ["SOL", "PAID"].map((v) => /* @__PURE__ */ jsxs52(
+  return /* @__PURE__ */ jsxs54("fieldset", { className: "ub-currency", children: [
+    /* @__PURE__ */ jsx90("legend", { children: "Launch currency" }),
+    /* @__PURE__ */ jsx90("div", { children: ["SOL", "PAID"].map((v) => /* @__PURE__ */ jsxs54(
       SingleSparkButton,
       {
         "aria-pressed": value === v,
         className: value === v ? "ub-selected" : "",
         onClick: () => onChange(v),
         children: [
-          v === "SOL" ? /* @__PURE__ */ jsx88(Sol, {}) : /* @__PURE__ */ jsx88(SingleSparkMark, {}),
+          v === "SOL" ? /* @__PURE__ */ jsx90(Sol, {}) : /* @__PURE__ */ jsx90(SingleSparkMark, {}),
           "Launch with ",
           v
         ]
       },
       v
     )) }),
-    /* @__PURE__ */ jsx88("p", { children: "Choose what people use to buy and sell your token. SOL is still needed for network fees." })
+    /* @__PURE__ */ jsx90("p", { children: "Choose what people use to buy and sell your token. SOL is still needed for network fees." })
   ] });
 }
 
 // react/components/singlespark-business/LaunchCurrency.tsx
-import { jsx as jsx89 } from "react/jsx-runtime";
+import { jsx as jsx91 } from "react/jsx-runtime";
 function LaunchCurrency({
   value,
   onChange,
   className
 }) {
   const [v, set] = useValue(value, "SOL", onChange);
-  return /* @__PURE__ */ jsx89(Surface, { className, children: /* @__PURE__ */ jsx89(CurrencyCore, { value: v, onChange: set }) });
+  return /* @__PURE__ */ jsx91(Surface, { className, children: /* @__PURE__ */ jsx91(CurrencyCore, { value: v, onChange: set }) });
 }
 
 // react/components/singlespark-business/RecipientField.tsx
-import { jsx as jsx90, jsxs as jsxs53 } from "react/jsx-runtime";
+import { jsx as jsx92, jsxs as jsxs55 } from "react/jsx-runtime";
 function RecipientField({
   value,
   onChange,
   label = "X Money sent to",
   hint
 }) {
-  return /* @__PURE__ */ jsxs53("label", { className: "ub-field", children: [
-    /* @__PURE__ */ jsx90("span", { children: label }),
-    /* @__PURE__ */ jsxs53("span", { className: "ub-input-icon", children: [
-      /* @__PURE__ */ jsx90(Icon2, { name: "at" }),
-      /* @__PURE__ */ jsx90(
+  return /* @__PURE__ */ jsxs55("label", { className: "ub-field", children: [
+    /* @__PURE__ */ jsx92("span", { children: label }),
+    /* @__PURE__ */ jsxs55("span", { className: "ub-input-icon", children: [
+      /* @__PURE__ */ jsx92(Icon2, { name: "at" }),
+      /* @__PURE__ */ jsx92(
         "input",
         {
           type: "text",
@@ -3989,34 +4144,34 @@ function RecipientField({
         }
       )
     ] }),
-    hint && /* @__PURE__ */ jsx90("small", { children: hint })
+    hint && /* @__PURE__ */ jsx92("small", { children: hint })
   ] });
 }
 
 // react/components/singlespark-business/SingleSparkRecipientSearch.tsx
-import { jsx as jsx91 } from "react/jsx-runtime";
+import { jsx as jsx93 } from "react/jsx-runtime";
 function SingleSparkRecipientSearch({
   value,
   onChange,
   className
 }) {
   const [v, set] = useValue(value, "", onChange);
-  return /* @__PURE__ */ jsx91(Surface, { className, children: /* @__PURE__ */ jsx91(RecipientField, { value: v, onChange: set }) });
+  return /* @__PURE__ */ jsx93(Surface, { className, children: /* @__PURE__ */ jsx93(RecipientField, { value: v, onChange: set }) });
 }
 
 // react/components/singlespark-business/DeployerCore.tsx
-import { jsx as jsx92, jsxs as jsxs54 } from "react/jsx-runtime";
+import { jsx as jsx94, jsxs as jsxs56 } from "react/jsx-runtime";
 function DeployerCore({
   draft,
   onChange
 }) {
   const valid = /^(?:|0|[1-9]|10)$/.test(draft.deployerReward);
   const reward = valid ? Number(draft.deployerReward) : 0;
-  return /* @__PURE__ */ jsxs54("section", { className: "ub-deployer-reward", children: [
-    /* @__PURE__ */ jsxs54("label", { className: "ub-field", children: [
-      /* @__PURE__ */ jsx92("span", { children: "Deployer reward (optional)" }),
-      /* @__PURE__ */ jsxs54("span", { className: "ub-input-icon", children: [
-        /* @__PURE__ */ jsx92(
+  return /* @__PURE__ */ jsxs56("section", { className: "ub-deployer-reward", children: [
+    /* @__PURE__ */ jsxs56("label", { className: "ub-field", children: [
+      /* @__PURE__ */ jsx94("span", { children: "Deployer reward (optional)" }),
+      /* @__PURE__ */ jsxs56("span", { className: "ub-input-icon", children: [
+        /* @__PURE__ */ jsx94(
           "input",
           {
             type: "text",
@@ -4028,12 +4183,12 @@ function DeployerCore({
             onChange: (e) => onChange({ deployerReward: e.target.value })
           }
         ),
-        /* @__PURE__ */ jsx92("span", { children: "%" })
+        /* @__PURE__ */ jsx94("span", { children: "%" })
       ] }),
-      /* @__PURE__ */ jsx92("small", { children: "0\u201310% of collected creator fees." })
+      /* @__PURE__ */ jsx94("small", { children: "0\u201310% of collected creator fees." })
     ] }),
-    reward > 0 && /* @__PURE__ */ jsxs54("div", { className: "ub-deployer-details", children: [
-      /* @__PURE__ */ jsx92(
+    reward > 0 && /* @__PURE__ */ jsxs56("div", { className: "ub-deployer-details", children: [
+      /* @__PURE__ */ jsx94(
         SingleSparkField,
         {
           label: "Deployer\u2019s X account",
@@ -4042,56 +4197,56 @@ function DeployerCore({
           onChange: (e) => onChange({ deployerHandle: e.target.value })
         }
       ),
-      /* @__PURE__ */ jsxs54("div", { children: [
-        /* @__PURE__ */ jsx92("p", { children: "For every $100 in collected creator fees" }),
-        /* @__PURE__ */ jsxs54("dl", { children: [
-          /* @__PURE__ */ jsxs54("div", { children: [
-            /* @__PURE__ */ jsx92("dt", { children: "Recipient" }),
-            /* @__PURE__ */ jsxs54("dd", { children: [
+      /* @__PURE__ */ jsxs56("div", { children: [
+        /* @__PURE__ */ jsx94("p", { children: "For every $100 in collected creator fees" }),
+        /* @__PURE__ */ jsxs56("dl", { children: [
+          /* @__PURE__ */ jsxs56("div", { children: [
+            /* @__PURE__ */ jsx94("dt", { children: "Recipient" }),
+            /* @__PURE__ */ jsxs56("dd", { children: [
               "$",
               (80 - reward).toFixed(2)
             ] })
           ] }),
-          /* @__PURE__ */ jsxs54("div", { children: [
-            /* @__PURE__ */ jsx92("dt", { children: "Deployer" }),
-            /* @__PURE__ */ jsxs54("dd", { children: [
+          /* @__PURE__ */ jsxs56("div", { children: [
+            /* @__PURE__ */ jsx94("dt", { children: "Deployer" }),
+            /* @__PURE__ */ jsxs56("dd", { children: [
               "$",
               reward.toFixed(2)
             ] })
           ] }),
-          /* @__PURE__ */ jsxs54("div", { children: [
-            /* @__PURE__ */ jsx92("dt", { children: "Protocol" }),
-            /* @__PURE__ */ jsx92("dd", { children: "$20.00" })
+          /* @__PURE__ */ jsxs56("div", { children: [
+            /* @__PURE__ */ jsx94("dt", { children: "Protocol" }),
+            /* @__PURE__ */ jsx94("dd", { children: "$20.00" })
           ] })
         ] }),
-        /* @__PURE__ */ jsx92("p", { children: "The deployer reward is fixed at launch and deducted from the recipient pool. The collection-time policy determines the pool size." })
+        /* @__PURE__ */ jsx94("p", { children: "The deployer reward is fixed at launch and deducted from the recipient pool. The collection-time policy determines the pool size." })
       ] })
     ] })
   ] });
 }
 
 // react/components/singlespark-business/DeployerRewardField.tsx
-import { jsx as jsx93 } from "react/jsx-runtime";
+import { jsx as jsx95 } from "react/jsx-runtime";
 function DeployerRewardField({
   value,
   onChange,
   className
 }) {
   const [draft, change] = useDraft(value, onChange);
-  return /* @__PURE__ */ jsx93(Surface, { className, children: /* @__PURE__ */ jsx93(DeployerCore, { draft, onChange: change }) });
+  return /* @__PURE__ */ jsx95(Surface, { className, children: /* @__PURE__ */ jsx95(DeployerCore, { draft, onChange: change }) });
 }
 
 // react/components/singlespark-business/MetadataCore.tsx
-import { useEffect as useEffect5, useRef as useRef6, useState as useState14 } from "react";
+import { useEffect as useEffect6, useRef as useRef7, useState as useState14 } from "react";
 
 // react/components/singlespark-business/SocialCore.tsx
-import { jsx as jsx94, jsxs as jsxs55 } from "react/jsx-runtime";
+import { jsx as jsx96, jsxs as jsxs57 } from "react/jsx-runtime";
 function SocialCore({
   draft,
   onChange
 }) {
-  return /* @__PURE__ */ jsx94(SingleSparkAccordion, { className: "ub-socials", label: /* @__PURE__ */ jsx94("span", { children: "Social links (optional)" }), children: /* @__PURE__ */ jsxs55("div", { className: "ub-form-stack", children: [
-    /* @__PURE__ */ jsx94(
+  return /* @__PURE__ */ jsx96(SingleSparkAccordion, { className: "ub-socials", label: /* @__PURE__ */ jsx96("span", { children: "Social links (optional)" }), children: /* @__PURE__ */ jsxs57("div", { className: "ub-form-stack", children: [
+    /* @__PURE__ */ jsx96(
       SingleSparkField,
       {
         label: "Website",
@@ -4100,8 +4255,8 @@ function SocialCore({
         onChange: (e) => onChange({ website: e.target.value })
       }
     ),
-    /* @__PURE__ */ jsx94("p", { className: "ub-caption", children: "Points to the token page on SingleSpark by default." }),
-    /* @__PURE__ */ jsx94(
+    /* @__PURE__ */ jsx96("p", { className: "ub-caption", children: "Points to the token page on SingleSpark by default." }),
+    /* @__PURE__ */ jsx96(
       SingleSparkField,
       {
         label: "Telegram",
@@ -4110,7 +4265,7 @@ function SocialCore({
         onChange: (e) => onChange({ telegram: e.target.value })
       }
     ),
-    /* @__PURE__ */ jsx94(
+    /* @__PURE__ */ jsx96(
       SingleSparkField,
       {
         label: "X",
@@ -4123,7 +4278,7 @@ function SocialCore({
 }
 
 // react/components/singlespark-business/MetadataCore.tsx
-import { jsx as jsx95, jsxs as jsxs56 } from "react/jsx-runtime";
+import { jsx as jsx97, jsxs as jsxs58 } from "react/jsx-runtime";
 function MetadataCore({
   draft,
   onChange,
@@ -4131,16 +4286,16 @@ function MetadataCore({
 }) {
   const [filename, setFilename] = useState14("");
   const [error, setError] = useState14("");
-  const preview = useRef6();
-  useEffect5(
+  const preview = useRef7();
+  useEffect6(
     () => () => {
       if (preview.current) URL.revokeObjectURL(preview.current);
     },
     []
   );
-  return /* @__PURE__ */ jsxs56("div", { className: "ub-form-stack", children: [
-    /* @__PURE__ */ jsxs56("div", { className: "ub-two-fields", children: [
-      /* @__PURE__ */ jsx95(
+  return /* @__PURE__ */ jsxs58("div", { className: "ub-form-stack", children: [
+    /* @__PURE__ */ jsxs58("div", { className: "ub-two-fields", children: [
+      /* @__PURE__ */ jsx97(
         SingleSparkField,
         {
           label: "Name",
@@ -4150,7 +4305,7 @@ function MetadataCore({
           onChange: (e) => onChange({ name: e.target.value })
         }
       ),
-      /* @__PURE__ */ jsx95(
+      /* @__PURE__ */ jsx97(
         SingleSparkField,
         {
           label: "Ticker",
@@ -4161,10 +4316,10 @@ function MetadataCore({
         }
       )
     ] }),
-    /* @__PURE__ */ jsxs56("label", { className: "ub-field", children: [
-      /* @__PURE__ */ jsx95("span", { children: "Token image" }),
-      /* @__PURE__ */ jsxs56("span", { className: "ub-upload", children: [
-        /* @__PURE__ */ jsx95(
+    /* @__PURE__ */ jsxs58("label", { className: "ub-field", children: [
+      /* @__PURE__ */ jsx97("span", { children: "Token image" }),
+      /* @__PURE__ */ jsxs58("span", { className: "ub-upload", children: [
+        /* @__PURE__ */ jsx97(
           "input",
           {
             type: "file",
@@ -4185,14 +4340,14 @@ function MetadataCore({
             }
           }
         ),
-        /* @__PURE__ */ jsx95("span", { className: "ub-upload-icon", children: /* @__PURE__ */ jsx95(Icon2, { name: "image", size: 18 }) }),
-        /* @__PURE__ */ jsx95("strong", { children: filename || "Choose image" })
+        /* @__PURE__ */ jsx97("span", { className: "ub-upload-icon", children: /* @__PURE__ */ jsx97(Icon2, { name: "image", size: 18 }) }),
+        /* @__PURE__ */ jsx97("strong", { children: filename || "Choose image" })
       ] }),
-      error && /* @__PURE__ */ jsx95("small", { role: "alert", children: error })
+      error && /* @__PURE__ */ jsx97("small", { role: "alert", children: error })
     ] }),
-    /* @__PURE__ */ jsxs56("label", { className: "ub-field", children: [
-      /* @__PURE__ */ jsx95("span", { children: "Description" }),
-      /* @__PURE__ */ jsx95(
+    /* @__PURE__ */ jsxs58("label", { className: "ub-field", children: [
+      /* @__PURE__ */ jsx97("span", { children: "Description" }),
+      /* @__PURE__ */ jsx97(
         "textarea",
         {
           placeholder: "What the token is.",
@@ -4201,17 +4356,17 @@ function MetadataCore({
           onChange: (e) => onChange({ description: e.target.value })
         }
       ),
-      /* @__PURE__ */ jsxs56("small", { children: [
+      /* @__PURE__ */ jsxs58("small", { children: [
         draft.description.length,
         "/256 characters including the fee lines"
       ] })
     ] }),
-    /* @__PURE__ */ jsx95(SocialCore, { draft, onChange })
+    /* @__PURE__ */ jsx97(SocialCore, { draft, onChange })
   ] });
 }
 
 // react/components/singlespark-business/SingleSparkMetadataForm.tsx
-import { jsx as jsx96 } from "react/jsx-runtime";
+import { jsx as jsx98 } from "react/jsx-runtime";
 function SingleSparkMetadataForm({
   value,
   onChange,
@@ -4219,34 +4374,34 @@ function SingleSparkMetadataForm({
   className
 }) {
   const [draft, change] = useDraft(value, onChange);
-  return /* @__PURE__ */ jsx96(Surface, { className, children: /* @__PURE__ */ jsx96(MetadataCore, { draft, onChange: change, onImageFile }) });
+  return /* @__PURE__ */ jsx98(Surface, { className, children: /* @__PURE__ */ jsx98(MetadataCore, { draft, onChange: change, onImageFile }) });
 }
 
 // react/components/singlespark-business/SocialLinksFields.tsx
-import { jsx as jsx97 } from "react/jsx-runtime";
+import { jsx as jsx99 } from "react/jsx-runtime";
 function SocialLinksFields({
   value,
   onChange,
   className
 }) {
   const [draft, change] = useDraft(value, onChange);
-  return /* @__PURE__ */ jsx97(Surface, { className, children: /* @__PURE__ */ jsx97(SocialCore, { draft, onChange: change }) });
+  return /* @__PURE__ */ jsx99(Surface, { className, children: /* @__PURE__ */ jsx99(SocialCore, { draft, onChange: change }) });
 }
 
 // react/components/singlespark-business/InitialBuyCore.tsx
-import { Fragment as Fragment15, jsx as jsx98, jsxs as jsxs57 } from "react/jsx-runtime";
+import { Fragment as Fragment15, jsx as jsx100, jsxs as jsxs59 } from "react/jsx-runtime";
 function InitialBuyCore({
   value,
   onChange,
   platform = "Pump"
 }) {
-  return /* @__PURE__ */ jsxs57("label", { className: "ub-field", children: [
-    /* @__PURE__ */ jsxs57("span", { children: [
+  return /* @__PURE__ */ jsxs59("label", { className: "ub-field", children: [
+    /* @__PURE__ */ jsxs59("span", { children: [
       "Initial buy ",
-      /* @__PURE__ */ jsx98("small", { children: "(optional)" })
+      /* @__PURE__ */ jsx100("small", { children: "(optional)" })
     ] }),
-    /* @__PURE__ */ jsxs57("span", { className: "ub-input-icon", children: [
-      /* @__PURE__ */ jsx98(
+    /* @__PURE__ */ jsxs59("span", { className: "ub-input-icon", children: [
+      /* @__PURE__ */ jsx100(
         "input",
         {
           type: "number",
@@ -4257,8 +4412,8 @@ function InitialBuyCore({
           onChange: (e) => onChange(e.target.value)
         }
       ),
-      /* @__PURE__ */ jsx98("span", { children: platform === "Pons" ? "ETH" : /* @__PURE__ */ jsxs57(Fragment15, { children: [
-        /* @__PURE__ */ jsx98(Sol, {}),
+      /* @__PURE__ */ jsx100("span", { children: platform === "Pons" ? "ETH" : /* @__PURE__ */ jsxs59(Fragment15, { children: [
+        /* @__PURE__ */ jsx100(Sol, {}),
         " SOL"
       ] }) })
     ] })
@@ -4266,7 +4421,7 @@ function InitialBuyCore({
 }
 
 // react/components/singlespark-business/InitialBuyField.tsx
-import { jsx as jsx99 } from "react/jsx-runtime";
+import { jsx as jsx101 } from "react/jsx-runtime";
 function InitialBuyField({
   value,
   onChange,
@@ -4274,18 +4429,18 @@ function InitialBuyField({
   className
 }) {
   const [v, set] = useValue(value, "", onChange);
-  return /* @__PURE__ */ jsx99(Surface, { className, children: /* @__PURE__ */ jsx99(InitialBuyCore, { value: v, onChange: set, platform }) });
+  return /* @__PURE__ */ jsx101(Surface, { className, children: /* @__PURE__ */ jsx101(InitialBuyCore, { value: v, onChange: set, platform }) });
 }
 
 // react/components/singlespark-business/TaxCore.tsx
-import { Fragment as Fragment16, jsx as jsx100, jsxs as jsxs58 } from "react/jsx-runtime";
+import { Fragment as Fragment16, jsx as jsx102, jsxs as jsxs60 } from "react/jsx-runtime";
 function TaxCore({
   value,
   onChange
 }) {
   const valid = Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 10;
-  return /* @__PURE__ */ jsxs58(Fragment16, { children: [
-    /* @__PURE__ */ jsx100(
+  return /* @__PURE__ */ jsxs60(Fragment16, { children: [
+    /* @__PURE__ */ jsx102(
       SingleSparkField,
       {
         label: "Added creator tax",
@@ -4299,32 +4454,32 @@ function TaxCore({
         onChange: (e) => onChange(e.target.value)
       }
     ),
-    /* @__PURE__ */ jsx100("p", { className: "ub-caption", children: "1% base trading fee + 0\u201310% added creator tax. This setting is permanent." }),
-    /* @__PURE__ */ jsx100(SingleSparkListRow, { label: "Total trading tax", children: /* @__PURE__ */ jsx100("strong", { children: valid ? 1 + Number(value) + "%" : "0%" }) })
+    /* @__PURE__ */ jsx102("p", { className: "ub-caption", children: "1% base trading fee + 0\u201310% added creator tax. This setting is permanent." }),
+    /* @__PURE__ */ jsx102(SingleSparkListRow, { label: "Total trading tax", children: /* @__PURE__ */ jsx102("strong", { children: valid ? 1 + Number(value) + "%" : "0%" }) })
   ] });
 }
 
 // react/components/singlespark-business/PonsTaxField.tsx
-import { jsx as jsx101 } from "react/jsx-runtime";
+import { jsx as jsx103 } from "react/jsx-runtime";
 function PonsTaxField({
   value,
   onChange,
   className
 }) {
   const [v, set] = useValue(value, "", onChange);
-  return /* @__PURE__ */ jsx101(Surface, { className, children: /* @__PURE__ */ jsx101(TaxCore, { value: v, onChange: set }) });
+  return /* @__PURE__ */ jsx103(Surface, { className, children: /* @__PURE__ */ jsx103(TaxCore, { value: v, onChange: set }) });
 }
 
 // react/components/singlespark-business/ConsentCore.tsx
-import { jsx as jsx102, jsxs as jsxs59 } from "react/jsx-runtime";
+import { jsx as jsx104, jsxs as jsxs61 } from "react/jsx-runtime";
 function ConsentCore({
   agreed,
   onChange,
   onConnect
 }) {
-  return /* @__PURE__ */ jsxs59("div", { className: "ub-consent", children: [
-    /* @__PURE__ */ jsxs59("label", { children: [
-      /* @__PURE__ */ jsx102(
+  return /* @__PURE__ */ jsxs61("div", { className: "ub-consent", children: [
+    /* @__PURE__ */ jsxs61("label", { children: [
+      /* @__PURE__ */ jsx104(
         "input",
         {
           type: "checkbox",
@@ -4332,27 +4487,27 @@ function ConsentCore({
           onChange: (e) => onChange(e.target.checked)
         }
       ),
-      /* @__PURE__ */ jsxs59("span", { children: [
+      /* @__PURE__ */ jsxs61("span", { children: [
         "I agree to the",
         " ",
-        /* @__PURE__ */ jsx102(External, { href: "https://usepaid.app/legal/terms", children: "Terms of Use" }),
+        /* @__PURE__ */ jsx104(External, { href: "https://usepaid.app/legal/terms", children: "Terms of Use" }),
         " ",
         "and",
         " ",
-        /* @__PURE__ */ jsx102(External, { href: "https://usepaid.app/legal/disclosures", children: "Disclosures" }),
+        /* @__PURE__ */ jsx104(External, { href: "https://usepaid.app/legal/disclosures", children: "Disclosures" }),
         "."
       ] })
     ] }),
-    /* @__PURE__ */ jsxs59(SingleSparkButton, { className: "ub-primary ub-full", onClick: onConnect, children: [
-      /* @__PURE__ */ jsx102(Icon2, { name: "wallet" }),
+    /* @__PURE__ */ jsxs61(SingleSparkButton, { className: "ub-primary ub-full", onClick: onConnect, children: [
+      /* @__PURE__ */ jsx104(Icon2, { name: "wallet" }),
       "Connect wallet"
     ] }),
-    /* @__PURE__ */ jsx102("p", { children: "By continuing you agree to the Terms of Use." })
+    /* @__PURE__ */ jsx104("p", { children: "By continuing you agree to the Terms of Use." })
   ] });
 }
 
 // react/components/singlespark-business/LaunchConsentAndWallet.tsx
-import { jsx as jsx103 } from "react/jsx-runtime";
+import { jsx as jsx105 } from "react/jsx-runtime";
 function LaunchConsentAndWallet({
   agreed,
   onAgreementChange,
@@ -4361,7 +4516,7 @@ function LaunchConsentAndWallet({
   onAction
 }) {
   const [v, set] = useValue(agreed, false, onAgreementChange);
-  return /* @__PURE__ */ jsx103(Surface, { className, children: /* @__PURE__ */ jsx103(
+  return /* @__PURE__ */ jsx105(Surface, { className, children: /* @__PURE__ */ jsx105(
     ConsentCore,
     {
       agreed: v,
@@ -4372,14 +4527,14 @@ function LaunchConsentAndWallet({
 }
 
 // react/components/singlespark-business/FeeSplitCore.tsx
-import { jsx as jsx104 } from "react/jsx-runtime";
+import { jsx as jsx106 } from "react/jsx-runtime";
 function FeeSplitCore({
   recipient = "\u2014",
   recipientShare = 65,
   treasuryShare = 10,
   buybackShare = 25
 }) {
-  return /* @__PURE__ */ jsx104(
+  return /* @__PURE__ */ jsx106(
     SingleSparkKeyValueList,
     {
       entries: [
@@ -4393,36 +4548,36 @@ function FeeSplitCore({
 }
 
 // react/components/singlespark-business/PreviewCard.tsx
-import { Fragment as Fragment17, jsx as jsx105, jsxs as jsxs60 } from "react/jsx-runtime";
+import { Fragment as Fragment17, jsx as jsx107, jsxs as jsxs62 } from "react/jsx-runtime";
 function PreviewCard({
   draft,
   details
 }) {
-  return /* @__PURE__ */ jsxs60("div", { className: "ub-launch-preview-card", children: [
-    /* @__PURE__ */ jsx105("div", { className: "ub-preview-photo", children: draft.imageUrl ? /* @__PURE__ */ jsx105("img", { src: draft.imageUrl, alt: "Selected token image" }) : /* @__PURE__ */ jsx105("span", { children: "\u2014" }) }),
-    /* @__PURE__ */ jsxs60("div", { className: "ub-preview-title", children: [
-      /* @__PURE__ */ jsx105("span", { children: draft.name || "Token name" }),
-      /* @__PURE__ */ jsx105("code", { children: draft.ticker || "TICKER" })
+  return /* @__PURE__ */ jsxs62("div", { className: "ub-launch-preview-card", children: [
+    /* @__PURE__ */ jsx107("div", { className: "ub-preview-photo", children: draft.imageUrl ? /* @__PURE__ */ jsx107("img", { src: draft.imageUrl, alt: "Selected token image" }) : /* @__PURE__ */ jsx107("span", { children: "\u2014" }) }),
+    /* @__PURE__ */ jsxs62("div", { className: "ub-preview-title", children: [
+      /* @__PURE__ */ jsx107("span", { children: draft.name || "Token name" }),
+      /* @__PURE__ */ jsx107("code", { children: draft.ticker || "TICKER" })
     ] }),
-    details !== void 0 ? details : /* @__PURE__ */ jsxs60(Fragment17, { children: [
-      /* @__PURE__ */ jsxs60("div", { className: "ub-preview-values", children: [
-        /* @__PURE__ */ jsx105("strong", { children: "$0" }),
-        /* @__PURE__ */ jsx105("small", { children: "MC" }),
-        /* @__PURE__ */ jsx105("strong", { children: "$0" }),
-        /* @__PURE__ */ jsx105("small", { children: "Sent" })
+    details !== void 0 ? details : /* @__PURE__ */ jsxs62(Fragment17, { children: [
+      /* @__PURE__ */ jsxs62("div", { className: "ub-preview-values", children: [
+        /* @__PURE__ */ jsx107("strong", { children: "$0" }),
+        /* @__PURE__ */ jsx107("small", { children: "MC" }),
+        /* @__PURE__ */ jsx107("strong", { children: "$0" }),
+        /* @__PURE__ */ jsx107("small", { children: "Sent" })
       ] }),
-      /* @__PURE__ */ jsx105(FeeSplitCore, { recipient: draft.recipient || "\u2014" })
+      /* @__PURE__ */ jsx107(FeeSplitCore, { recipient: draft.recipient || "\u2014" })
     ] })
   ] });
 }
 
 // react/components/singlespark-business/PayoutFlow.tsx
-import { useEffect as useEffect6, useState as useState15 } from "react";
+import { useEffect as useEffect7, useState as useState15 } from "react";
 
 // react/components/singlespark-business/XMoney.tsx
-import { jsx as jsx106 } from "react/jsx-runtime";
+import { jsx as jsx108 } from "react/jsx-runtime";
 function XMoney() {
-  return /* @__PURE__ */ jsx106(
+  return /* @__PURE__ */ jsx108(
     "svg",
     {
       width: "27",
@@ -4430,7 +4585,7 @@ function XMoney() {
       viewBox: "0 0 24 24",
       fill: "#4ade80",
       "aria-hidden": "true",
-      children: /* @__PURE__ */ jsx106(
+      children: /* @__PURE__ */ jsx108(
         "path",
         {
           fillRule: "evenodd",
@@ -4442,7 +4597,7 @@ function XMoney() {
 }
 
 // react/components/singlespark-business/NotificationFrame.tsx
-import { Fragment as Fragment18, jsx as jsx107, jsxs as jsxs61 } from "react/jsx-runtime";
+import { Fragment as Fragment18, jsx as jsx109, jsxs as jsxs63 } from "react/jsx-runtime";
 function NotificationFrame({
   step = 0,
   className = "",
@@ -4466,65 +4621,65 @@ function NotificationFrame({
     "250.00",
     "500.00"
   ][Math.floor(step / 2) % 7];
-  return /* @__PURE__ */ jsx107(
+  return /* @__PURE__ */ jsx109(
     "div",
     {
       className: "ub-notification " + (children !== void 0 ? "ub-notification-message " : "") + (variant === "toast" ? "ub-notification-toast " : "") + className,
       style: paused ? { animationPlayState: "paused" } : void 0,
-      children: variant === "toast" ? /* @__PURE__ */ jsxs61(Fragment18, { children: [
-        /* @__PURE__ */ jsx107("span", { className: "ub-notification-toast-text", children: children ?? title }),
-        onClose && /* @__PURE__ */ jsx107(SingleSparkButton, { className: "ub-notification-close", "aria-label": closeLabel, onClick: onClose, children: /* @__PURE__ */ jsx107("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx107(Icon2, { name: "close" }) }) }),
-        actions && /* @__PURE__ */ jsx107("div", { className: "ub-notification-actions", children: actions })
-      ] }) : children !== void 0 ? /* @__PURE__ */ jsxs61(Fragment18, { children: [
-        /* @__PURE__ */ jsxs61("div", { className: "ub-notification-heading", children: [
-          /* @__PURE__ */ jsx107("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx107(Icon2, { name: "bell", size: 18 }) }),
-          /* @__PURE__ */ jsx107("strong", { children: title }),
-          onClose && /* @__PURE__ */ jsx107(SingleSparkButton, { className: "ub-notification-close", "aria-label": closeLabel, onClick: onClose, children: /* @__PURE__ */ jsx107("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx107(Icon2, { name: "close" }) }) })
+      children: variant === "toast" ? /* @__PURE__ */ jsxs63(Fragment18, { children: [
+        /* @__PURE__ */ jsx109("span", { className: "ub-notification-toast-text", children: children ?? title }),
+        onClose && /* @__PURE__ */ jsx109(SingleSparkButton, { className: "ub-notification-close", "aria-label": closeLabel, onClick: onClose, children: /* @__PURE__ */ jsx109("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx109(Icon2, { name: "close" }) }) }),
+        actions && /* @__PURE__ */ jsx109("div", { className: "ub-notification-actions", children: actions })
+      ] }) : children !== void 0 ? /* @__PURE__ */ jsxs63(Fragment18, { children: [
+        /* @__PURE__ */ jsxs63("div", { className: "ub-notification-heading", children: [
+          /* @__PURE__ */ jsx109("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx109(Icon2, { name: "bell", size: 18 }) }),
+          /* @__PURE__ */ jsx109("strong", { children: title }),
+          onClose && /* @__PURE__ */ jsx109(SingleSparkButton, { className: "ub-notification-close", "aria-label": closeLabel, onClick: onClose, children: /* @__PURE__ */ jsx109("span", { "aria-hidden": "true", children: /* @__PURE__ */ jsx109(Icon2, { name: "close" }) }) })
         ] }),
-        /* @__PURE__ */ jsx107("p", { className: "ub-notification-body", children }),
-        actions && /* @__PURE__ */ jsx107("div", { className: "ub-notification-actions", children: actions })
-      ] }) : step % 2 === 0 ? /* @__PURE__ */ jsxs61(Fragment18, { children: [
-        /* @__PURE__ */ jsx107(Icon2, { name: "bell" }),
-        /* @__PURE__ */ jsxs61("div", { className: "ub-notification-icons", children: [
-          /* @__PURE__ */ jsx107(XMoney, {}),
-          /* @__PURE__ */ jsx107(SingleSparkMark, {})
+        /* @__PURE__ */ jsx109("p", { className: "ub-notification-body", children }),
+        actions && /* @__PURE__ */ jsx109("div", { className: "ub-notification-actions", children: actions })
+      ] }) : step % 2 === 0 ? /* @__PURE__ */ jsxs63(Fragment18, { children: [
+        /* @__PURE__ */ jsx109(Icon2, { name: "bell" }),
+        /* @__PURE__ */ jsxs63("div", { className: "ub-notification-icons", children: [
+          /* @__PURE__ */ jsx109(XMoney, {}),
+          /* @__PURE__ */ jsx109(SingleSparkMark, {})
         ] }),
-        /* @__PURE__ */ jsxs61("p", { children: [
-          /* @__PURE__ */ jsx107("strong", { children: "SingleSpark" }),
+        /* @__PURE__ */ jsxs63("p", { children: [
+          /* @__PURE__ */ jsx109("strong", { children: "SingleSpark" }),
           " sent you $",
           amount,
           " for \u201C",
           note,
           "\u201D",
           " ",
-          /* @__PURE__ */ jsxs61("span", { children: [
+          /* @__PURE__ */ jsxs63("span", { children: [
             "\xB7 ",
             age
           ] })
         ] })
-      ] }) : /* @__PURE__ */ jsxs61("div", { className: "ub-notification-receipt", children: [
-        /* @__PURE__ */ jsxs61("div", { children: [
-          /* @__PURE__ */ jsxs61("strong", { children: [
+      ] }) : /* @__PURE__ */ jsxs63("div", { className: "ub-notification-receipt", children: [
+        /* @__PURE__ */ jsxs63("div", { children: [
+          /* @__PURE__ */ jsxs63("strong", { children: [
             "$",
             amount.replace(".00", "")
           ] }),
-          /* @__PURE__ */ jsxs61("p", { children: [
-            /* @__PURE__ */ jsx107("span", { children: "sent to" }),
+          /* @__PURE__ */ jsxs63("p", { children: [
+            /* @__PURE__ */ jsx109("span", { children: "sent to" }),
             " ",
-            /* @__PURE__ */ jsx107("b", { children: recipient })
+            /* @__PURE__ */ jsx109("b", { children: recipient })
           ] }),
-          /* @__PURE__ */ jsxs61("small", { children: [
+          /* @__PURE__ */ jsxs63("small", { children: [
             "\u201C",
             note,
             "\u201D"
           ] })
         ] }),
-        /* @__PURE__ */ jsxs61("div", { children: [
-          /* @__PURE__ */ jsxs61("span", { className: "ub-mini-avatar-pair", children: [
-            /* @__PURE__ */ jsx107(SingleSparkMark, {}),
-            /* @__PURE__ */ jsx107("i", {})
+        /* @__PURE__ */ jsxs63("div", { children: [
+          /* @__PURE__ */ jsxs63("span", { className: "ub-mini-avatar-pair", children: [
+            /* @__PURE__ */ jsx109(SingleSparkMark, {}),
+            /* @__PURE__ */ jsx109("i", {})
           ] }),
-          /* @__PURE__ */ jsx107("small", { children: age })
+          /* @__PURE__ */ jsx109("small", { children: age })
         ] })
       ] })
     }
@@ -4532,7 +4687,7 @@ function NotificationFrame({
 }
 
 // react/components/singlespark-business/PayoutFlow.tsx
-import { jsx as jsx108, jsxs as jsxs62 } from "react/jsx-runtime";
+import { jsx as jsx110, jsxs as jsxs64 } from "react/jsx-runtime";
 function PayoutFlow({
   paused = false,
   recipientName = "Recipient",
@@ -4540,20 +4695,20 @@ function PayoutFlow({
 }) {
   const [step, setStep] = useState15(0);
   const [reduced, setReduced] = useState15(false);
-  useEffect6(() => {
+  useEffect7(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     const change = () => setReduced(media.matches);
     change();
     media.addEventListener("change", change);
     return () => media.removeEventListener("change", change);
   }, []);
-  useEffect6(() => {
+  useEffect7(() => {
     if (paused || reduced) return;
     const timer = setInterval(() => setStep((s) => s + 1), 3e3);
     return () => clearInterval(timer);
   }, [paused, reduced]);
-  return /* @__PURE__ */ jsxs62("div", { className: "ub-notification-space", children: [
-    /* @__PURE__ */ jsx108(
+  return /* @__PURE__ */ jsxs64("div", { className: "ub-notification-space", children: [
+    /* @__PURE__ */ jsx110(
       NotificationFrame,
       {
         step,
@@ -4564,7 +4719,7 @@ function PayoutFlow({
       },
       "in-" + step
     ),
-    step > 0 && /* @__PURE__ */ jsx108(
+    step > 0 && /* @__PURE__ */ jsx110(
       NotificationFrame,
       {
         step: step - 1,
@@ -4580,7 +4735,7 @@ function PayoutFlow({
 }
 
 // react/components/singlespark-business/LaunchPreviewCore.tsx
-import { jsx as jsx109, jsxs as jsxs63 } from "react/jsx-runtime";
+import { jsx as jsx111, jsxs as jsxs65 } from "react/jsx-runtime";
 function LaunchPreviewCore({
   draft = {},
   details,
@@ -4590,8 +4745,8 @@ function LaunchPreviewCore({
   recipientName,
   note
 }) {
-  return /* @__PURE__ */ jsxs63("aside", { className: "ub-launch-preview", children: [
-    notification !== void 0 ? notification : /* @__PURE__ */ jsx109(
+  return /* @__PURE__ */ jsxs65("aside", { className: "ub-launch-preview", children: [
+    notification !== void 0 ? notification : /* @__PURE__ */ jsx111(
       PayoutFlow,
       {
         paused: paused || motionPaused,
@@ -4599,18 +4754,18 @@ function LaunchPreviewCore({
         note
       }
     ),
-    /* @__PURE__ */ jsx109(PreviewCard, { draft, details })
+    /* @__PURE__ */ jsx111(PreviewCard, { draft, details })
   ] });
 }
 
 // react/components/singlespark-business/LaunchLivePreview.tsx
-import { jsx as jsx110 } from "react/jsx-runtime";
+import { jsx as jsx112 } from "react/jsx-runtime";
 function LaunchLivePreview({ className, ...props }) {
-  return /* @__PURE__ */ jsx110(Surface, { className, children: /* @__PURE__ */ jsx110(LaunchPreviewCore, { ...props }) });
+  return /* @__PURE__ */ jsx112(Surface, { className, children: /* @__PURE__ */ jsx112(LaunchPreviewCore, { ...props }) });
 }
 
 // react/components/singlespark-business/FeeSplitSummary.tsx
-import { jsx as jsx111 } from "react/jsx-runtime";
+import { jsx as jsx113 } from "react/jsx-runtime";
 function FeeSplitSummary({
   recipient,
   recipientShare,
@@ -4618,7 +4773,7 @@ function FeeSplitSummary({
   buybackShare,
   className
 }) {
-  return /* @__PURE__ */ jsx111(Surface, { className, children: /* @__PURE__ */ jsx111(
+  return /* @__PURE__ */ jsx113(Surface, { className, children: /* @__PURE__ */ jsx113(
     FeeSplitCore,
     {
       recipient,
@@ -4630,19 +4785,19 @@ function FeeSplitSummary({
 }
 
 // react/components/singlespark-business/RegisterCore.tsx
-import { useEffect as useEffect7, useRef as useRef7, useState as useState16 } from "react";
+import { useEffect as useEffect8, useRef as useRef8, useState as useState16 } from "react";
 
 // react/components/singlespark-business/TreasuryCopy.tsx
-import { jsx as jsx112, jsxs as jsxs64 } from "react/jsx-runtime";
+import { jsx as jsx114, jsxs as jsxs66 } from "react/jsx-runtime";
 function TreasuryCopy() {
-  return /* @__PURE__ */ jsx112(SingleSparkCopyButton, { value: treasury, className: "ub-treasury", children: /* @__PURE__ */ jsxs64("span", { children: [
-    /* @__PURE__ */ jsx112("small", { children: "Pump fee-sharing address" }),
-    /* @__PURE__ */ jsx112("code", { children: treasury })
+  return /* @__PURE__ */ jsx114(SingleSparkCopyButton, { value: treasury, className: "ub-treasury", children: /* @__PURE__ */ jsxs66("span", { children: [
+    /* @__PURE__ */ jsx114("small", { children: "Pump fee-sharing address" }),
+    /* @__PURE__ */ jsx114("code", { children: treasury })
   ] }) });
 }
 
 // react/components/singlespark-business/RegisterCore.tsx
-import { Fragment as Fragment19, jsx as jsx113, jsxs as jsxs65 } from "react/jsx-runtime";
+import { Fragment as Fragment19, jsx as jsx115, jsxs as jsxs67 } from "react/jsx-runtime";
 function RegisterCore({
   recipient: recipientValue,
   mint: mintValue,
@@ -4660,8 +4815,8 @@ function RegisterCore({
   const [status, setStatus] = useState16("Not checked yet.");
   const [confirmed, setConfirmed] = useState16(false);
   const [busy, setBusy] = useState16(false);
-  const generation = useRef7(0);
-  useEffect7(
+  const generation = useRef8(0);
+  useEffect8(
     () => () => {
       generation.current++;
     },
@@ -4697,11 +4852,11 @@ function RegisterCore({
       if (ticket === generation.current) setBusy(false);
     }
   };
-  return /* @__PURE__ */ jsxs65(Fragment19, { children: [
-    /* @__PURE__ */ jsxs65("div", { className: "ub-form-stack", children: [
-      /* @__PURE__ */ jsx113(Launchpads, { value: "Pump", onChange: () => {
+  return /* @__PURE__ */ jsxs67(Fragment19, { children: [
+    /* @__PURE__ */ jsxs67("div", { className: "ub-form-stack", children: [
+      /* @__PURE__ */ jsx115(Launchpads, { value: "Pump", onChange: () => {
       }, pumpOnly: true }),
-      /* @__PURE__ */ jsx113(
+      /* @__PURE__ */ jsx115(
         RecipientField,
         {
           value: recipient,
@@ -4714,9 +4869,9 @@ function RegisterCore({
         }
       )
     ] }),
-    /* @__PURE__ */ jsx113("hr", {}),
-    /* @__PURE__ */ jsxs65("div", { className: "ub-form-stack", children: [
-      /* @__PURE__ */ jsx113(
+    /* @__PURE__ */ jsx115("hr", {}),
+    /* @__PURE__ */ jsxs67("div", { className: "ub-form-stack", children: [
+      /* @__PURE__ */ jsx115(
         SingleSparkField,
         {
           label: "Contract address",
@@ -4731,17 +4886,17 @@ function RegisterCore({
           }
         }
       ),
-      /* @__PURE__ */ jsx113("p", { className: "ub-caption", children: "The address of the token you already launched on pump.fun." })
+      /* @__PURE__ */ jsx115("p", { className: "ub-caption", children: "The address of the token you already launched on pump.fun." })
     ] }),
-    /* @__PURE__ */ jsx113("hr", {}),
-    /* @__PURE__ */ jsxs65("section", { className: "ub-register-authority", children: [
-      /* @__PURE__ */ jsxs65("div", { children: [
-        /* @__PURE__ */ jsx113("h3", { children: "Set up fee sharing" }),
-        /* @__PURE__ */ jsx113("p", { children: "On pump.fun, open the token's fee sharing, send 100% of the creator fees to the singleSpark fee-sharing address, and revoke the config. This confirms fee routing; a signed memo separately proves control of the fee admin." })
+    /* @__PURE__ */ jsx115("hr", {}),
+    /* @__PURE__ */ jsxs67("section", { className: "ub-register-authority", children: [
+      /* @__PURE__ */ jsxs67("div", { children: [
+        /* @__PURE__ */ jsx115("h3", { children: "Set up fee sharing" }),
+        /* @__PURE__ */ jsx115("p", { children: "On pump.fun, open the token's fee sharing, send 100% of the creator fees to the singleSpark fee-sharing address, and revoke the config. This confirms fee routing; a signed memo separately proves control of the fee admin." })
       ] }),
-      /* @__PURE__ */ jsx113(TreasuryCopy, {}),
-      /* @__PURE__ */ jsxs65("div", { className: "ub-register-check", children: [
-        /* @__PURE__ */ jsx113(
+      /* @__PURE__ */ jsx115(TreasuryCopy, {}),
+      /* @__PURE__ */ jsxs67("div", { className: "ub-register-check", children: [
+        /* @__PURE__ */ jsx115(
           SingleSparkButton,
           {
             className: "ub-secondary",
@@ -4751,13 +4906,13 @@ function RegisterCore({
             children: confirmed ? "Check again" : "Check"
           }
         ),
-        /* @__PURE__ */ jsx113("span", { role: "status", children: status })
+        /* @__PURE__ */ jsx115("span", { role: "status", children: status })
       ] })
     ] }),
-    /* @__PURE__ */ jsx113("hr", {}),
-    /* @__PURE__ */ jsxs65("div", { className: "ub-form-stack ub-register-submit", children: [
-      /* @__PURE__ */ jsx113("p", { children: "No wallet is needed to register fee routing. An on-chain memo is a separate proof for the singleSpark fee badge." }),
-      /* @__PURE__ */ jsx113(
+    /* @__PURE__ */ jsx115("hr", {}),
+    /* @__PURE__ */ jsxs67("div", { className: "ub-form-stack ub-register-submit", children: [
+      /* @__PURE__ */ jsx115("p", { children: "No wallet is needed to register fee routing. An on-chain memo is a separate proof for the singleSpark fee badge." }),
+      /* @__PURE__ */ jsx115(
         SingleSparkButton,
         {
           className: "ub-primary ub-full",
@@ -4780,10 +4935,10 @@ function RegisterCore({
           children: !recipient ? "Select metadata recipient" : !valid ? "Paste the contract address" : !confirmed ? "Check the fee authority first" : "Register token"
         }
       ),
-      /* @__PURE__ */ jsxs65("small", { children: [
+      /* @__PURE__ */ jsxs67("small", { children: [
         "By registering, you agree to the",
         " ",
-        /* @__PURE__ */ jsx113(External, { href: "https://usepaid.app/legal/terms", children: "Terms of Use" }),
+        /* @__PURE__ */ jsx115(External, { href: "https://usepaid.app/legal/terms", children: "Terms of Use" }),
         "."
       ] })
     ] })
@@ -4791,9 +4946,9 @@ function RegisterCore({
 }
 
 // react/components/singlespark-business/SingleSparkRegisterForm.tsx
-import { jsx as jsx114 } from "react/jsx-runtime";
+import { jsx as jsx116 } from "react/jsx-runtime";
 function SingleSparkRegisterForm({ className, ...props }) {
-  return /* @__PURE__ */ jsx114(Surface, { className, children: /* @__PURE__ */ jsx114("div", { className: "ub-form-stack", children: /* @__PURE__ */ jsx114(RegisterCore, { ...props }) }) });
+  return /* @__PURE__ */ jsx116(Surface, { className, children: /* @__PURE__ */ jsx116("div", { className: "ub-form-stack", children: /* @__PURE__ */ jsx116(RegisterCore, { ...props }) }) });
 }
 
 // react/components/singlespark-business/LaunchModesCore.tsx
@@ -4801,14 +4956,14 @@ import { useState as useState17 } from "react";
 
 // react/components/singlespark-business/WalletlessCore.tsx
 import React from "react";
-import { Fragment as Fragment20, jsx as jsx115, jsxs as jsxs66 } from "react/jsx-runtime";
+import { Fragment as Fragment20, jsx as jsx117, jsxs as jsxs68 } from "react/jsx-runtime";
 function WalletlessCore() {
-  return /* @__PURE__ */ jsx115("div", { className: "ub-walletless-steps", children: [
+  return /* @__PURE__ */ jsx117("div", { className: "ub-walletless-steps", children: [
     [
       "Name the recipient in the description",
-      /* @__PURE__ */ jsxs66(Fragment20, { children: [
+      /* @__PURE__ */ jsxs68(Fragment20, { children: [
         "When you create the coin on pump.fun, add the same last line our launcher uses: ",
-        /* @__PURE__ */ jsx115("span", { children: "Fees to @recipient via singleSpark" }),
+        /* @__PURE__ */ jsx117("span", { children: "Fees to @recipient via singleSpark" }),
         ". Replace @recipient with the X account that should receive the main creator share. Put your own description above that line."
       ] })
     ],
@@ -4820,30 +4975,30 @@ function WalletlessCore() {
       "Payouts start on their own",
       "Nothing to submit. The token appears on Explore and the first payout lands shortly, confirmed publicly by @singleSpark."
     ]
-  ].map(([h, p], i) => /* @__PURE__ */ jsxs66(React.Fragment, { children: [
-    i > 0 && /* @__PURE__ */ jsx115("hr", {}),
-    /* @__PURE__ */ jsxs66("section", { children: [
-      /* @__PURE__ */ jsxs66("div", { children: [
-        /* @__PURE__ */ jsx115("span", { children: i + 1 }),
-        /* @__PURE__ */ jsx115("h3", { children: h })
+  ].map(([h, p], i) => /* @__PURE__ */ jsxs68(React.Fragment, { children: [
+    i > 0 && /* @__PURE__ */ jsx117("hr", {}),
+    /* @__PURE__ */ jsxs68("section", { children: [
+      /* @__PURE__ */ jsxs68("div", { children: [
+        /* @__PURE__ */ jsx117("span", { children: i + 1 }),
+        /* @__PURE__ */ jsx117("h3", { children: h })
       ] }),
-      /* @__PURE__ */ jsx115("p", { children: p }),
-      i === 1 ? /* @__PURE__ */ jsx115(TreasuryCopy, {}) : i === 2 ? /* @__PURE__ */ jsx115("p", { className: "ub-walletless-footnote", children: "Launched already? Register checks the recipient named by the token\u2019s description or X link. It cannot change published metadata." }) : null
+      /* @__PURE__ */ jsx117("p", { children: p }),
+      i === 1 ? /* @__PURE__ */ jsx117(TreasuryCopy, {}) : i === 2 ? /* @__PURE__ */ jsx117("p", { className: "ub-walletless-footnote", children: "Launched already? Register checks the recipient named by the token\u2019s description or X link. It cannot change published metadata." }) : null
     ] })
   ] }, i)) });
 }
 
 // react/components/singlespark-business/WalletlessPreview.tsx
-import { jsx as jsx116, jsxs as jsxs67 } from "react/jsx-runtime";
+import { jsx as jsx118, jsxs as jsxs69 } from "react/jsx-runtime";
 function WalletlessPreview({ paused }) {
-  return /* @__PURE__ */ jsxs67("aside", { className: "ub-launch-preview", children: [
-    /* @__PURE__ */ jsx116(PayoutFlow, { paused }),
-    /* @__PURE__ */ jsxs67("div", { className: "ub-launch-preview-card ub-pump-guide", children: [
-      /* @__PURE__ */ jsxs67("div", { children: [
-        /* @__PURE__ */ jsx116("strong", { children: "Launch on Pump" }),
-        /* @__PURE__ */ jsx116("p", { children: "pump.fun \xB7 Share creator rewards" })
+  return /* @__PURE__ */ jsxs69("aside", { className: "ub-launch-preview", children: [
+    /* @__PURE__ */ jsx118(PayoutFlow, { paused }),
+    /* @__PURE__ */ jsxs69("div", { className: "ub-launch-preview-card ub-pump-guide", children: [
+      /* @__PURE__ */ jsxs69("div", { children: [
+        /* @__PURE__ */ jsx118("strong", { children: "Launch on Pump" }),
+        /* @__PURE__ */ jsx118("p", { children: "pump.fun \xB7 Share creator rewards" })
       ] }),
-      /* @__PURE__ */ jsx116(
+      /* @__PURE__ */ jsx118(
         "img",
         {
           src: asset("pump-launch.png"),
@@ -4852,13 +5007,13 @@ function WalletlessPreview({ paused }) {
           alt: "pump.fun\u2019s Share creator rewards screen"
         }
       ),
-      /* @__PURE__ */ jsx116("p", { children: "Add our treasury as the only recipient, at 100%, before you create the coin." })
+      /* @__PURE__ */ jsx118("p", { children: "Add our treasury as the only recipient, at 100%, before you create the coin." })
     ] })
   ] });
 }
 
 // react/components/singlespark-business/LaunchModesCore.tsx
-import { Fragment as Fragment21, jsx as jsx117, jsxs as jsxs68 } from "react/jsx-runtime";
+import { Fragment as Fragment21, jsx as jsx119, jsxs as jsxs70 } from "react/jsx-runtime";
 function LaunchModesCore({
   mode: controlled,
   defaultMode = "Launch",
@@ -4875,14 +5030,14 @@ function LaunchModesCore({
   const [platform, setPlatform] = useState17("Pump");
   const [currency, setCurrency] = useState17("SOL");
   const [draft, change] = useDraft(draftValue, onDraftChange);
-  return /* @__PURE__ */ jsxs68(Fragment21, { children: [
-    mode !== "Launch" && /* @__PURE__ */ jsx117("p", { className: "ub-launch-mode-note", children: "These fee-sharing instructions are for Pump. To create a Pons token, use the Launch tab. Existing Pons tokens pointed at PAID are indexed automatically." }),
-    /* @__PURE__ */ jsxs68("div", { className: "ub-launch", children: [
-      /* @__PURE__ */ jsxs68("section", { className: "ub-launch-form", children: [
-        /* @__PURE__ */ jsx117(
+  return /* @__PURE__ */ jsxs70(Fragment21, { children: [
+    mode !== "Launch" && /* @__PURE__ */ jsx119("p", { className: "ub-launch-mode-note", children: "These fee-sharing instructions are for Pump. To create a Pons token, use the Launch tab. Existing Pons tokens pointed at PAID are indexed automatically." }),
+    /* @__PURE__ */ jsxs70("div", { className: "ub-launch", children: [
+      /* @__PURE__ */ jsxs70("section", { className: "ub-launch-form", children: [
+        /* @__PURE__ */ jsx119(
           Heading,
           {
-            right: /* @__PURE__ */ jsx117(
+            right: /* @__PURE__ */ jsx119(
               SingleSparkTabs,
               {
                 values: ["Launch", "Register", "Walletless"],
@@ -4893,9 +5048,9 @@ function LaunchModesCore({
             children: mode === "Launch" ? "Launch token" : mode === "Register" ? "Register a token" : "Walletless launch"
           }
         ),
-        mode === "Launch" ? /* @__PURE__ */ jsxs68(Fragment21, { children: [
-          /* @__PURE__ */ jsxs68("div", { className: "ub-form-stack", children: [
-            /* @__PURE__ */ jsx117(
+        mode === "Launch" ? /* @__PURE__ */ jsxs70(Fragment21, { children: [
+          /* @__PURE__ */ jsxs70("div", { className: "ub-form-stack", children: [
+            /* @__PURE__ */ jsx119(
               Launchpads,
               {
                 value: platform,
@@ -4903,24 +5058,24 @@ function LaunchModesCore({
                 onChange: (v) => setPlatform(v)
               }
             ),
-            platform === "Pons" ? /* @__PURE__ */ jsx117(
+            platform === "Pons" ? /* @__PURE__ */ jsx119(
               TaxCore,
               {
                 value: draft.tax,
                 onChange: (tax) => change({ tax })
               }
-            ) : /* @__PURE__ */ jsx117(CurrencyCore, { value: currency, onChange: setCurrency }),
-            /* @__PURE__ */ jsx117(
+            ) : /* @__PURE__ */ jsx119(CurrencyCore, { value: currency, onChange: setCurrency }),
+            /* @__PURE__ */ jsx119(
               RecipientField,
               {
                 value: draft.recipient,
                 onChange: (recipient) => change({ recipient })
               }
             ),
-            /* @__PURE__ */ jsx117(DeployerCore, { draft, onChange: change })
+            /* @__PURE__ */ jsx119(DeployerCore, { draft, onChange: change })
           ] }),
-          /* @__PURE__ */ jsx117("hr", {}),
-          /* @__PURE__ */ jsx117(
+          /* @__PURE__ */ jsx119("hr", {}),
+          /* @__PURE__ */ jsx119(
             MetadataCore,
             {
               draft,
@@ -4928,7 +5083,7 @@ function LaunchModesCore({
               onImageFile
             }
           ),
-          /* @__PURE__ */ jsx117(
+          /* @__PURE__ */ jsx119(
             InitialBuyCore,
             {
               value: draft.initialBuy,
@@ -4936,7 +5091,7 @@ function LaunchModesCore({
               onChange: (initialBuy) => change({ initialBuy })
             }
           ),
-          /* @__PURE__ */ jsx117(
+          /* @__PURE__ */ jsx119(
             ConsentCore,
             {
               agreed: draft.agreed,
@@ -4944,41 +5099,41 @@ function LaunchModesCore({
               onConnect: () => onConnect ? onConnect() : onAction?.("connect-wallet")
             }
           )
-        ] }) : mode === "Register" ? /* @__PURE__ */ jsx117(RegisterCore, { ...register }) : /* @__PURE__ */ jsxs68(Fragment21, { children: [
-          /* @__PURE__ */ jsx117(Launchpads, { value: "Pump", onChange: () => {
+        ] }) : mode === "Register" ? /* @__PURE__ */ jsx119(RegisterCore, { ...register }) : /* @__PURE__ */ jsxs70(Fragment21, { children: [
+          /* @__PURE__ */ jsx119(Launchpads, { value: "Pump", onChange: () => {
           }, pumpOnly: true }),
-          /* @__PURE__ */ jsx117(WalletlessCore, {})
+          /* @__PURE__ */ jsx119(WalletlessCore, {})
         ] })
       ] }),
-      mode === "Walletless" ? /* @__PURE__ */ jsx117(WalletlessPreview, { paused }) : mode === "Register" ? /* @__PURE__ */ jsx117("aside", { className: "ub-launch-preview", children: /* @__PURE__ */ jsx117(PreviewCard, { draft: {} }) }) : /* @__PURE__ */ jsx117(LaunchPreviewCore, { draft, paused })
+      mode === "Walletless" ? /* @__PURE__ */ jsx119(WalletlessPreview, { paused }) : mode === "Register" ? /* @__PURE__ */ jsx119("aside", { className: "ub-launch-preview", children: /* @__PURE__ */ jsx119(PreviewCard, { draft: {} }) }) : /* @__PURE__ */ jsx119(LaunchPreviewCore, { draft, paused })
     ] })
   ] });
 }
 
 // react/components/singlespark-business/SingleSparkLaunchModes.tsx
-import { jsx as jsx118 } from "react/jsx-runtime";
+import { jsx as jsx120 } from "react/jsx-runtime";
 function SingleSparkLaunchModes({ className, ...props }) {
-  return /* @__PURE__ */ jsx118(Surface, { className, children: /* @__PURE__ */ jsx118(LaunchModesCore, { ...props }) });
+  return /* @__PURE__ */ jsx120(Surface, { className, children: /* @__PURE__ */ jsx120(LaunchModesCore, { ...props }) });
 }
 
 // react/components/singlespark-business/SingleSparkWalletlessGuide.tsx
-import { jsx as jsx119 } from "react/jsx-runtime";
+import { jsx as jsx121 } from "react/jsx-runtime";
 function SingleSparkWalletlessGuide({
   className,
   ...props
 }) {
-  return /* @__PURE__ */ jsx119(Surface, { className, children: /* @__PURE__ */ jsx119(LaunchModesCore, { defaultMode: "Walletless", ...props }) });
+  return /* @__PURE__ */ jsx121(Surface, { className, children: /* @__PURE__ */ jsx121(LaunchModesCore, { defaultMode: "Walletless", ...props }) });
 }
 
 // react/components/singlespark-business/SingleSparkPageIntro.tsx
-import { jsx as jsx120, jsxs as jsxs69 } from "react/jsx-runtime";
+import { jsx as jsx122, jsxs as jsxs71 } from "react/jsx-runtime";
 function SingleSparkPageIntro({
   title = "Launch a token and route creator fees",
   description = "Deploy a new token on pump.fun or pons.family with its fees pointed at our treasury, or redirect the fees on a token you already launched.",
   className
 }) {
-  return /* @__PURE__ */ jsx120(Surface, { className, children: /* @__PURE__ */ jsxs69("section", { className: "ub-page-intro", children: [
-    /* @__PURE__ */ jsx120("div", { className: "ub-intro-grid", "aria-hidden": "true", children: [0, 1, 2, 3, 4, 5, 6].map((i) => /* @__PURE__ */ jsx120(
+  return /* @__PURE__ */ jsx122(Surface, { className, children: /* @__PURE__ */ jsxs71("section", { className: "ub-page-intro", children: [
+    /* @__PURE__ */ jsx122("div", { className: "ub-intro-grid", "aria-hidden": "true", children: [0, 1, 2, 3, 4, 5, 6].map((i) => /* @__PURE__ */ jsx122(
       "span",
       {
         style: {
@@ -5005,15 +5160,15 @@ function SingleSparkPageIntro({
       },
       i
     )) }),
-    /* @__PURE__ */ jsxs69("div", { children: [
-      /* @__PURE__ */ jsx120("h1", { children: title }),
-      /* @__PURE__ */ jsx120("p", { children: description })
+    /* @__PURE__ */ jsxs71("div", { children: [
+      /* @__PURE__ */ jsx122("h1", { children: title }),
+      /* @__PURE__ */ jsx122("p", { children: description })
     ] })
   ] }) });
 }
 
 // react/components/singlespark-business/AnalyticsRange.tsx
-import { jsx as jsx121, jsxs as jsxs70 } from "react/jsx-runtime";
+import { jsx as jsx123, jsxs as jsxs72 } from "react/jsx-runtime";
 function AnalyticsRange({
   value,
   onChange,
@@ -5026,9 +5181,9 @@ function AnalyticsRange({
     "All",
     onChange
   );
-  return /* @__PURE__ */ jsx121(Surface, { className, children: /* @__PURE__ */ jsxs70("div", { className: "ub-analytics-heading", children: [
-    title && /* @__PURE__ */ jsx121("h1", { children: title }),
-    /* @__PURE__ */ jsx121(
+  return /* @__PURE__ */ jsx123(Surface, { className, children: /* @__PURE__ */ jsxs72("div", { className: "ub-analytics-heading", children: [
+    title && /* @__PURE__ */ jsx123("h1", { children: title }),
+    /* @__PURE__ */ jsx123(
       SingleSparkTabs,
       {
         values: ranges,
@@ -5041,7 +5196,7 @@ function AnalyticsRange({
 }
 
 // react/components/singlespark-business/AnalyticsMetrics.tsx
-import { jsx as jsx122, jsxs as jsxs71 } from "react/jsx-runtime";
+import { jsx as jsx124, jsxs as jsxs73 } from "react/jsx-runtime";
 function AnalyticsMetrics({
   metrics = [
     { label: "Total fees claimed", value: "$5,689,241.52" },
@@ -5050,18 +5205,18 @@ function AnalyticsMetrics({
   className,
   loading = false
 }) {
-  return /* @__PURE__ */ jsx122(Surface, { className, children: /* @__PURE__ */ jsx122("div", { className: "ub-analytics-metrics", children: metrics.map((m) => /* @__PURE__ */ jsxs71("section", { children: [
-    /* @__PURE__ */ jsx122("span", { children: m.label }),
-    /* @__PURE__ */ jsxs71("strong", { children: [
-      loading ? /* @__PURE__ */ jsx122(SingleSparkSkeleton, { variant: "input", width: 80, height: 28, label: `Loading ${m.label}` }) : /* @__PURE__ */ jsx122(SingleSparkMoney, { value: m.value }),
-      !loading && m.unit && /* @__PURE__ */ jsx122("small", { className: "ub-metric-unit", children: m.unit })
+  return /* @__PURE__ */ jsx124(Surface, { className, children: /* @__PURE__ */ jsx124("div", { className: "ub-analytics-metrics", children: metrics.map((m) => /* @__PURE__ */ jsxs73("section", { children: [
+    /* @__PURE__ */ jsx124("span", { children: m.label }),
+    /* @__PURE__ */ jsxs73("strong", { children: [
+      loading ? /* @__PURE__ */ jsx124(SingleSparkSkeleton, { variant: "input", width: 80, height: 28, label: `Loading ${m.label}` }) : /* @__PURE__ */ jsx124(SingleSparkMoney, { value: m.value }),
+      !loading && m.unit && /* @__PURE__ */ jsx124("small", { className: "ub-metric-unit", children: m.unit })
     ] }),
-    /* @__PURE__ */ jsx122("small", { children: m.comparison || "No baseline" })
+    /* @__PURE__ */ jsx124("small", { children: m.comparison || "No baseline" })
   ] }, m.label)) }) });
 }
 
 // react/components/singlespark-business/BarChart.tsx
-import { jsx as jsx123, jsxs as jsxs72 } from "react/jsx-runtime";
+import { jsx as jsx125, jsxs as jsxs74 } from "react/jsx-runtime";
 function BarChart({
   values,
   title,
@@ -5073,67 +5228,67 @@ function BarChart({
 }) {
   const max = Math.max(...values, 0) || 1;
   const date = (n) => labels?.[n] ?? (n < 7 ? "Sep " + (n + 24) : "Oct " + (n - 6));
-  return /* @__PURE__ */ jsxs72("section", { className: "ub-analytics-chart", "aria-label": title, children: [
-    /* @__PURE__ */ jsxs72("header", { children: [
-      /* @__PURE__ */ jsx123("h3", { children: title }),
-      /* @__PURE__ */ jsx123("strong", { children: total }),
-      /* @__PURE__ */ jsx123("p", { children: description })
+  return /* @__PURE__ */ jsxs74("section", { className: "ub-analytics-chart", "aria-label": title, children: [
+    /* @__PURE__ */ jsxs74("header", { children: [
+      /* @__PURE__ */ jsx125("h3", { children: title }),
+      /* @__PURE__ */ jsx125("strong", { children: total }),
+      /* @__PURE__ */ jsx125("p", { children: description })
     ] }),
-    values.length ? /* @__PURE__ */ jsxs72("div", { className: "ub-bar-surface", children: [
-      /* @__PURE__ */ jsx123("div", { className: "ub-bars", children: values.map((v, n) => {
+    values.length ? /* @__PURE__ */ jsxs74("div", { className: "ub-bar-surface", children: [
+      /* @__PURE__ */ jsx125("div", { className: "ub-bars", children: values.map((v, n) => {
         const amount = valueLabels?.[n] ?? `$${v.toLocaleString("en-US")}`;
-        return /* @__PURE__ */ jsxs72(
+        return /* @__PURE__ */ jsxs74(
           "button",
           {
             type: "button",
             "aria-label": `${date(n)}${labels ? "" : ", 2026 UTC"} \xB7 ${amount}`,
             children: [
-              /* @__PURE__ */ jsx123("span", { "data-zero": v === 0 || void 0, style: { height: (v > 0 ? Math.max(1, v / max * 100) : 0) + "%", minHeight: v > 0 ? 4 : 3, animationDelay: `${n / Math.max(1, values.length - 1) * 600}ms` } }),
-              /* @__PURE__ */ jsxs72("span", { className: "ub-chart-tooltip", children: [
+              /* @__PURE__ */ jsx125("span", { "data-zero": v === 0 || void 0, style: { height: (v > 0 ? Math.max(1, v / max * 100) : 0) + "%", minHeight: v > 0 ? 4 : 3, animationDelay: `${n / Math.max(1, values.length - 1) * 600}ms` } }),
+              /* @__PURE__ */ jsxs74("span", { className: "ub-chart-tooltip", children: [
                 date(n),
-                /* @__PURE__ */ jsx123("strong", { children: amount })
+                /* @__PURE__ */ jsx125("strong", { children: amount })
               ] })
             ]
           },
           n
         );
       }) }),
-      /* @__PURE__ */ jsxs72("div", { className: "ub-axis", children: [
-        /* @__PURE__ */ jsx123("span", { children: date(0) }),
-        /* @__PURE__ */ jsx123("span", { children: date(Math.floor((values.length - 1) / 2)) }),
-        /* @__PURE__ */ jsx123("span", { children: date(values.length - 1) })
+      /* @__PURE__ */ jsxs74("div", { className: "ub-axis", children: [
+        /* @__PURE__ */ jsx125("span", { children: date(0) }),
+        /* @__PURE__ */ jsx125("span", { children: date(Math.floor((values.length - 1) / 2)) }),
+        /* @__PURE__ */ jsx125("span", { children: date(values.length - 1) })
       ] })
-    ] }) : /* @__PURE__ */ jsx123("div", { className: "ub-chart-skeleton", role: "status", children: emptyText })
+    ] }) : /* @__PURE__ */ jsx125("div", { className: "ub-chart-skeleton", role: "status", children: emptyText })
   ] });
 }
 
 // react/components/singlespark-business/AnalyticsCharts.tsx
-import { Fragment as Fragment22, jsx as jsx124, jsxs as jsxs73 } from "react/jsx-runtime";
+import { Fragment as Fragment22, jsx as jsx126, jsxs as jsxs75 } from "react/jsx-runtime";
 function AnalyticsCharts({
   fees = feeBarSnapshot[0],
   burns = feeBarSnapshot[1],
   charts,
   className
 }) {
-  return /* @__PURE__ */ jsx124(Surface, { className, children: /* @__PURE__ */ jsx124("div", { className: "ub-analytics-charts", children: charts ? charts.map((chart) => /* @__PURE__ */ jsx124(BarChart, { ...chart }, chart.title)) : /* @__PURE__ */ jsxs73(Fragment22, { children: [
-    /* @__PURE__ */ jsx124(BarChart, { values: fees, title: "Fees", total: "$5.69M" }),
-    /* @__PURE__ */ jsx124(BarChart, { values: burns, title: "$PAID burnt", total: "$1.21M" }),
-    /* @__PURE__ */ jsxs73("section", { className: "ub-analytics-chart", children: [
-      /* @__PURE__ */ jsxs73("header", { children: [
-        /* @__PURE__ */ jsx124("h3", { children: "Protocol volume" }),
-        /* @__PURE__ */ jsx124("strong", { children: "Loading" }),
-        /* @__PURE__ */ jsx124("p", { children: "Live volume coverage has not been captured." })
+  return /* @__PURE__ */ jsx126(Surface, { className, children: /* @__PURE__ */ jsx126("div", { className: "ub-analytics-charts", children: charts ? charts.map((chart) => /* @__PURE__ */ jsx126(BarChart, { ...chart }, chart.title)) : /* @__PURE__ */ jsxs75(Fragment22, { children: [
+    /* @__PURE__ */ jsx126(BarChart, { values: fees, title: "Fees", total: "$5.69M" }),
+    /* @__PURE__ */ jsx126(BarChart, { values: burns, title: "$PAID burnt", total: "$1.21M" }),
+    /* @__PURE__ */ jsxs75("section", { className: "ub-analytics-chart", children: [
+      /* @__PURE__ */ jsxs75("header", { children: [
+        /* @__PURE__ */ jsx126("h3", { children: "Protocol volume" }),
+        /* @__PURE__ */ jsx126("strong", { children: "Loading" }),
+        /* @__PURE__ */ jsx126("p", { children: "Live volume coverage has not been captured." })
       ] }),
-      /* @__PURE__ */ jsx124("div", { className: "ub-chart-skeleton" })
+      /* @__PURE__ */ jsx126("div", { className: "ub-chart-skeleton" })
     ] })
   ] }) }) });
 }
 
 // react/components/singlespark-business/BurnDetailsCore.tsx
-import { Fragment as Fragment23, jsx as jsx125, jsxs as jsxs74 } from "react/jsx-runtime";
+import { Fragment as Fragment23, jsx as jsx127, jsxs as jsxs76 } from "react/jsx-runtime";
 function BurnDetailsCore() {
-  return /* @__PURE__ */ jsxs74(Fragment23, { children: [
-    /* @__PURE__ */ jsx125(
+  return /* @__PURE__ */ jsxs76(Fragment23, { children: [
+    /* @__PURE__ */ jsx127(
       SingleSparkKeyValueList,
       {
         entries: [
@@ -5142,25 +5297,25 @@ function BurnDetailsCore() {
           ["$PAID bought", "70.7K"],
           ["$PAID burned", "70.7K"],
           ["Route", "Jupiter"],
-          ["Token", /* @__PURE__ */ jsx125("code", { children: singleSparkMint })],
+          ["Token", /* @__PURE__ */ jsx127("code", { children: singleSparkMint })],
           [
             "Swap",
-            /* @__PURE__ */ jsx125("code", { children: "3cV7ijsmaooPLp6oEreB6aPt7T2jNdg8yaXjnwixUzx3HTGMtLUk5GBQrKkmtcFcfLhvucSnCvqvVoJcEJRxxkK" })
+            /* @__PURE__ */ jsx127("code", { children: "3cV7ijsmaooPLp6oEreB6aPt7T2jNdg8yaXjnwixUzx3HTGMtLUk5GBQrKkmtcFcfLhvucSnCvqvVoJcEJRxxkK" })
           ],
-          ["Burn", /* @__PURE__ */ jsx125("code", { children: burnTx })],
+          ["Burn", /* @__PURE__ */ jsx127("code", { children: burnTx })],
           ["Bought", "Oct 7, 2026, 9:34 AM"],
           ["Burned", "Oct 7, 2026, 9:34 AM"]
         ]
       }
     ),
-    /* @__PURE__ */ jsxs74(
+    /* @__PURE__ */ jsxs76(
       External,
       {
         href: "https://solscan.io/tx/" + burnTx,
         className: "ub-button ub-primary ub-full",
         children: [
           "View burn on Solscan ",
-          /* @__PURE__ */ jsx125(Icon2, { name: "external", size: 14 })
+          /* @__PURE__ */ jsx127(Icon2, { name: "external", size: 14 })
         ]
       }
     )
@@ -5168,25 +5323,25 @@ function BurnDetailsCore() {
 }
 
 // react/components/singlespark-business/BuybackDetails.tsx
-import { jsx as jsx126 } from "react/jsx-runtime";
+import { jsx as jsx128 } from "react/jsx-runtime";
 function BuybackDetails({ className }) {
-  return /* @__PURE__ */ jsx126(Surface, { className, children: /* @__PURE__ */ jsx126(SingleSparkPanel, { children: /* @__PURE__ */ jsx126(BurnDetailsCore, {}) }) });
+  return /* @__PURE__ */ jsx128(Surface, { className, children: /* @__PURE__ */ jsx128(SingleSparkPanel, { children: /* @__PURE__ */ jsx128(BurnDetailsCore, {}) }) });
 }
 
 // react/components/singlespark-business/BuybackSummary.tsx
-import { jsx as jsx127, jsxs as jsxs75 } from "react/jsx-runtime";
+import { jsx as jsx129, jsxs as jsxs77 } from "react/jsx-runtime";
 function BuybackSummary({ className }) {
-  return /* @__PURE__ */ jsx127(Surface, { className, children: /* @__PURE__ */ jsxs75(SingleSparkPanel, { children: [
-    /* @__PURE__ */ jsx127("dl", { className: "ub-buyback-totals", children: [
+  return /* @__PURE__ */ jsx129(Surface, { className, children: /* @__PURE__ */ jsxs77(SingleSparkPanel, { children: [
+    /* @__PURE__ */ jsx129("dl", { className: "ub-buyback-totals", children: [
       ["SOL spent", "10,533.3021"],
       ["Value", "$1,209,012.21"],
       ["$PAID bought", "69.60M"],
       ["$PAID burned", "69.60M"]
-    ].map(([h, v]) => /* @__PURE__ */ jsxs75("div", { children: [
-      /* @__PURE__ */ jsx127("dt", { children: h }),
-      /* @__PURE__ */ jsx127("dd", { children: v })
+    ].map(([h, v]) => /* @__PURE__ */ jsxs77("div", { children: [
+      /* @__PURE__ */ jsx129("dt", { children: h }),
+      /* @__PURE__ */ jsx129("dd", { children: v })
     ] }, h)) }),
-    /* @__PURE__ */ jsx127(
+    /* @__PURE__ */ jsx129(
       External,
       {
         href: "https://solscan.io/token/" + singleSparkMint,
@@ -5202,35 +5357,35 @@ import { useState as useState19 } from "react";
 
 // react/components/singlespark-business/BurnCard.tsx
 import { useId as useId6, useState as useState18 } from "react";
-import { Fragment as Fragment24, jsx as jsx128, jsxs as jsxs76 } from "react/jsx-runtime";
+import { Fragment as Fragment24, jsx as jsx130, jsxs as jsxs78 } from "react/jsx-runtime";
 function BurnCard({ index = 0, content, action }) {
   const [open, setOpen] = useState18(false);
   const detailsId = useId6();
-  return /* @__PURE__ */ jsxs76("article", { className: "ub-payment ub-expand " + (open ? "ub-open" : ""), "aria-busy": action?.loading || void 0, children: [
-    /* @__PURE__ */ jsxs76("div", { className: "ub-burn-main", children: [
-      /* @__PURE__ */ jsxs76("div", { className: "ub-payment-text", children: [
-        /* @__PURE__ */ jsx128("p", { children: content ? content.amount : `${["4.032", "1.7388", "2.0663"][index]} SOL` }),
-        /* @__PURE__ */ jsx128("div", { children: content ? content.description : /* @__PURE__ */ jsxs76(Fragment24, { children: [
-          /* @__PURE__ */ jsx128("span", { children: "bought and burned" }),
-          /* @__PURE__ */ jsxs76("strong", { children: [
+  return /* @__PURE__ */ jsxs78("article", { className: "ub-payment ub-expand " + (open ? "ub-open" : ""), "aria-busy": action?.loading || void 0, children: [
+    /* @__PURE__ */ jsxs78("div", { className: "ub-burn-main", children: [
+      /* @__PURE__ */ jsxs78("div", { className: "ub-payment-text", children: [
+        /* @__PURE__ */ jsx130("p", { children: content ? content.amount : `${["4.032", "1.7388", "2.0663"][index]} SOL` }),
+        /* @__PURE__ */ jsx130("div", { children: content ? content.description : /* @__PURE__ */ jsxs78(Fragment24, { children: [
+          /* @__PURE__ */ jsx130("span", { children: "bought and burned" }),
+          /* @__PURE__ */ jsxs78("strong", { children: [
             ["70.7K", "31.8K", "38.8K"][index],
             " $PAID"
           ] })
         ] }) })
       ] }),
-      /* @__PURE__ */ jsx128("div", { className: "ub-burn-route", children: content ? content.route : /* @__PURE__ */ jsxs76(Fragment24, { children: [
-        /* @__PURE__ */ jsx128("span", { children: /* @__PURE__ */ jsx128(Sol, {}) }),
-        /* @__PURE__ */ jsx128(Icon2, { name: "arrow" }),
-        /* @__PURE__ */ jsx128("span", { children: /* @__PURE__ */ jsx128(SingleSparkMark, {}) }),
-        /* @__PURE__ */ jsx128(Icon2, { name: "arrow" }),
-        /* @__PURE__ */ jsx128("span", { className: "ub-burn-icon", children: /* @__PURE__ */ jsx128(Icon2, { name: "burn", size: 20 }) })
+      /* @__PURE__ */ jsx130("div", { className: "ub-burn-route", children: content ? content.route : /* @__PURE__ */ jsxs78(Fragment24, { children: [
+        /* @__PURE__ */ jsx130("span", { children: /* @__PURE__ */ jsx130(Sol, {}) }),
+        /* @__PURE__ */ jsx130(Icon2, { name: "arrow" }),
+        /* @__PURE__ */ jsx130("span", { children: /* @__PURE__ */ jsx130(SingleSparkMark, {}) }),
+        /* @__PURE__ */ jsx130(Icon2, { name: "arrow" }),
+        /* @__PURE__ */ jsx130("span", { className: "ub-burn-icon", children: /* @__PURE__ */ jsx130(Icon2, { name: "burn", size: 20 }) })
       ] }) }),
-      (!content || content.status != null || !!content.time) && /* @__PURE__ */ jsxs76("span", { className: "ub-burn-status", children: [
+      (!content || content.status != null || !!content.time) && /* @__PURE__ */ jsxs78("span", { className: "ub-burn-status", children: [
         content ? content.status : "Burned",
         " ",
-        /* @__PURE__ */ jsx128("small", { children: content ? content.time : "30m" })
+        /* @__PURE__ */ jsx130("small", { children: content ? content.time : "30m" })
       ] }),
-      /* @__PURE__ */ jsx128(
+      /* @__PURE__ */ jsx130(
         "button",
         {
           type: "button",
@@ -5241,10 +5396,10 @@ function BurnCard({ index = 0, content, action }) {
           "aria-controls": action ? void 0 : detailsId,
           "aria-label": action ? action.label : content ? content.detailsLabel : "Show buyback details",
           onClick: action ? action.onClick : () => setOpen(!open),
-          children: action?.loading && /* @__PURE__ */ jsx128("span", { className: "ub-card-progress", children: /* @__PURE__ */ jsx128(SingleSparkLoading, { size: 18, decorative: true }) })
+          children: action?.loading && /* @__PURE__ */ jsx130("span", { className: "ub-card-progress", children: /* @__PURE__ */ jsx130(SingleSparkLoading, { size: 18, decorative: true }) })
         }
       ),
-      action ? /* @__PURE__ */ jsx128(
+      action ? /* @__PURE__ */ jsx130(
         "button",
         {
           type: "button",
@@ -5253,11 +5408,11 @@ function BurnCard({ index = 0, content, action }) {
           "aria-expanded": open,
           "aria-controls": detailsId,
           onClick: () => setOpen(!open),
-          children: /* @__PURE__ */ jsx128(Icon2, { name: "chevron" })
+          children: /* @__PURE__ */ jsx130(Icon2, { name: "chevron" })
         }
-      ) : /* @__PURE__ */ jsx128("span", { className: "ub-card-chevron", children: /* @__PURE__ */ jsx128(Icon2, { name: "chevron" }) })
+      ) : /* @__PURE__ */ jsx130("span", { className: "ub-card-chevron", children: /* @__PURE__ */ jsx130(Icon2, { name: "chevron" }) })
     ] }),
-    /* @__PURE__ */ jsx128("div", { className: "ub-expand-grid", children: /* @__PURE__ */ jsx128("div", { children: /* @__PURE__ */ jsx128(
+    /* @__PURE__ */ jsx130("div", { className: "ub-expand-grid", children: /* @__PURE__ */ jsx130("div", { children: /* @__PURE__ */ jsx130(
       "div",
       {
         className: "ub-expand-body",
@@ -5266,21 +5421,21 @@ function BurnCard({ index = 0, content, action }) {
         ref: (node) => {
           if (node) node.inert = !open;
         },
-        children: content ? content.details : index === 0 ? /* @__PURE__ */ jsx128(BurnDetailsCore, {}) : /* @__PURE__ */ jsx128(SingleSparkNotice, { title: "Snapshot detail", children: "Only the first event\u2019s detail is retained in this local snapshot." })
+        children: content ? content.details : index === 0 ? /* @__PURE__ */ jsx130(BurnDetailsCore, {}) : /* @__PURE__ */ jsx130(SingleSparkNotice, { title: "Snapshot detail", children: "Only the first event\u2019s detail is retained in this local snapshot." })
       }
     ) }) })
   ] });
 }
 
 // react/components/singlespark-business/BuybackList.tsx
-import { jsx as jsx129, jsxs as jsxs77 } from "react/jsx-runtime";
+import { jsx as jsx131, jsxs as jsxs79 } from "react/jsx-runtime";
 function BuybackList({ className }) {
   const [tab, setTab] = useState19(
     "All"
   );
-  return /* @__PURE__ */ jsxs77(Surface, { className, children: [
-    /* @__PURE__ */ jsx129(Heading, { children: "Buyback and burn" }),
-    /* @__PURE__ */ jsx129(
+  return /* @__PURE__ */ jsxs79(Surface, { className, children: [
+    /* @__PURE__ */ jsx131(Heading, { children: "Buyback and burn" }),
+    /* @__PURE__ */ jsx131(
       SingleSparkTabs,
       {
         values: ["All", "Burned", "Pending", "Failed"],
@@ -5288,23 +5443,23 @@ function BuybackList({ className }) {
         onChange: setTab
       }
     ),
-    /* @__PURE__ */ jsx129("div", { className: "ub-stack", children: tab === "Pending" || tab === "Failed" ? /* @__PURE__ */ jsxs77("div", { className: "ub-empty", children: [
+    /* @__PURE__ */ jsx131("div", { className: "ub-stack", children: tab === "Pending" || tab === "Failed" ? /* @__PURE__ */ jsxs79("div", { className: "ub-empty", children: [
       "No ",
       tab.toLowerCase(),
       " events in this captured snapshot."
-    ] }) : [0, 1, 2].map((i) => /* @__PURE__ */ jsx129(BurnCard, { index: i }, i)) })
+    ] }) : [0, 1, 2].map((i) => /* @__PURE__ */ jsx131(BurnCard, { index: i }, i)) })
   ] });
 }
 
 // react/components/singlespark-business/AnalyticsMethodology.tsx
-import { Fragment as Fragment25, jsx as jsx130, jsxs as jsxs78 } from "react/jsx-runtime";
+import { Fragment as Fragment25, jsx as jsx132, jsxs as jsxs80 } from "react/jsx-runtime";
 function AnalyticsMethodology({ className, description, children }) {
-  return /* @__PURE__ */ jsx130(Surface, { className, children: /* @__PURE__ */ jsxs78("section", { className: "ub-methodology", children: [
-    /* @__PURE__ */ jsx130("h2", { children: "About these figures" }),
-    /* @__PURE__ */ jsx130("p", { children: description ?? /* @__PURE__ */ jsx130(Fragment25, { children: "Updated every 30 seconds. Daily records use UTC. Missing values and unpriced records are not counted as zero." }) }),
-    children ?? /* @__PURE__ */ jsxs78(Fragment25, { children: [
-      /* @__PURE__ */ jsx130(SingleSparkAccordion, { label: "Trading volume methodology", children: "Volume coverage varies by asset and date. Missing intervals stay unknown." }),
-      /* @__PURE__ */ jsx130(SingleSparkAccordion, { label: "Payment valuation breakdown", children: /* @__PURE__ */ jsx130(
+  return /* @__PURE__ */ jsx132(Surface, { className, children: /* @__PURE__ */ jsxs80("section", { className: "ub-methodology", children: [
+    /* @__PURE__ */ jsx132("h2", { children: "About these figures" }),
+    /* @__PURE__ */ jsx132("p", { children: description ?? /* @__PURE__ */ jsx132(Fragment25, { children: "Updated every 30 seconds. Daily records use UTC. Missing values and unpriced records are not counted as zero." }) }),
+    children ?? /* @__PURE__ */ jsxs80(Fragment25, { children: [
+      /* @__PURE__ */ jsx132(SingleSparkAccordion, { label: "Trading volume methodology", children: "Volume coverage varies by asset and date. Missing intervals stay unknown." }),
+      /* @__PURE__ */ jsx132(SingleSparkAccordion, { label: "Payment valuation breakdown", children: /* @__PURE__ */ jsx132(
         SingleSparkKeyValueList,
         {
           entries: [
@@ -5319,29 +5474,29 @@ function AnalyticsMethodology({ className, description, children }) {
 }
 
 // react/components/singlespark-business/FactsCore.tsx
-import { jsx as jsx131, jsxs as jsxs79 } from "react/jsx-runtime";
+import { jsx as jsx133, jsxs as jsxs81 } from "react/jsx-runtime";
 function FactsCore() {
-  return /* @__PURE__ */ jsx131("dl", { className: "ub-facts", children: [
+  return /* @__PURE__ */ jsx133("dl", { className: "ub-facts", children: [
     ["Ticker", "$PAID"],
     ["Home chain", "Solana, via pump.fun"],
     ["Funded by", "Protocol allocations and PAID treasury fees"],
     ["Mechanism", "Open-market buy, then burn"]
-  ].map(([a, b]) => /* @__PURE__ */ jsxs79("div", { children: [
-    /* @__PURE__ */ jsx131("dt", { children: a }),
-    /* @__PURE__ */ jsx131("dd", { children: b })
+  ].map(([a, b]) => /* @__PURE__ */ jsxs81("div", { children: [
+    /* @__PURE__ */ jsx133("dt", { children: a }),
+    /* @__PURE__ */ jsx133("dd", { children: b })
   ] }, a)) });
 }
 
 // react/components/singlespark-business/SingleSparkFacts.tsx
-import { jsx as jsx132 } from "react/jsx-runtime";
+import { jsx as jsx134 } from "react/jsx-runtime";
 function SingleSparkFacts({ className }) {
-  return /* @__PURE__ */ jsx132(Surface, { className, children: /* @__PURE__ */ jsx132(FactsCore, {}) });
+  return /* @__PURE__ */ jsx134(Surface, { className, children: /* @__PURE__ */ jsx134(FactsCore, {}) });
 }
 
 // react/components/singlespark-business/BurnStepsCore.tsx
-import { jsx as jsx133, jsxs as jsxs80 } from "react/jsx-runtime";
+import { jsx as jsx135, jsxs as jsxs82 } from "react/jsx-runtime";
 function BurnStepsCore() {
-  return /* @__PURE__ */ jsx133("div", { className: "ub-steps", children: [
+  return /* @__PURE__ */ jsx135("div", { className: "ub-steps", children: [
     [
       "A claim settles",
       "Creator fees are claimed on chain and recorded as a fee event, keyed on the claim\u2019s own transaction signature."
@@ -5358,90 +5513,90 @@ function BurnStepsCore() {
       "The tokens are burnt",
       "Completed purchases and burns have on-chain transaction records."
     ]
-  ].map(([h, p], i) => /* @__PURE__ */ jsxs80("div", { children: [
-    /* @__PURE__ */ jsx133("span", { children: i + 1 }),
-    /* @__PURE__ */ jsxs80("section", { children: [
-      /* @__PURE__ */ jsx133("h3", { children: h }),
-      /* @__PURE__ */ jsx133("p", { children: p })
+  ].map(([h, p], i) => /* @__PURE__ */ jsxs82("div", { children: [
+    /* @__PURE__ */ jsx135("span", { children: i + 1 }),
+    /* @__PURE__ */ jsxs82("section", { children: [
+      /* @__PURE__ */ jsx135("h3", { children: h }),
+      /* @__PURE__ */ jsx135("p", { children: p })
     ] })
   ] }, h)) });
 }
 
 // react/components/singlespark-business/BuyBurnSteps.tsx
-import { jsx as jsx134 } from "react/jsx-runtime";
+import { jsx as jsx136 } from "react/jsx-runtime";
 function BuyBurnSteps({ className }) {
-  return /* @__PURE__ */ jsx134(Surface, { className, children: /* @__PURE__ */ jsx134(BurnStepsCore, {}) });
+  return /* @__PURE__ */ jsx136(Surface, { className, children: /* @__PURE__ */ jsx136(BurnStepsCore, {}) });
 }
 
 // react/components/singlespark-business/BuyNotice.tsx
-import { jsx as jsx135, jsxs as jsxs81 } from "react/jsx-runtime";
+import { jsx as jsx137, jsxs as jsxs83 } from "react/jsx-runtime";
 function BuyNotice() {
-  return /* @__PURE__ */ jsxs81(SingleSparkNotice, { title: "Buyback and burn activity", children: [
+  return /* @__PURE__ */ jsxs83(SingleSparkNotice, { title: "Buyback and burn activity", children: [
     "Current buyback and burn records are published on each token's activity page. A pending buyback is not a completed burn.",
-    /* @__PURE__ */ jsx135("br", {}),
-    /* @__PURE__ */ jsx135("br", {}),
+    /* @__PURE__ */ jsx137("br", {}),
+    /* @__PURE__ */ jsx137("br", {}),
     "PAID token treasury fees fund buybacks in full."
   ] });
 }
 
 // react/components/singlespark-business/BuybackActivityNotice.tsx
-import { jsx as jsx136 } from "react/jsx-runtime";
+import { jsx as jsx138 } from "react/jsx-runtime";
 function BuybackActivityNotice({ className }) {
-  return /* @__PURE__ */ jsx136(Surface, { className, children: /* @__PURE__ */ jsx136(BuyNotice, {}) });
+  return /* @__PURE__ */ jsx138(Surface, { className, children: /* @__PURE__ */ jsx138(BuyNotice, {}) });
 }
 
 // react/components/singlespark-business/ProtocolArticle.tsx
-import { jsx as jsx137, jsxs as jsxs82 } from "react/jsx-runtime";
+import { jsx as jsx139, jsxs as jsxs84 } from "react/jsx-runtime";
 function ProtocolArticle({ className }) {
-  return /* @__PURE__ */ jsx137(Surface, { className, children: /* @__PURE__ */ jsxs82("article", { className: "ub-article", children: [
-    /* @__PURE__ */ jsxs82("header", { children: [
-      /* @__PURE__ */ jsx137("span", { children: "Protocol" }),
-      /* @__PURE__ */ jsx137("h1", { children: "$PAID" })
+  return /* @__PURE__ */ jsx139(Surface, { className, children: /* @__PURE__ */ jsxs84("article", { className: "ub-article", children: [
+    /* @__PURE__ */ jsxs84("header", { children: [
+      /* @__PURE__ */ jsx139("span", { children: "Protocol" }),
+      /* @__PURE__ */ jsx139("h1", { children: "$PAID" })
     ] }),
-    /* @__PURE__ */ jsx137("p", { className: "ub-article-lead", children: "Standard creator fees fund recipient allocations, singleSpark treasury and buybacks. PAID token treasury fees separately fund buybacks in full. Pending allocations are not completed payments or burns." }),
-    /* @__PURE__ */ jsxs82("div", { className: "ub-article-body", children: [
-      /* @__PURE__ */ jsx137("p", { children: "Current collection split: 65% recipient pool / 10% singleSpark treasury / 25% buyback and burn." }),
-      /* @__PURE__ */ jsx137(BuyNotice, {}),
-      /* @__PURE__ */ jsxs82("section", { children: [
-        /* @__PURE__ */ jsx137("h2", { children: "What it is for" }),
-        /* @__PURE__ */ jsx137("p", { children: "$PAID is the protocol\u2019s value accrual, not a governance token and not a fee token." }),
-        /* @__PURE__ */ jsx137(FactsCore, {})
+    /* @__PURE__ */ jsx139("p", { className: "ub-article-lead", children: "Standard creator fees fund recipient allocations, singleSpark treasury and buybacks. PAID token treasury fees separately fund buybacks in full. Pending allocations are not completed payments or burns." }),
+    /* @__PURE__ */ jsxs84("div", { className: "ub-article-body", children: [
+      /* @__PURE__ */ jsx139("p", { children: "Current collection split: 65% recipient pool / 10% singleSpark treasury / 25% buyback and burn." }),
+      /* @__PURE__ */ jsx139(BuyNotice, {}),
+      /* @__PURE__ */ jsxs84("section", { children: [
+        /* @__PURE__ */ jsx139("h2", { children: "What it is for" }),
+        /* @__PURE__ */ jsx139("p", { children: "$PAID is the protocol\u2019s value accrual, not a governance token and not a fee token." }),
+        /* @__PURE__ */ jsx139(FactsCore, {})
       ] }),
-      /* @__PURE__ */ jsxs82("section", { children: [
-        /* @__PURE__ */ jsx137("h2", { children: "How the buy and burn works" }),
-        /* @__PURE__ */ jsx137(BurnStepsCore, {})
+      /* @__PURE__ */ jsxs84("section", { children: [
+        /* @__PURE__ */ jsx139("h2", { children: "How the buy and burn works" }),
+        /* @__PURE__ */ jsx139(BurnStepsCore, {})
       ] })
     ] })
   ] }) });
 }
 
 // react/components/singlespark-business/CapitalFlowSections.tsx
-import { jsx as jsx138, jsxs as jsxs83 } from "react/jsx-runtime";
+import { jsx as jsx140, jsxs as jsxs85 } from "react/jsx-runtime";
 function CapitalFlowSections({ className, onNavigate }) {
-  return /* @__PURE__ */ jsx138(Surface, { className, children: /* @__PURE__ */ jsxs83("article", { className: "ub-article", children: [
-    /* @__PURE__ */ jsxs83("header", { children: [
-      /* @__PURE__ */ jsx138("span", { children: "Fund flows" }),
-      /* @__PURE__ */ jsx138("h1", { children: "New fees and historical balances." })
+  return /* @__PURE__ */ jsx140(Surface, { className, children: /* @__PURE__ */ jsxs85("article", { className: "ub-article", children: [
+    /* @__PURE__ */ jsxs85("header", { children: [
+      /* @__PURE__ */ jsx140("span", { children: "Fund flows" }),
+      /* @__PURE__ */ jsx140("h1", { children: "New fees and historical balances." })
     ] }),
-    /* @__PURE__ */ jsx138("p", { children: "Current collection split: 65% recipient pool / 10% singleSpark treasury / 25% buyback and burn." }),
-    /* @__PURE__ */ jsxs83("div", { className: "ub-manual-grid", children: [
-      /* @__PURE__ */ jsxs83("section", { children: [
-        /* @__PURE__ */ jsx138("h2", { children: "Creator and deployer fees" }),
-        /* @__PURE__ */ jsxs83("ol", { children: [
-          /* @__PURE__ */ jsx138("li", { children: "Eligible fees are collected and recorded." }),
-          /* @__PURE__ */ jsx138("li", { children: "Beneficiary shares stay in the original asset." }),
-          /* @__PURE__ */ jsx138("li", { children: "The portal shows original asset availability." }),
-          /* @__PURE__ */ jsx138("li", { children: "One eligible asset can be requested to the beneficiary\u2019s own Solana wallet." })
+    /* @__PURE__ */ jsx140("p", { children: "Current collection split: 65% recipient pool / 10% singleSpark treasury / 25% buyback and burn." }),
+    /* @__PURE__ */ jsxs85("div", { className: "ub-manual-grid", children: [
+      /* @__PURE__ */ jsxs85("section", { children: [
+        /* @__PURE__ */ jsx140("h2", { children: "Creator and deployer fees" }),
+        /* @__PURE__ */ jsxs85("ol", { children: [
+          /* @__PURE__ */ jsx140("li", { children: "Eligible fees are collected and recorded." }),
+          /* @__PURE__ */ jsx140("li", { children: "Beneficiary shares stay in the original asset." }),
+          /* @__PURE__ */ jsx140("li", { children: "The portal shows original asset availability." }),
+          /* @__PURE__ */ jsx140("li", { children: "One eligible asset can be requested to the beneficiary\u2019s own Solana wallet." })
         ] })
       ] }),
-      /* @__PURE__ */ jsxs83("section", { children: [
-        /* @__PURE__ */ jsx138("h2", { children: "Earlier X Money balances" }),
-        /* @__PURE__ */ jsx138("p", { children: "Earlier balances stay outside manual claims. Previous conversion, ACH and X Money records remain historical evidence." }),
-        /* @__PURE__ */ jsx138("h2", { children: "PAID treasury fees" }),
-        /* @__PURE__ */ jsx138("p", { children: "100% of PAID treasury fees fund buybacks." })
+      /* @__PURE__ */ jsxs85("section", { children: [
+        /* @__PURE__ */ jsx140("h2", { children: "Earlier X Money balances" }),
+        /* @__PURE__ */ jsx140("p", { children: "Earlier balances stay outside manual claims. Previous conversion, ACH and X Money records remain historical evidence." }),
+        /* @__PURE__ */ jsx140("h2", { children: "PAID treasury fees" }),
+        /* @__PURE__ */ jsx140("p", { children: "100% of PAID treasury fees fund buybacks." })
       ] })
     ] }),
-    /* @__PURE__ */ jsx138(
+    /* @__PURE__ */ jsx140(
       SingleSparkButton,
       {
         className: "ub-primary",
@@ -5453,75 +5608,72 @@ function CapitalFlowSections({ className, onNavigate }) {
 }
 
 // react/components/singlespark-business/OfficialLinkHub.tsx
-import { jsx as jsx139, jsxs as jsxs84 } from "react/jsx-runtime";
+import { jsx as jsx141, jsxs as jsxs86 } from "react/jsx-runtime";
 function OfficialLinkHub({ className }) {
-  return /* @__PURE__ */ jsx139(Surface, { className, children: /* @__PURE__ */ jsxs84("section", { className: "ub-links-hub", children: [
-    /* @__PURE__ */ jsx139(SingleSparkMark, {}),
-    /* @__PURE__ */ jsx139("h1", { children: "PAID" }),
-    /* @__PURE__ */ jsx139("p", { children: "Token fees, paid through X Money." }),
-    /* @__PURE__ */ jsx139("h2", { children: "Official links" }),
+  return /* @__PURE__ */ jsx141(Surface, { className, children: /* @__PURE__ */ jsxs86("section", { className: "ub-links-hub", children: [
+    /* @__PURE__ */ jsx141(SingleSparkMark, {}),
+    /* @__PURE__ */ jsx141("h1", { children: "PAID" }),
+    /* @__PURE__ */ jsx141("p", { children: "Token fees, paid through X Money." }),
+    /* @__PURE__ */ jsx141("h2", { children: "Official links" }),
     [
       ["X", "x.com/singleSpark"],
       ["Telegram", "t.me/usepaidapp"],
       ["Discord", "discord.gg/usepaidapp"],
       ["Website", "usepaid.app"],
       ["Dexscreener", "dexscreener.com/solana/" + singleSparkMint]
-    ].map(([name, url]) => /* @__PURE__ */ jsxs84(
+    ].map(([name, url]) => /* @__PURE__ */ jsxs86(
       External,
       {
         href: "https://" + url,
         className: "ub-official-link",
         children: [
-          /* @__PURE__ */ jsx139("span", { className: "ub-link-symbol", children: name === "X" ? "X" : /* @__PURE__ */ jsx139(Icon2, { name: "link", size: 22 }) }),
-          /* @__PURE__ */ jsxs84("span", { children: [
-            /* @__PURE__ */ jsx139("strong", { children: name }),
-            /* @__PURE__ */ jsx139("small", { children: url })
+          /* @__PURE__ */ jsx141("span", { className: "ub-link-symbol", children: name === "X" ? "X" : /* @__PURE__ */ jsx141(Icon2, { name: "link", size: 22 }) }),
+          /* @__PURE__ */ jsxs86("span", { children: [
+            /* @__PURE__ */ jsx141("strong", { children: name }),
+            /* @__PURE__ */ jsx141("small", { children: url })
           ] }),
-          /* @__PURE__ */ jsx139(Icon2, { name: "external" })
+          /* @__PURE__ */ jsx141(Icon2, { name: "external" })
         ]
       },
       name
     )),
-    /* @__PURE__ */ jsxs84("div", { className: "ub-contract-copy", children: [
-      /* @__PURE__ */ jsx139("code", { children: singleSparkMint }),
-      /* @__PURE__ */ jsx139(SingleSparkCopyButton, { value: singleSparkMint })
-    ] }),
-    /* @__PURE__ */ jsx139("p", { children: "These are the only official links. Anything else is a fake." })
+    /* @__PURE__ */ jsx141("div", { className: "ub-contract-copy", children: /* @__PURE__ */ jsx141(AddressLink, { address: singleSparkMint }) }),
+    /* @__PURE__ */ jsx141("p", { children: "These are the only official links. Anything else is a fake." })
   ] }) });
 }
 
 // react/components/singlespark-business/LegalArticle.tsx
-import { Fragment as Fragment26, jsx as jsx140, jsxs as jsxs85 } from "react/jsx-runtime";
+import { Fragment as Fragment26, jsx as jsx142, jsxs as jsxs87 } from "react/jsx-runtime";
 function LegalArticle({
   className,
   title = "Terms of Use",
   children
 }) {
-  return /* @__PURE__ */ jsx140(Surface, { className, children: /* @__PURE__ */ jsxs85("article", { className: "ub-article", children: [
-    /* @__PURE__ */ jsxs85("header", { children: [
-      /* @__PURE__ */ jsx140("span", { children: "Legal" }),
-      /* @__PURE__ */ jsx140("h1", { children: title })
+  return /* @__PURE__ */ jsx142(Surface, { className, children: /* @__PURE__ */ jsxs87("article", { className: "ub-article", children: [
+    /* @__PURE__ */ jsxs87("header", { children: [
+      /* @__PURE__ */ jsx142("span", { children: "Legal" }),
+      /* @__PURE__ */ jsx142("h1", { children: title })
     ] }),
-    /* @__PURE__ */ jsx140("div", { className: "ub-article-body", children: children || /* @__PURE__ */ jsxs85(Fragment26, { children: [
-      /* @__PURE__ */ jsx140("p", { children: "This preview preserves the public article typography. The current legal text is available at the source." }),
-      /* @__PURE__ */ jsx140("h2", { children: "singleSpark terms" }),
-      /* @__PURE__ */ jsx140("p", { children: "Read the full terms, privacy policy, and disclosures before using the service." }),
-      /* @__PURE__ */ jsx140(External, { href: "https://usepaid.app/legal/terms", children: "Open Terms of Use \u2197" }),
-      /* @__PURE__ */ jsx140("br", {}),
-      /* @__PURE__ */ jsx140(External, { href: "https://usepaid.app/legal/privacy", children: "Privacy Policy \u2197" }),
-      /* @__PURE__ */ jsx140("br", {}),
-      /* @__PURE__ */ jsx140(External, { href: "https://usepaid.app/legal/disclosures", children: "Disclosures \u2197" })
+    /* @__PURE__ */ jsx142("div", { className: "ub-article-body", children: children || /* @__PURE__ */ jsxs87(Fragment26, { children: [
+      /* @__PURE__ */ jsx142("p", { children: "This preview preserves the public article typography. The current legal text is available at the source." }),
+      /* @__PURE__ */ jsx142("h2", { children: "singleSpark terms" }),
+      /* @__PURE__ */ jsx142("p", { children: "Read the full terms, privacy policy, and disclosures before using the service." }),
+      /* @__PURE__ */ jsx142(External, { href: "https://usepaid.app/legal/terms", children: "Open Terms of Use \u2197" }),
+      /* @__PURE__ */ jsx142("br", {}),
+      /* @__PURE__ */ jsx142(External, { href: "https://usepaid.app/legal/privacy", children: "Privacy Policy \u2197" }),
+      /* @__PURE__ */ jsx142("br", {}),
+      /* @__PURE__ */ jsx142(External, { href: "https://usepaid.app/legal/disclosures", children: "Disclosures \u2197" })
     ] }) })
   ] }) });
 }
 
 // react/components/singlespark-business/OptOutExplanation.tsx
-import { jsx as jsx141, jsxs as jsxs86 } from "react/jsx-runtime";
+import { jsx as jsx143, jsxs as jsxs88 } from "react/jsx-runtime";
 function OptOutExplanation({ className }) {
-  return /* @__PURE__ */ jsx141(Surface, { className, children: /* @__PURE__ */ jsxs86("section", { className: "ub-opt-explanation", children: [
-    /* @__PURE__ */ jsx141("h2", { children: "Opt out" }),
-    /* @__PURE__ */ jsx141("p", { children: "singleSpark pays creator fees to the X account a token names. If that\u2019s you and you don\u2019t want it, opting out turns off everything we do with your handle." }),
-    /* @__PURE__ */ jsx141("div", { className: "ub-steps", children: [
+  return /* @__PURE__ */ jsx143(Surface, { className, children: /* @__PURE__ */ jsxs88("section", { className: "ub-opt-explanation", children: [
+    /* @__PURE__ */ jsx143("h2", { children: "Opt out" }),
+    /* @__PURE__ */ jsx143("p", { children: "singleSpark pays creator fees to the X account a token names. If that\u2019s you and you don\u2019t want it, opting out turns off everything we do with your handle." }),
+    /* @__PURE__ */ jsx143("div", { className: "ub-steps", children: [
       [
         "Payments stop",
         "We won\u2019t send X Money payments to your account."
@@ -5538,29 +5690,29 @@ function OptOutExplanation({ className }) {
         "Launches here can\u2019t pick you",
         "The launch form won\u2019t accept your handle as the recipient."
       ]
-    ].map(([h, p], i) => /* @__PURE__ */ jsxs86("div", { children: [
-      /* @__PURE__ */ jsx141("span", { children: i + 1 }),
-      /* @__PURE__ */ jsxs86("section", { children: [
-        /* @__PURE__ */ jsx141("h3", { children: h }),
-        /* @__PURE__ */ jsx141("p", { children: p })
+    ].map(([h, p], i) => /* @__PURE__ */ jsxs88("div", { children: [
+      /* @__PURE__ */ jsx143("span", { children: i + 1 }),
+      /* @__PURE__ */ jsxs88("section", { children: [
+        /* @__PURE__ */ jsx143("h3", { children: h }),
+        /* @__PURE__ */ jsx143("p", { children: p })
       ] })
     ] }, h)) }),
-    /* @__PURE__ */ jsx141(SingleSparkNotice, { title: "What we can\u2019t stop", children: "Anyone can still create a token on pump.fun or pons with your handle in it. singleSpark does not run those venues." })
+    /* @__PURE__ */ jsx143(SingleSparkNotice, { title: "What we can\u2019t stop", children: "Anyone can still create a token on pump.fun or pons with your handle in it. singleSpark does not run those venues." })
   ] }) });
 }
 
 // react/components/singlespark-business/OptOutStatus.tsx
-import { jsx as jsx142, jsxs as jsxs87 } from "react/jsx-runtime";
+import { jsx as jsx144, jsxs as jsxs89 } from "react/jsx-runtime";
 function OptOutStatus({ className }) {
-  return /* @__PURE__ */ jsx142(Surface, { className, children: /* @__PURE__ */ jsxs87(SingleSparkPanel, { className: "ub-opt-status", children: [
-    /* @__PURE__ */ jsxs87("div", { className: "ub-opt-account", children: [
-      /* @__PURE__ */ jsx142("span", { children: /* @__PURE__ */ jsx142(Icon2, { name: "at", size: 28 }) }),
-      /* @__PURE__ */ jsxs87("div", { children: [
-        /* @__PURE__ */ jsx142("strong", { children: "Your X account" }),
-        /* @__PURE__ */ jsx142("p", { children: "Checking sign-in" })
+  return /* @__PURE__ */ jsx144(Surface, { className, children: /* @__PURE__ */ jsxs89(SingleSparkPanel, { className: "ub-opt-status", children: [
+    /* @__PURE__ */ jsxs89("div", { className: "ub-opt-account", children: [
+      /* @__PURE__ */ jsx144("span", { children: /* @__PURE__ */ jsx144(Icon2, { name: "at", size: 28 }) }),
+      /* @__PURE__ */ jsxs89("div", { children: [
+        /* @__PURE__ */ jsx144("strong", { children: "Your X account" }),
+        /* @__PURE__ */ jsx144("p", { children: "Checking sign-in" })
       ] })
     ] }),
-    /* @__PURE__ */ jsx142(
+    /* @__PURE__ */ jsx144(
       SingleSparkKeyValueList,
       {
         entries: [
@@ -5571,19 +5723,19 @@ function OptOutStatus({ className }) {
         ]
       }
     ),
-    /* @__PURE__ */ jsx142(SingleSparkButton, { disabled: true, className: "ub-primary ub-full", children: "Checking" })
+    /* @__PURE__ */ jsx144(SingleSparkButton, { disabled: true, className: "ub-primary ub-full", children: "Checking" })
   ] }) });
 }
 
 // react/components/singlespark-business/OptOutSteps.tsx
-import { jsx as jsx143, jsxs as jsxs88 } from "react/jsx-runtime";
+import { jsx as jsx145, jsxs as jsxs90 } from "react/jsx-runtime";
 function OptOutSteps({ className }) {
-  return /* @__PURE__ */ jsxs88(Surface, { className, children: [
-    /* @__PURE__ */ jsx143("ol", { className: "ub-opt-steps", children: ["Sign in with X", "Confirm", "Opted out"].map((v, i) => /* @__PURE__ */ jsxs88("li", { children: [
-      /* @__PURE__ */ jsx143("span", { children: i + 1 }),
+  return /* @__PURE__ */ jsxs90(Surface, { className, children: [
+    /* @__PURE__ */ jsx145("ol", { className: "ub-opt-steps", children: ["Sign in with X", "Confirm", "Opted out"].map((v, i) => /* @__PURE__ */ jsxs90("li", { children: [
+      /* @__PURE__ */ jsx145("span", { children: i + 1 }),
       v
     ] }, v)) }),
-    /* @__PURE__ */ jsx143("p", { className: "ub-source-limit", children: "Only the public step indicator has been verified. Authentication and confirmation screens are not reconstructed." })
+    /* @__PURE__ */ jsx145("p", { className: "ub-source-limit", children: "Only the public step indicator has been verified. Authentication and confirmation screens are not reconstructed." })
   ] });
 }
 
@@ -5672,8 +5824,8 @@ var SingleSparkCandlestickChartAsset0 = new URL(
 );
 
 // react/components/singlespark-chart/SingleSparkCandlestickChart.tsx
-import { useEffect as useEffect8, useMemo, useRef as useRef8, useState as useState20 } from "react";
-import { Fragment as Fragment27, jsx as jsx144, jsxs as jsxs89 } from "react/jsx-runtime";
+import { useEffect as useEffect9, useMemo, useRef as useRef9, useState as useState20 } from "react";
+import { Fragment as Fragment27, jsx as jsx146, jsxs as jsxs91 } from "react/jsx-runtime";
 function SingleSparkCandlestickChart({
   data = emptyBars,
   symbol = "Market",
@@ -5687,12 +5839,12 @@ function SingleSparkCandlestickChart({
   onRetry,
   className = ""
 }) {
-  const container = useRef8(null);
-  const instance = useRef8();
-  const seriesRef = useRef8();
-  const volumeRef = useRef8();
+  const container = useRef9(null);
+  const instance = useRef9();
+  const seriesRef = useRef9();
+  const volumeRef = useRef9();
   const bars = useMemo(() => normalizeSingleSparkCandles(data), [data]);
-  const latest = useRef8(bars);
+  const latest = useRef9(bars);
   latest.current = bars;
   const [kind, setKind] = useState20("Candles");
   const [volume, setVolume] = useState20(true);
@@ -5701,7 +5853,7 @@ function SingleSparkCandlestickChart({
   const [ready, setReady] = useState20(false);
   const [attempt, setAttempt] = useState20(0);
   const digits = Math.min(12, Math.max(0, Math.trunc(precision) || 0));
-  useEffect8(() => {
+  useEffect9(() => {
     const node = container.current;
     if (!node) return;
     let disposed = false;
@@ -5803,7 +5955,7 @@ function SingleSparkCandlestickChart({
       volumeRef.current = void 0;
     };
   }, [kind, volume, digits, height, attempt]);
-  useEffect8(() => {
+  useEffect9(() => {
     if (!ready || !seriesRef.current) return;
     seriesRef.current.setData(
       kind === "Candles" ? bars : bars.map((c) => ({ time: c.time, value: c.close }))
@@ -5828,16 +5980,16 @@ function SingleSparkCandlestickChart({
       scale.setVisibleLogicalRange({ from: middle - half, to: middle + half });
     }
   };
-  return /* @__PURE__ */ jsxs89(
+  return /* @__PURE__ */ jsxs91(
     "section",
     {
       className: `ss-chart ${className}`,
       "aria-label": `${symbol} price chart`,
       "aria-busy": loading || !ready,
       children: [
-        /* @__PURE__ */ jsxs89("header", { className: "ss-chart-toolbar", children: [
-          /* @__PURE__ */ jsx144("strong", { children: symbol }),
-          /* @__PURE__ */ jsx144(
+        /* @__PURE__ */ jsxs91("header", { className: "ss-chart-toolbar", children: [
+          /* @__PURE__ */ jsx146("strong", { children: symbol }),
+          /* @__PURE__ */ jsx146(
             SingleSparkTabs,
             {
               values: intervals,
@@ -5846,7 +5998,7 @@ function SingleSparkCandlestickChart({
               onChange: onIntervalChange
             }
           ),
-          /* @__PURE__ */ jsx144(
+          /* @__PURE__ */ jsx146(
             SingleSparkTabs,
             {
               values: ["Candles", "Line"],
@@ -5856,20 +6008,20 @@ function SingleSparkCandlestickChart({
             }
           )
         ] }),
-        /* @__PURE__ */ jsx144("div", { className: "ss-chart-ohlc", children: current ? /* @__PURE__ */ jsxs89(Fragment27, { children: [
-          /* @__PURE__ */ jsxs89("time", { children: [
+        /* @__PURE__ */ jsx146("div", { className: "ss-chart-ohlc", children: current ? /* @__PURE__ */ jsxs91(Fragment27, { children: [
+          /* @__PURE__ */ jsxs91("time", { children: [
             new Date(current.time * 1e3).toISOString().slice(0, 16).replace("T", " "),
             " ",
             "UTC"
           ] }),
-          ["open", "high", "low", "close"].map((key) => /* @__PURE__ */ jsxs89("span", { children: [
+          ["open", "high", "low", "close"].map((key) => /* @__PURE__ */ jsxs91("span", { children: [
             key[0].toUpperCase(),
             " ",
-            /* @__PURE__ */ jsx144("b", { children: current[key].toFixed(digits) })
+            /* @__PURE__ */ jsx146("b", { children: current[key].toFixed(digits) })
           ] }, key))
         ] }) : "No OHLC data" }),
-        /* @__PURE__ */ jsxs89("div", { className: "ss-chart-canvas-wrap", children: [
-          /* @__PURE__ */ jsx144(
+        /* @__PURE__ */ jsxs91("div", { className: "ss-chart-canvas-wrap", children: [
+          /* @__PURE__ */ jsx146(
             "div",
             {
               ref: container,
@@ -5878,14 +6030,14 @@ function SingleSparkCandlestickChart({
               "aria-hidden": "true"
             }
           ),
-          (loading || !ready && !engineError && !error || error || engineError || !bars.length) && /* @__PURE__ */ jsxs89(
+          (loading || !ready && !engineError && !error || error || engineError || !bars.length) && /* @__PURE__ */ jsxs91(
             "div",
             {
               className: "ss-chart-overlay",
               role: loading || !ready && !engineError && !error ? void 0 : "status",
               children: [
-                loading || !ready && !engineError && !error ? /* @__PURE__ */ jsx144(SingleSparkSkeleton, { variant: "chart", label: "Loading chart\u2026" }) : error || engineError || "No price data for this interval",
-                (error || engineError) && /* @__PURE__ */ jsx144(
+                loading || !ready && !engineError && !error ? /* @__PURE__ */ jsx146(SingleSparkSkeleton, { variant: "chart", label: "Loading chart\u2026" }) : error || engineError || "No price data for this interval",
+                (error || engineError) && /* @__PURE__ */ jsx146(
                   SingleSparkButton,
                   {
                     onClick: () => {
@@ -5899,8 +6051,8 @@ function SingleSparkCandlestickChart({
             }
           )
         ] }),
-        /* @__PURE__ */ jsxs89("footer", { className: "ss-chart-toolbar", children: [
-          /* @__PURE__ */ jsxs89(
+        /* @__PURE__ */ jsxs91("footer", { className: "ss-chart-toolbar", children: [
+          /* @__PURE__ */ jsxs91(
             SingleSparkButton,
             {
               size: "sm",
@@ -5912,17 +6064,17 @@ function SingleSparkCandlestickChart({
               ]
             }
           ),
-          /* @__PURE__ */ jsxs89("div", { children: [
-            /* @__PURE__ */ jsx144(SingleSparkIconButton, { "aria-label": "Zoom in", onClick: () => zoom(0.7), children: /* @__PURE__ */ jsx144(SingleSparkIcon, { name: "plus" }) }),
-            /* @__PURE__ */ jsx144(
+          /* @__PURE__ */ jsxs91("div", { children: [
+            /* @__PURE__ */ jsx146(SingleSparkIconButton, { "aria-label": "Zoom in", onClick: () => zoom(0.7), children: /* @__PURE__ */ jsx146(SingleSparkIcon, { name: "plus" }) }),
+            /* @__PURE__ */ jsx146(
               SingleSparkIconButton,
               {
                 "aria-label": "Zoom out",
                 onClick: () => zoom(1.4),
-                children: /* @__PURE__ */ jsx144(SingleSparkIcon, { name: "minus" })
+                children: /* @__PURE__ */ jsx146(SingleSparkIcon, { name: "minus" })
               }
             ),
-            /* @__PURE__ */ jsx144(
+            /* @__PURE__ */ jsx146(
               SingleSparkButton,
               {
                 size: "sm",
@@ -5932,25 +6084,25 @@ function SingleSparkCandlestickChart({
             )
           ] })
         ] }),
-        /* @__PURE__ */ jsxs89("details", { className: "ss-chart-data", children: [
-          /* @__PURE__ */ jsxs89("summary", { children: [
+        /* @__PURE__ */ jsxs91("details", { className: "ss-chart-data", children: [
+          /* @__PURE__ */ jsxs91("summary", { children: [
             "View OHLC data (",
             Math.min(50, bars.length),
             " latest bars)"
           ] }),
-          /* @__PURE__ */ jsx144("div", { className: "ss-trades-table", children: /* @__PURE__ */ jsxs89("table", { children: [
-            /* @__PURE__ */ jsx144("thead", { children: /* @__PURE__ */ jsx144("tr", { children: ["UTC", "Open", "High", "Low", "Close", "Volume"].map(
-              (label) => /* @__PURE__ */ jsx144("th", { children: label }, label)
+          /* @__PURE__ */ jsx146("div", { className: "ss-trades-table", children: /* @__PURE__ */ jsxs91("table", { children: [
+            /* @__PURE__ */ jsx146("thead", { children: /* @__PURE__ */ jsx146("tr", { children: ["UTC", "Open", "High", "Low", "Close", "Volume"].map(
+              (label) => /* @__PURE__ */ jsx146("th", { children: label }, label)
             ) }) }),
-            /* @__PURE__ */ jsx144("tbody", { children: bars.slice(-50).map((c) => /* @__PURE__ */ jsxs89("tr", { children: [
-              /* @__PURE__ */ jsx144("td", { children: new Date(c.time * 1e3).toISOString().slice(5, 16).replace("T", " ") }),
+            /* @__PURE__ */ jsx146("tbody", { children: bars.slice(-50).map((c) => /* @__PURE__ */ jsxs91("tr", { children: [
+              /* @__PURE__ */ jsx146("td", { children: new Date(c.time * 1e3).toISOString().slice(5, 16).replace("T", " ") }),
               [c.open, c.high, c.low, c.close, c.volume].map(
-                (value, i) => /* @__PURE__ */ jsx144("td", { children: value ?? "0" }, i)
+                (value, i) => /* @__PURE__ */ jsx146("td", { children: value ?? "0" }, i)
               )
             ] }, c.time)) })
           ] }) })
         ] }),
-        /* @__PURE__ */ jsx144(
+        /* @__PURE__ */ jsx146(
           "a",
           {
             className: "ss-chart-credit",
@@ -6009,13 +6161,13 @@ function isSingleSparkQuoteValid(quote, decimals, now = Date.now()) {
 }
 
 // react/components/singlespark-trade/SingleSparkTradeTabs.tsx
-import { jsx as jsx145 } from "react/jsx-runtime";
+import { jsx as jsx147 } from "react/jsx-runtime";
 function SingleSparkTradeTabs({
   value = "buy",
   onChange,
   className = ""
 }) {
-  return /* @__PURE__ */ jsx145(
+  return /* @__PURE__ */ jsx147(
     SingleSparkTabs,
     {
       className: `ss-trade-tabs ${className}`,
@@ -6028,9 +6180,30 @@ function SingleSparkTradeTabs({
 }
 
 // react/components/singlespark-trade/SingleSparkTokenAmountInput.tsx
-import { forwardRef, useId as useId7 } from "react";
-import { jsx as jsx146, jsxs as jsxs90 } from "react/jsx-runtime";
-var SingleSparkTokenAmountInput = forwardRef(function SingleSparkTokenAmountInput2({
+import { forwardRef as forwardRef2, useId as useId7 } from "react";
+
+// react/components/ui/Input.tsx
+import { forwardRef } from "react";
+import { jsx as jsx148, jsxs as jsxs92 } from "react/jsx-runtime";
+var Input = forwardRef(function Input2({ className = "", bare = false, ...props }, ref) {
+  return /* @__PURE__ */ jsx148(SingleSparkTextInput, { ref, placeholder: void 0, className: `app-input ${bare ? "app-input--bare" : ""} ${className}`.trim(), ...props });
+});
+var Textarea = forwardRef(function Textarea2({ className = "", ...props }, ref) {
+  return /* @__PURE__ */ jsx148(SingleSparkTextarea, { ref, "aria-label": void 0, placeholder: void 0, rows: 2, className: `app-input app-textarea ${className}`.trim(), ...props });
+});
+var Checkbox = forwardRef(function Checkbox2({ className = "", ...props }, ref) {
+  return /* @__PURE__ */ jsxs92("span", { className: "app-checkbox", children: [
+    /* @__PURE__ */ jsx148(SingleSparkCheckboxInput, { ref, className, ...props }),
+    /* @__PURE__ */ jsx148("i", { className: "ph ph-check", "aria-hidden": "true" })
+  ] });
+});
+var RangeInput = forwardRef(function RangeInput2({ className = "", ...props }, ref) {
+  return /* @__PURE__ */ jsx148("input", { ref, type: "range", className: `app-range ${className}`.trim(), ...props });
+});
+
+// react/components/singlespark-trade/SingleSparkTokenAmountInput.tsx
+import { jsx as jsx149, jsxs as jsxs93 } from "react/jsx-runtime";
+var SingleSparkTokenAmountInput = forwardRef2(function SingleSparkTokenAmountInput2({
   value = "",
   onChange,
   symbol = "SOL",
@@ -6047,21 +6220,22 @@ var SingleSparkTokenAmountInput = forwardRef(function SingleSparkTokenAmountInpu
 }, ref) {
   const generatedId = useId7();
   const id = inputProps?.id ?? generatedId;
-  return /* @__PURE__ */ jsxs90("div", { className: `ss-amount ${className}`, "data-invalid": !!error, children: [
-    /* @__PURE__ */ jsxs90("div", { className: "ss-amount-heading", children: [
-      /* @__PURE__ */ jsx146("label", { htmlFor: id, children: label }),
-      balanceContent ?? /* @__PURE__ */ jsxs90("span", { children: [
+  return /* @__PURE__ */ jsxs93("div", { className: `ss-amount ${className}`, "data-invalid": !!error, children: [
+    /* @__PURE__ */ jsxs93("div", { className: "ss-amount-heading", children: [
+      /* @__PURE__ */ jsx149("label", { htmlFor: id, children: label }),
+      balanceContent ?? /* @__PURE__ */ jsxs93("span", { children: [
         "Balance: ",
         balance ?? "0",
         " ",
         symbol
       ] })
     ] }),
-    /* @__PURE__ */ jsxs90("div", { className: "ss-amount-field", children: [
-      /* @__PURE__ */ jsx146(
-        "input",
+    /* @__PURE__ */ jsxs93("div", { className: "ss-amount-field", children: [
+      /* @__PURE__ */ jsx149(
+        Input,
         {
           ...inputProps,
+          bare: true,
           ref,
           id,
           value,
@@ -6074,11 +6248,11 @@ var SingleSparkTokenAmountInput = forwardRef(function SingleSparkTokenAmountInpu
           onChange: (e) => onChange?.(e.target.value)
         }
       ),
-      /* @__PURE__ */ jsxs90("span", { children: [
-        iconContent ?? /* @__PURE__ */ jsx146(SingleSparkTokenIcon, { symbol, src: icon, size: 24 }),
+      /* @__PURE__ */ jsxs93("span", { children: [
+        iconContent ?? /* @__PURE__ */ jsx149(SingleSparkTokenIcon, { symbol, src: icon, size: 24 }),
         symbol
       ] }),
-      maxAmount !== void 0 && /* @__PURE__ */ jsx146(
+      maxAmount !== void 0 && /* @__PURE__ */ jsx149(
         SingleSparkButton,
         {
           size: "sm",
@@ -6088,12 +6262,12 @@ var SingleSparkTokenAmountInput = forwardRef(function SingleSparkTokenAmountInpu
         }
       )
     ] }),
-    /* @__PURE__ */ jsx146("small", { id: `${id}-error`, "aria-live": "polite", className: "ss-error ss-amount-error", children: error })
+    /* @__PURE__ */ jsx149("small", { id: `${id}-error`, "aria-live": "polite", className: "ss-error ss-amount-error", children: error })
   ] });
 });
 
 // react/components/singlespark-trade/SingleSparkAmountPresets.tsx
-import { jsx as jsx147, jsxs as jsxs91 } from "react/jsx-runtime";
+import { jsx as jsx150, jsxs as jsxs94 } from "react/jsx-runtime";
 function SingleSparkAmountPresets({
   values = [
     { label: "0.1 SOL", value: "0.1" },
@@ -6108,7 +6282,7 @@ function SingleSparkAmountPresets({
   busy = false,
   className = ""
 }) {
-  return /* @__PURE__ */ jsxs91(
+  return /* @__PURE__ */ jsxs94(
     "div",
     {
       className: `ss-amount-presets ${className}`,
@@ -6116,7 +6290,7 @@ function SingleSparkAmountPresets({
       "aria-label": label,
       "aria-busy": busy,
       children: [
-        showReset && /* @__PURE__ */ jsx147(
+        showReset && /* @__PURE__ */ jsx150(
           SingleSparkButton,
           {
             size: "sm",
@@ -6125,14 +6299,14 @@ function SingleSparkAmountPresets({
             children: "Reset"
           }
         ),
-        values.map((item) => /* @__PURE__ */ jsx147(
+        values.map((item) => /* @__PURE__ */ jsx150(
           SingleSparkButton,
           {
             size: "sm",
             disabled,
             "aria-pressed": value === item.value,
             onClick: () => onChange?.(item.value),
-            children: /* @__PURE__ */ jsx147(SingleSparkMoney, { value: item.label })
+            children: /* @__PURE__ */ jsx150(SingleSparkMoney, { value: item.label })
           },
           item.label
         ))
@@ -6142,8 +6316,8 @@ function SingleSparkAmountPresets({
 }
 
 // react/components/singlespark-trade/SingleSparkSlippageControl.tsx
-import { useEffect as useEffect9, useState as useState21 } from "react";
-import { jsx as jsx148, jsxs as jsxs92 } from "react/jsx-runtime";
+import { useEffect as useEffect10, useState as useState21 } from "react";
+import { jsx as jsx151, jsxs as jsxs95 } from "react/jsx-runtime";
 function SingleSparkSlippageControl({
   value,
   onChange,
@@ -6152,18 +6326,19 @@ function SingleSparkSlippageControl({
   const [draft, setDraft] = useState21(
     value === void 0 ? "" : String(value / 100)
   );
-  useEffect9(() => {
+  useEffect10(() => {
     if (value !== void 0) setDraft(String(value / 100));
   }, [value]);
   const units = parseSingleSparkAmount(draft, 2);
   const valid = units !== null && units >= 1n && units <= 5000n;
-  return /* @__PURE__ */ jsxs92("div", { className: `ss-slippage ${className}`, children: [
-    /* @__PURE__ */ jsxs92("label", { children: [
+  return /* @__PURE__ */ jsxs95("div", { className: `ss-slippage ${className}`, children: [
+    /* @__PURE__ */ jsxs95("label", { children: [
       "Max slippage",
-      /* @__PURE__ */ jsxs92("div", { className: "ss-slippage-field", children: [
-        /* @__PURE__ */ jsx148(
-          "input",
+      /* @__PURE__ */ jsxs95("div", { className: "ss-slippage-field", children: [
+        /* @__PURE__ */ jsx151(
+          Input,
           {
+            bare: true,
             "aria-label": "Max slippage percent",
             inputMode: "decimal",
             value: draft,
@@ -6177,10 +6352,10 @@ function SingleSparkSlippageControl({
             }
           }
         ),
-        /* @__PURE__ */ jsx148("span", { children: "%" })
+        /* @__PURE__ */ jsx151("span", { children: "%" })
       ] })
     ] }),
-    /* @__PURE__ */ jsx148("div", { className: "ss-amount-presets", children: [50, 100, 300].map((n) => /* @__PURE__ */ jsxs92(
+    /* @__PURE__ */ jsx151("div", { className: "ss-amount-presets", children: [50, 100, 300].map((n) => /* @__PURE__ */ jsxs95(
       SingleSparkButton,
       {
         size: "sm",
@@ -6196,12 +6371,12 @@ function SingleSparkSlippageControl({
       },
       n
     )) }),
-    /* @__PURE__ */ jsx148("small", { className: !valid ? "ss-error" : "ss-muted", children: !valid ? "Enter a value between 0.01% and 50%." : Number(units) > 500 ? "High slippage: the final amount may differ substantially." : "The trade will fail if the execution price exceeds this tolerance." })
+    /* @__PURE__ */ jsx151("small", { className: !valid ? "ss-error" : "ss-muted", children: !valid ? "Enter a value between 0.01% and 50%." : Number(units) > 500 ? "High slippage: the final amount may differ substantially." : "The trade will fail if the execution price exceeds this tolerance." })
   ] });
 }
 
 // react/components/singlespark-trade/SingleSparkTradeSummary.tsx
-import { jsx as jsx149 } from "react/jsx-runtime";
+import { jsx as jsx152 } from "react/jsx-runtime";
 function SingleSparkTradeSummary({
   quote,
   entries,
@@ -6211,7 +6386,7 @@ function SingleSparkTradeSummary({
   className = ""
 }) {
   if (loading)
-    return /* @__PURE__ */ jsx149(
+    return /* @__PURE__ */ jsx152(
       SingleSparkSkeleton,
       {
         variant: "text",
@@ -6220,7 +6395,7 @@ function SingleSparkTradeSummary({
         className
       }
     );
-  return /* @__PURE__ */ jsx149(
+  return /* @__PURE__ */ jsx152(
     SingleSparkKeyValueList,
     {
       className: `ss-trade-summary ${className}`,
@@ -6236,13 +6411,13 @@ function SingleSparkTradeSummary({
           quote?.priceImpact === void 0 ? "0%" : `${quote.priceImpact.toFixed(2)}%`
         ],
         ["Estimated fee", quote?.fee || "0"]
-      ]).map(([label, value]) => [label, typeof value === "string" || typeof value === "number" ? /* @__PURE__ */ jsx149(SingleSparkMoney, { value }) : value])
+      ]).map(([label, value]) => [label, typeof value === "string" || typeof value === "number" ? /* @__PURE__ */ jsx152(SingleSparkMoney, { value }) : value])
     }
   );
 }
 
 // react/components/singlespark-trade/SingleSparkTransactionStatus.tsx
-import { jsx as jsx150, jsxs as jsxs93 } from "react/jsx-runtime";
+import { jsx as jsx153, jsxs as jsxs96 } from "react/jsx-runtime";
 function SingleSparkTransactionStatus({
   status = "idle",
   message,
@@ -6258,23 +6433,23 @@ function SingleSparkTransactionStatus({
     confirmed: "Transaction confirmed",
     error: "Transaction failed"
   };
-  return /* @__PURE__ */ jsxs93(
+  return /* @__PURE__ */ jsxs96(
     "div",
     {
       className: `ss-transaction-status ${className}`,
       "data-status": status,
       role: "status",
       children: [
-        ["quoting", "signing", "submitted"].includes(status) ? /* @__PURE__ */ jsx150(SingleSparkLoading, { decorative: true }) : /* @__PURE__ */ jsx150(
+        ["quoting", "signing", "submitted"].includes(status) ? /* @__PURE__ */ jsx153(SingleSparkLoading, { decorative: true }) : /* @__PURE__ */ jsx153(
           SingleSparkIcon,
           {
             name: status === "error" ? "warning" : status === "confirmed" ? "check" : "clock"
           }
         ),
-        /* @__PURE__ */ jsxs93("div", { children: [
-          /* @__PURE__ */ jsx150("strong", { children: label ?? labels[status] }),
-          message && /* @__PURE__ */ jsx150("small", { children: message }),
-          hash && /* @__PURE__ */ jsx150("code", { children: hash })
+        /* @__PURE__ */ jsxs96("div", { children: [
+          /* @__PURE__ */ jsx153("strong", { children: label ?? labels[status] }),
+          message && /* @__PURE__ */ jsx153("small", { children: message }),
+          hash && /* @__PURE__ */ jsx153("code", { children: hash })
         ] })
       ]
     }
@@ -6282,8 +6457,8 @@ function SingleSparkTransactionStatus({
 }
 
 // react/components/singlespark-trade/SingleSparkTokenTradePanel.tsx
-import { useEffect as useEffect10, useRef as useRef9, useState as useState22 } from "react";
-import { jsx as jsx151, jsxs as jsxs94 } from "react/jsx-runtime";
+import { useEffect as useEffect11, useRef as useRef10, useState as useState22 } from "react";
+import { jsx as jsx154, jsxs as jsxs97 } from "react/jsx-runtime";
 function SingleSparkTokenTradePanel({
   token,
   currency = singleSparkNativeSol,
@@ -6307,9 +6482,9 @@ function SingleSparkTokenTradePanel({
   const [hash, setHash] = useState22();
   const [refresh, setRefresh] = useState22(0);
   const [now, setNow] = useState22(Date.now);
-  const submitting = useRef9(false);
-  const mounted = useRef9(true);
-  useEffect10(() => {
+  const submitting = useRef10(false);
+  const mounted = useRef10(true);
+  useEffect11(() => {
     mounted.current = true;
     return () => {
       mounted.current = false;
@@ -6326,9 +6501,9 @@ function SingleSparkTokenTradePanel({
   const request = token && token.chain === currency.chain && !sameAsset && units !== null && units > 0n && !error && slippage !== void 0 ? { side, token, currency, amount, slippageBps: slippage } : void 0;
   const key = request ? singleSparkTradeRequestKey(request) : "";
   const busy = status === "signing";
-  const requestRef = useRef9(request);
+  const requestRef = useRef10(request);
   requestRef.current = request;
-  useEffect10(() => {
+  useEffect11(() => {
     if (submitting.current) return;
     setQuoteResult(void 0);
     setMessage("");
@@ -6364,7 +6539,7 @@ function SingleSparkTokenTradePanel({
       controller.abort();
     };
   }, [key, onQuote, connected, refresh]);
-  useEffect10(() => {
+  useEffect11(() => {
     if (!quoteResult) return;
     const timer = setTimeout(
       () => setNow(Date.now()),
@@ -6417,21 +6592,21 @@ function SingleSparkTokenTradePanel({
     )
   })) : [];
   const actionLabel = !connected ? "Connect wallet" : !token ? "Select a market" : sameAsset || token.chain !== currency.chain ? "Unsupported pair" : !onQuote || !onTrade ? "Trading unavailable" : !amount || units === 0n ? "Enter an amount" : error ? "Check amount" : slippage === void 0 ? "Check slippage" : expired ? "Quote expired" : `Review ${side}`;
-  return /* @__PURE__ */ jsxs94("section", { className: `ss-token-trade ${className}`, "data-side": side, children: [
-    /* @__PURE__ */ jsxs94("header", { children: [
-      /* @__PURE__ */ jsx151(SingleSparkTokenIdentity, { token }),
-      /* @__PURE__ */ jsx151(
+  return /* @__PURE__ */ jsxs97("section", { className: `ss-token-trade ${className}`, "data-side": side, children: [
+    /* @__PURE__ */ jsxs97("header", { children: [
+      /* @__PURE__ */ jsx154(SingleSparkTokenIdentity, { token }),
+      /* @__PURE__ */ jsx154(
         SingleSparkIconButton,
         {
           "aria-label": "Trade settings",
           onClick: () => setSettings(true),
           disabled: busy,
-          children: /* @__PURE__ */ jsx151(SingleSparkIcon, { name: "settings" })
+          children: /* @__PURE__ */ jsx154(SingleSparkIcon, { name: "settings" })
         }
       )
     ] }),
-    /* @__PURE__ */ jsxs94("fieldset", { disabled: busy, children: [
-      /* @__PURE__ */ jsx151(
+    /* @__PURE__ */ jsxs97("fieldset", { disabled: busy, children: [
+      /* @__PURE__ */ jsx154(
         SingleSparkTradeTabs,
         {
           value: side,
@@ -6441,14 +6616,14 @@ function SingleSparkTokenTradePanel({
           }
         }
       ),
-      /* @__PURE__ */ jsxs94("div", { className: "ss-trade-context", children: [
-        /* @__PURE__ */ jsx151("span", { children: singleSparkChains[currency.chain].name }),
-        /* @__PURE__ */ jsxs94(SingleSparkButton, { size: "sm", onClick: () => setSettings(true), children: [
+      /* @__PURE__ */ jsxs97("div", { className: "ss-trade-context", children: [
+        /* @__PURE__ */ jsx154("span", { children: singleSparkChains[currency.chain].name }),
+        /* @__PURE__ */ jsxs97(SingleSparkButton, { size: "sm", onClick: () => setSettings(true), children: [
           "Slippage ",
           slippage === void 0 ? "0%" : `${slippage / 100}%`
         ] })
       ] }),
-      /* @__PURE__ */ jsx151(
+      /* @__PURE__ */ jsx154(
         SingleSparkTokenAmountInput,
         {
           value: amount,
@@ -6461,7 +6636,7 @@ function SingleSparkTokenTradePanel({
           error
         }
       ),
-      /* @__PURE__ */ jsx151(
+      /* @__PURE__ */ jsx154(
         SingleSparkAmountPresets,
         {
           values: presets,
@@ -6470,7 +6645,7 @@ function SingleSparkTokenTradePanel({
         }
       )
     ] }),
-    (quote || status === "quoting") && /* @__PURE__ */ jsx151(
+    (quote || status === "quoting") && /* @__PURE__ */ jsx154(
       SingleSparkTradeSummary,
       {
         loading: status === "quoting",
@@ -6479,7 +6654,7 @@ function SingleSparkTokenTradePanel({
         slippageBps: slippage
       }
     ),
-    /* @__PURE__ */ jsxs94(
+    /* @__PURE__ */ jsxs97(
       SingleSparkButton,
       {
         className: "ss-trade-action",
@@ -6488,24 +6663,24 @@ function SingleSparkTokenTradePanel({
         loading: busy || status === "quoting",
         onClick: () => connected ? setReview(true) : onConnect?.(),
         children: [
-          /* @__PURE__ */ jsx151(SingleSparkIcon, { name: side === "buy" ? "trend-up" : "trend-down" }),
+          /* @__PURE__ */ jsx154(SingleSparkIcon, { name: side === "buy" ? "trend-up" : "trend-down" }),
           actionLabel
         ]
       }
     ),
-    (expired || status === "error" || status === "submitted" || status === "confirmed") && /* @__PURE__ */ jsxs94(
+    (expired || status === "error" || status === "submitted" || status === "confirmed") && /* @__PURE__ */ jsxs97(
       SingleSparkButton,
       {
         size: "sm",
         onClick: () => setRefresh((n) => n + 1),
         disabled: busy,
         children: [
-          /* @__PURE__ */ jsx151(SingleSparkIcon, { name: "refresh", size: 14 }),
+          /* @__PURE__ */ jsx154(SingleSparkIcon, { name: "refresh", size: 14 }),
           expired ? "Refresh expired quote" : "New quote"
         ]
       }
     ),
-    status !== "idle" && /* @__PURE__ */ jsx151(
+    status !== "idle" && /* @__PURE__ */ jsx154(
       SingleSparkTransactionStatus,
       {
         status,
@@ -6513,14 +6688,14 @@ function SingleSparkTokenTradePanel({
         hash
       }
     ),
-    /* @__PURE__ */ jsx151(
+    /* @__PURE__ */ jsx154(
       SingleSparkModal,
       {
         open: settings,
         onOpenChange: setSettings,
         title: "Trade settings",
         width: 380,
-        footer: /* @__PURE__ */ jsx151(
+        footer: /* @__PURE__ */ jsx154(
           SingleSparkButton,
           {
             variant: "primary",
@@ -6529,17 +6704,17 @@ function SingleSparkTokenTradePanel({
             children: "Done"
           }
         ),
-        children: /* @__PURE__ */ jsx151(SingleSparkSlippageControl, { value: slippage, onChange: setSlippage })
+        children: /* @__PURE__ */ jsx154(SingleSparkSlippageControl, { value: slippage, onChange: setSlippage })
       }
     ),
-    /* @__PURE__ */ jsxs94(
+    /* @__PURE__ */ jsxs97(
       SingleSparkModal,
       {
         open: review,
         onOpenChange: setReview,
         title: `Review ${side}`,
         width: 420,
-        footer: /* @__PURE__ */ jsxs94(
+        footer: /* @__PURE__ */ jsxs97(
           SingleSparkButton,
           {
             variant: "primary",
@@ -6552,7 +6727,7 @@ function SingleSparkTokenTradePanel({
           }
         ),
         children: [
-          /* @__PURE__ */ jsxs94("p", { children: [
+          /* @__PURE__ */ jsxs97("p", { children: [
             amount,
             " ",
             input?.symbol,
@@ -6561,7 +6736,7 @@ function SingleSparkTokenTradePanel({
             " ",
             output?.symbol
           ] }),
-          /* @__PURE__ */ jsx151(
+          /* @__PURE__ */ jsx154(
             SingleSparkTradeSummary,
             {
               quote,
@@ -6569,7 +6744,7 @@ function SingleSparkTokenTradePanel({
               slippageBps: slippage
             }
           ),
-          expired && /* @__PURE__ */ jsx151("p", { className: "ss-error", role: "alert", children: "Quote expired. Close and refresh before continuing." })
+          expired && /* @__PURE__ */ jsx154("p", { className: "ss-error", role: "alert", children: "Quote expired. Close and refresh before continuing." })
         ]
       }
     )
@@ -6620,10 +6795,12 @@ export {
   SingleSparkGlobalSearch,
   SingleSparkTopbar,
   SingleSparkMobileMenu,
+  NavigationIndicator,
   SingleSparkSidebar,
   SingleSparkFooter,
   singleSparkHomeComponents,
   defaultSingleSparkPayment,
+  AddressLink,
   SingleSparkTokenCard,
   LaunchpadFilter,
   SectionPagination,
@@ -6697,6 +6874,10 @@ export {
   singleSparkTradeRequestKey,
   isSingleSparkQuoteValid,
   SingleSparkTradeTabs,
+  Input,
+  Textarea,
+  Checkbox,
+  RangeInput,
   SingleSparkTokenAmountInput,
   SingleSparkAmountPresets,
   SingleSparkSlippageControl,

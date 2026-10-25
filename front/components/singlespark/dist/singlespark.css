@@ -116,6 +116,12 @@
 .u-home .uh-nav-icon { display: grid; place-items: center; width: 24px; height: 24px; flex: 0 0 24px; font-size: 24px; line-height: 1; }
 .u-home .uh-nav-icon > .uh-icon { width: 100%; height: 100%; }
 
+/* Replay only supplied samples; mirrored tiles keep the curve continuous at each seam. */
+.uh-history-loop{clip-path:none}
+@media(prefers-reduced-motion:no-preference){.uh-history-loop{animation:ss-history-scroll 24s linear infinite;will-change:transform}}
+@keyframes ss-history-scroll{from{transform:translateX(0)}to{transform:translateX(-840px)}}
+@media(prefers-reduced-motion:reduce){.uh-history-loop{animation:none;transform:none}.uh-history-loop>.uh-history-tile:not(:first-child),.uh-history-highlight{display:none}}
+
 .u-business{color:var(--ss-text);background:var(--ss-bg);font:14px/1.5 var(--ss-font-sans);min-width:0;width:100%;container:ub-preview/inline-size;color-scheme:inherit;--ub-secondary:var(--ss-muted);--ub-border:color-mix(in srgb,var(--ss-text) 7.84%,transparent);--ub-card:var(--ss-surface)}
 .u-business *{box-sizing:border-box}
 .u-business :is(h1,h2,h3,p,dl,dt,dd,ul,ol,fieldset){margin:0}

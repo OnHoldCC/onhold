@@ -2951,23 +2951,17 @@
   backface-visibility: hidden;
 }
 .collectible-card__back {
-  position: absolute;
-  inset: 0;
-  min-height: 0;
-  overflow: hidden;
   transform: rotateY(180deg);
 }
+.collectible-card[data-flipped=false] .collectible-card__back,
 .collectible-card[data-flipped=true] .collectible-card__face:not(.collectible-card__back) {
-  visibility: hidden;
-}
-.collectible-card__back .collectible-card__header {
-  flex-shrink: 0;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
 }
 .collectible-card__back .collectible-card__details {
   grid-template-columns: minmax(0, 1fr);
-  grid-auto-rows: max-content;
-  min-height: 0;
-  overflow-y: auto;
+  margin-top: auto;
 }
 .collectible-card__header {
   display: flex;
@@ -3145,13 +3139,6 @@
   border-radius: 18px;
   background: transparent;
   cursor: pointer;
-}
-.collectible-fan__item:has(.collectible-fan__select[aria-expanded=true]) .collectible-fan__card {
-  pointer-events: auto;
-}
-.collectible-fan__select[aria-expanded=true] {
-  bottom: auto;
-  height: 72px;
 }
 .collectible-fan__item:has(.collectible-fan__select:focus-visible),
 .collectible-fan__item:has(.collectible-fan__select[aria-expanded=true]) {
@@ -3575,4 +3562,494 @@
     grid-column: 2;
     margin-top: -8px;
   }
+}
+
+/* react/components/ui/TimingSteps.css */
+.interaction-timings {
+  margin: 16px 0;
+  min-width: 0;
+}
+.interaction-timings .process-steps__label {
+  min-width: 0;
+}
+.timing-steps .process-steps {
+  gap: 2px;
+  color: var(--ink,var(--ss-text));
+}
+.timing-steps .process-steps > li {
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  gap: 10px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+.timing-steps .process-steps > li::after {
+  display: none;
+}
+.timing-steps .process-steps__mark {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  background: transparent;
+  font-size: 11px;
+}
+.timing-steps .process-steps__mark svg {
+  width: 16px;
+  height: 16px;
+}
+.timing-steps .process-steps__label {
+  font-size: 13px;
+  min-width: 0;
+}
+.timing-steps .process-steps > li > small {
+  font-size: 0;
+  grid-column: auto;
+  margin: 0;
+}
+.timing-steps .process-steps [data-elapsed] {
+  font:
+    12px/1.5 ui-monospace,
+    SFMono-Regular,
+    monospace;
+  color: var(--muted,var(--ss-muted));
+  white-space: nowrap;
+}
+.timing-steps .process-steps > [data-status=active] {
+  background: color-mix(in srgb, var(--accent,var(--ss-primary)) 8%, transparent);
+}
+.timing-steps .process-steps > [data-status=active] .process-steps__mark {
+  color: var(--accent,var(--ss-primary));
+}
+.timing-details.ub-expand {
+  margin-top: 12px;
+  border: 0;
+  border-top: 1px solid var(--line,var(--ss-border));
+  border-radius: 0;
+  background: transparent;
+}
+.timing-details > .ub-expand-toggle {
+  min-height: 44px;
+  padding: 10px 0;
+  font-size: 12px;
+  color: var(--muted,var(--ss-muted));
+}
+.timing-details .ub-expand-body {
+  padding: 0;
+}
+@media (max-width: 520px) {
+  .timing-steps .process-steps > li {
+    gap: 8px;
+    padding: 8px;
+  }
+}
+.timing-details > .ub-expand-toggle > svg:last-child {
+  color: inherit;
+}
+
+/* react/components/ui/TransactionProgressDialog.css */
+.app-modal-dialog.interaction-progress-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line,var(--ss-border));
+  border-radius: 20px;
+  background: var(--card,var(--ss-surface));
+  color: var(--ink,var(--ss-text));
+}
+.interaction-progress-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex: none;
+  padding: 14px 18px 14px 22px;
+  border-bottom: 1px solid var(--line,var(--ss-border));
+}
+.interaction-progress-dialog__header h2 {
+  color: inherit;
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.5;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.interaction-progress-dialog__close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 11px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted,var(--ss-muted));
+}
+.interaction-progress-dialog__close:hover {
+  background: var(--hover,var(--ss-surface-hover));
+  color: var(--ink,var(--ss-text));
+}
+.interaction-progress-dialog__close svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+.interaction-progress-dialog__body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px 22px;
+}
+.interaction-progress-dialog__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.interaction-progress-dialog__summary > p {
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.interaction-progress-dialog__total {
+  display: grid;
+  flex: none;
+  gap: 2px;
+  text-align: right;
+}
+.interaction-progress-dialog__total small {
+  font-size: 11px;
+  color: var(--muted,var(--ss-muted));
+}
+.interaction-progress-dialog__total strong {
+  font:
+    500 16px/1.5 ui-monospace,
+    SFMono-Regular,
+    monospace;
+  font-variant-numeric: tabular-nums;
+}
+.interaction-progress-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  flex: none;
+  padding: 12px 22px;
+  border-top: 1px solid var(--line,var(--ss-border));
+}
+.interaction-progress-dialog__footer .app-button {
+  min-height: 44px;
+  min-width: 88px;
+}
+.interaction-progress-dialog__summary > p {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.interaction-progress-dialog__success {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--ss-success,#4f7c47);
+  border-radius: 50%;
+  color: var(--ss-success,#4f7c47);
+}
+.interaction-progress-dialog__success svg {
+  width: 18px;
+  height: 18px;
+}
+.interaction-progress-dialog__body > .transaction-recovery {
+  margin-top: 14px;
+}
+.interaction-progress-dialog__body > a {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--accent,var(--ss-primary));
+}
+@media (max-width: 520px) {
+  .app-modal-dialog.interaction-progress-dialog {
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+  }
+  .interaction-progress-dialog__header {
+    padding: 10px 12px 10px 18px;
+  }
+  .interaction-progress-dialog__body {
+    padding: 14px 16px;
+  }
+  .interaction-progress-dialog__footer {
+    padding: 10px 16px;
+  }
+}
+
+/* react/components/ui/TagsField.css */
+.tags-field {
+  border: 0;
+  padding: 0;
+  margin: 20px 0;
+}
+.tags-field legend {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+.tags-field legend small {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted,var(--ss-muted));
+}
+.tag-input {
+  border: 1px solid var(--line,var(--ss-border));
+  border-radius: 14px;
+  padding: 9px;
+  background: var(--card,var(--ss-surface));
+}
+.tag-input:focus-within {
+  border-color: var(--accent,var(--ss-primary));
+}
+.tag-entry {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-height: 40px;
+}
+.tag-entry .app-input {
+  flex: 1 1 160px;
+  width: 0;
+  min-width: 120px;
+  min-height: 40px;
+  margin: 0;
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 13px;
+}
+.tag-chip.app-button {
+  display: inline-flex;
+  gap: 7px;
+  min-height: 32px;
+  padding: 4px 9px;
+  border: 0;
+  border-radius: 8px;
+  background: #f7ebe3;
+  color: #9b5634;
+  font-size: 12px;
+}
+.tag-chip span:last-child {
+  font-size: 16px;
+  line-height: 1;
+}
+.tag-draft-count {
+  margin-left: auto;
+  padding-right: 7px;
+  color: var(--muted,var(--ss-muted));
+  font-size: 11px;
+}
+.tag-options {
+  display: grid;
+  max-height: 176px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-top: 1px solid var(--line,var(--ss-border));
+  margin-top: 8px;
+  padding-top: 6px;
+}
+.tag-option.app-button {
+  justify-content: flex-start;
+  min-height: 36px;
+  padding: 6px 10px;
+  border-radius: 7px;
+  font-size: 13px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.tag-option.is-active,
+.tag-option.app-button:hover:not(:disabled) {
+  background: var(--hover,var(--ss-surface-hover));
+}
+.tag-hint {
+  margin-top: 7px;
+  color: var(--muted,var(--ss-muted));
+  font-size: 11px;
+  line-height: 1.6;
+}
+.tag-hint--error {
+  color: #b44632;
+}
+:root[data-theme=dark] .tag-chip.app-button,
+[data-ss-theme=dark] .tag-chip.app-button {
+  background: #382a23;
+  color: #e6ad91;
+}
+
+/* react/components/ui/TokenMediaUpload.css */
+.token-media-upload {
+  width: 90px;
+  flex: 0 0 90px;
+}
+.create-media-button {
+  width: 90px;
+  height: 90px;
+  border: 1px dashed var(--line-2,var(--ss-border));
+  border-radius: 19px;
+  background: var(--bg,var(--ss-bg));
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+  display: grid;
+  place-items: center;
+  color: var(--muted,var(--ss-muted));
+}
+.create-media-button > img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+.create-media-uploading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #fff9;
+}
+.token-media-upload__remove {
+  background: none;
+  border: 0;
+  color: var(--muted,var(--ss-muted));
+  font-size: 11px;
+  padding: 5px 0;
+}
+.token-media-upload__error {
+  font-size: 12px;
+  color: #b44;
+  width: 220px;
+}
+.token-media-upload__status {
+  font-size: 12px;
+  color: var(--muted,var(--ss-muted));
+}
+.token-media-upload > input[hidden] {
+  display: none !important;
+}
+
+/* react/components/ui/CopyLinkField.css */
+.copy-link-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+.copy-link-field .app-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+}
+.copy-link-field__copy.app-button {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+}
+.copy-link-field__copy svg {
+  width: 19px;
+  height: 19px;
+}
+
+/* react/components/ui/DataValue.css */
+.value-skeleton {
+  display: inline-block;
+  vertical-align: middle;
+  max-width: 100%;
+  min-width: 4ch;
+}
+.value-skeleton .ss-skeleton-block {
+  border-radius: 5px;
+}
+.unavailable-value {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted,var(--ss-muted));
+}
+
+/* react/components/ui/ContractAddressList.css */
+.contract-assets {
+  flex-basis: 100%;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--muted,var(--ss-muted));
+  line-height: 1.6;
+}
+.contract-assets__heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.contract-assets__heading {
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.contract-assets summary {
+  cursor: pointer;
+  width: fit-content;
+  min-height: 36px;
+  align-content: center;
+  color: var(--text,var(--ss-text));
+}
+.contract-assets__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 24px;
+  margin: 12px 0;
+}
+.contract-assets__list dt {
+  font-weight: 700;
+  color: var(--text,var(--ss-text));
+}
+.contract-assets__list dd {
+  margin: 3px 0 0;
+}
+.contract-assets__list a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.contract-assets code {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+@media (max-width: 1100px) {
+  .contract-assets__list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* react/components/ui/GitHubLink.css */
+.sidebar-social-link {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: var(--muted,var(--ss-muted));
+  border-radius: 10px;
+}
+.sidebar-social-link:hover {
+  color: var(--ink,var(--ss-text));
+  background: var(--hover,var(--ss-surface-hover));
+}
+.sidebar-social-link:focus-visible {
+  outline: 2px solid var(--accent,var(--ss-primary));
+  outline-offset: 2px;
 }

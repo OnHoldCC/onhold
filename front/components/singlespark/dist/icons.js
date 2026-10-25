@@ -2,7 +2,7 @@
 import {
   SingleSparkIcon,
   singleSparkIconNames
-} from "./chunk-DRA3EEEB.js";
+} from "./chunk-I46M5C7U.js";
 import {
   SingleSparkChainIcon,
   SingleSparkTokenIcon,

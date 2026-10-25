@@ -469,7 +469,6 @@ function SingleSparkListItem({
   onClick,
   selected,
   disabled,
-  children,
   className = ""
 }) {
   const content = /* @__PURE__ */ jsxs12(Fragment, { children: [
@@ -480,7 +479,7 @@ function SingleSparkListItem({
     ] }),
     trailing != null && /* @__PURE__ */ jsx18("span", { className: "singlespark-list-trailing", children: trailing })
   ] });
-  return /* @__PURE__ */ jsxs12("li", { className: `singlespark-list-item ${className}`, children: [onClick ? /* @__PURE__ */ jsx18(
+  return /* @__PURE__ */ jsx18("li", { className: `singlespark-list-item ${className}`, children: onClick ? /* @__PURE__ */ jsx18(
     "button",
     {
       type: "button",
@@ -489,7 +488,7 @@ function SingleSparkListItem({
       disabled,
       children: content
     }
-  ) : /* @__PURE__ */ jsx18("div", { children: content }), children != null && jsx18("section", { className: "singlespark-list-content", children })] });
+  ) : /* @__PURE__ */ jsx18("div", { children: content }) });
 }
 
 // react/components/singlespark-primitives/SingleSparkList.tsx

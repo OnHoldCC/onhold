@@ -106,8 +106,7 @@ import {
   singleSparkTradeRequestKey,
   singleSparkWalletComponents,
   singleSparkWeb3Components
-} from "./chunk-ZJBPHL33.js";
-import "./chunk-Y2BLDS4Z.js";
+} from "./chunk-ZCP7T4LD.js";
 import "./chunk-JIJS2BJG.js";
 import {
   SingleSparkBondingProgress,
@@ -116,7 +115,7 @@ import {
   SingleSparkStatCard,
   SingleSparkStatGrid,
   SingleSparkTradesTable
-} from "./chunk-TBO6LKPX.js";
+} from "./chunk-OKNQGOBV.js";
 import {
   SingleSparkAccordion,
   SingleSparkAvatar,
@@ -140,7 +139,7 @@ import {
   SingleSparkTextInput,
   SingleSparkTextarea,
   singleSparkPrimitiveComponents
-} from "./chunk-K6TMLM72.js";
+} from "./chunk-TFIRYEHT.js";
 import {
   SingleSparkLoading,
   SingleSparkSkeleton,
@@ -229,7 +228,7 @@ import {
 import {
   SingleSparkIcon,
   singleSparkIconNames
-} from "./chunk-DRA3EEEB.js";
+} from "./chunk-I46M5C7U.js";
 import {
   SingleSparkAssetAmount,
   SingleSparkChainIcon,

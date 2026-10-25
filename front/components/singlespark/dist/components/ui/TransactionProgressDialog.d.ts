@@ -1,11 +1,18 @@
-import type { ReactNode } from 'react';
-import { type DetailDialogProps } from './DetailDialog';
-import { type ProcessStep } from './ProcessSteps';
-/** Presentation only; the caller owns receipts, recovery and completion. */
-export declare function TransactionProgressDialog({ status, steps, elapsed, children, labels, ...dialog }: Omit<DetailDialogProps, 'children'> & {
+import { type ReactNode } from 'react';
+import { type DialogProps } from './Dialog';
+import type { ProcessStep } from './ProcessSteps';
+import { type TimingLabels } from './TimingSteps';
+import './TransactionProgressDialog.css';
+/** Closing only dismisses this view; receipts, recovery and transaction lifetime belong to the caller. */
+export declare function TransactionProgressDialog({ title, status, steps, details, elapsed, children, labels, done, open, closeLabel, onClose, className, ...dialog }: Omit<DialogProps, 'children'> & {
+    title: string;
     status: string;
-    labels?: Partial<Record<ProcessStep['status'] | 'steps' | 'elapsed',string>>;
     steps: readonly ProcessStep[];
-    elapsed: string | undefined;
-    children: ReactNode;
-}): import("react").JSX.Element;
+    details?: readonly ProcessStep[];
+    elapsed?: string;
+    children?: ReactNode;
+    labels?: TimingLabels;
+    done?: boolean;
+    closeLabel?: string;
+    onClose: () => void;
+}): import("react").ReactPortal | null;

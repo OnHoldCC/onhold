@@ -15,6 +15,8 @@
 
 `../src/main.jsx` 只负责挂载应用，`../src/` 中的其他文件是 API、链交互、翻译、业务逻辑和静态资源。`../dist/` 是网站构建产物，不要直接修改；在项目根目录运行 `npm run build` 重新生成。
 
-交易进度通过 `InteractionProgressDialog` 组合 SingleSpark Dialog、ProcessSteps、Accordion 和按钮，默认合并底层检查并保留完整耗时详情。手机端头部 × 与底部关闭均只收起弹框，顶部可重新查看原交易。
+交易进度直接引用共享库 `/ui` 的 `TransactionProgressDialog`、`TimingSteps` 和 `TimingDetails`；计时采集和阶段合并也由共享库实现。OnHold 只绑定阶段名称、翻译、回执和恢复逻辑。手机端头部 × 与底部关闭均只收起弹框，顶部可重新查看原交易。
+
+标签输入、媒体上传、链接复制、数值加载态、合约地址列表和 GitHub 图标链接均来自共享库。更新时先在 SingleSparkUiUx 运行 `npm run build:package`，再在本项目运行 `node front/scripts/sync-singlespark.mjs ../SingleSparkUiUx`；同步只替换发行文件，保留 `runtime/` 钱包适配器。
 
 `nft-display.mjs` 只统一网站显示副本的 BANNED 印章颜色，不修改链上 NFT 元数据或已上传图片。

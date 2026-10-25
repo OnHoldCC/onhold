@@ -146,12 +146,11 @@ import { jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
 function SingleSparkWalletButton({
   address,
   connecting = false,
-  walletIcon,
   children,
   ...props
 }) {
   return /* @__PURE__ */ jsxs2(SingleSparkButton, { variant: "secondary", loading: connecting, ...props, children: [
-    walletIcon || /* @__PURE__ */ jsx2(SingleSparkIcon, { name: "wallet" }),
+    /* @__PURE__ */ jsx2(SingleSparkIcon, { name: "wallet" }),
     children || (address ? `${address.slice(0, 4)}\u2026${address.slice(-4)}` : "Connect wallet")
   ] });
 }
@@ -248,7 +247,6 @@ function SingleSparkWalletStatus({
   wallet = "Phantom",
   address,
   message,
-  walletIcon,
   onDisconnect,
   onRetry,
   className = ""
@@ -266,7 +264,7 @@ function SingleSparkWalletStatus({
       "data-status": status,
       children: [
         /* @__PURE__ */ jsxs5("div", { role: "status", "aria-live": "polite", children: [
-          /* @__PURE__ */ jsx5("span", { className: "singlespark-wallet-status-mark", children: walletIcon && status === "connected" ? walletIcon : status === "connecting" ? /* @__PURE__ */ jsx5(SingleSparkLoading, { size: 22, decorative: true }) : /* @__PURE__ */ jsx5(
+          /* @__PURE__ */ jsx5("span", { className: "singlespark-wallet-status-mark", children: status === "connecting" ? /* @__PURE__ */ jsx5(SingleSparkLoading, { size: 22, decorative: true }) : /* @__PURE__ */ jsx5(
             SingleSparkIcon,
             {
               name: status === "connected" ? "check" : status === "error" ? "close" : "wallet",
@@ -933,7 +931,7 @@ function Digit({ duration }) {
 // react/components/singlespark-home/Graph.tsx
 import { useId as useId3 } from "react";
 import { jsx as jsx20, jsxs as jsxs12 } from "react/jsx-runtime";
-function Graph({ history, label = "Activity history", loop = false }) {
+function Graph({ history, label = "Activity history" }) {
   const gradientId = useId3();
   const live = history !== void 0;
   if (live && (history.length < 2 || history.some((value) => !Number.isFinite(value)))) {
@@ -963,7 +961,7 @@ function Graph({ history, label = "Activity history", loop = false }) {
           /* @__PURE__ */ jsx20("stop", { offset: "0%", stopColor: color, stopOpacity: ".18" }),
           /* @__PURE__ */ jsx20("stop", { offset: "100%", stopColor: color, stopOpacity: ".01" })
         ] }) }),
-        /* @__PURE__ */ jsxs12("g", { className: loop && live ? "uh-history-loop" : live ? "uh-history-reveal" : "uh-stream-pan", children: (loop && live ? [0, 1, 2] : [0]).map((tile) => jsxs12("g", { className: "uh-history-tile", transform: tile === 1 ? "translate(840 0) scale(-1 1)" : `translate(${tile * 420} 0)`, children: [
+        /* @__PURE__ */ jsxs12("g", { className: live ? "uh-history-reveal" : "uh-stream-pan", children: [
           /* @__PURE__ */ jsx20(
             "path",
             {
@@ -983,9 +981,8 @@ function Graph({ history, label = "Activity history", loop = false }) {
               vectorEffect: "non-scaling-stroke",
               strokeLinecap: "round"
             }
-          ),
-          loop && live && jsx20("path", { className: "uh-history-highlight", d: curve, fill: "none", stroke: color, strokeOpacity: ".25", strokeWidth: "2", pathLength: "420", strokeDasharray: "14 126", vectorEffect: "non-scaling-stroke", strokeLinecap: "round" })
-        ] }, tile)) }, loop && live ? "history-loop" : live ? curve : void 0)
+          )
+        ] }, live ? curve : void 0)
       ]
     }
   );
@@ -1008,7 +1005,7 @@ function AnalyticsVisual({
         /* @__PURE__ */ jsx21("span", { children: metric.label }),
         controls ?? /* @__PURE__ */ jsx21("span", { children: metric.period })
       ] }),
-      /* @__PURE__ */ jsx21("div", { className: "uh-fee-number", children: metric.unavailable ? unavailable : metric.value == null ? /* @__PURE__ */ jsx21(SingleSparkSkeleton, { variant: "input", width: 140, height: 48, label: `Loading ${metric.label}` }) : /* @__PURE__ */ jsx21(SingleSparkMoney, { value: metric.value, title: metric.valueTitle, "aria-label": metric.valueTitle }) }),
+      /* @__PURE__ */ jsx21("div", { className: "uh-fee-number", children: metric.unavailable ? unavailable : metric.value == null ? /* @__PURE__ */ jsx21(SingleSparkSkeleton, { variant: "input", width: 140, height: 48, label: `Loading ${metric.label}` }) : /* @__PURE__ */ jsx21(SingleSparkMoney, { value: metric.value }) }),
       stats && /* @__PURE__ */ jsx21("dl", { className: "uh-analytics-stats", children: stats.map((stat) => /* @__PURE__ */ jsxs13("div", { children: [
         /* @__PURE__ */ jsx21("dt", { children: stat.label }),
         /* @__PURE__ */ jsxs13("dd", { children: [
@@ -1019,7 +1016,7 @@ function AnalyticsVisual({
     ] }),
     /* @__PURE__ */ jsxs13("div", { className: `uh-graph uh-graph-live ${stats ? "uh-graph-summary" : ""}`, children: [
       /* @__PURE__ */ jsx21("div", { className: "uh-graph-grid" }),
-      /* @__PURE__ */ jsx21(Graph, { history: metric.history, loop: true, label: `${metric.label} history` }),
+      /* @__PURE__ */ jsx21(Graph, { history: metric.history, label: `${metric.label} history` }, metric.period),
       /* @__PURE__ */ jsx21("div", { className: "uh-graph-fade uh-graph-left" }),
       /* @__PURE__ */ jsx21("div", { className: "uh-graph-fade uh-graph-right" })
     ] })
@@ -1030,7 +1027,7 @@ function AnalyticsVisual({
         /* @__PURE__ */ jsx21("span", { children: metric?.label ?? "Fees" }),
         metric ? controls ?? /* @__PURE__ */ jsx21("span", { children: metric.period }) : /* @__PURE__ */ jsx21("div", { children: /* @__PURE__ */ jsx21("div", { className: "uh-timeframes", children: ["1D", "30D", "All time", "1D"].map((label, i) => /* @__PURE__ */ jsx21("span", { children: label }, i)) }) })
       ] }),
-      /* @__PURE__ */ jsx21("div", { className: "uh-fee-number", children: metric?.unavailable ? unavailable : metric && metric.value == null ? /* @__PURE__ */ jsx21(SingleSparkSkeleton, { variant: "input", width: 140, height: 48, label: `Loading ${metric.label}` }) : metric?.format === "count" ? /* @__PURE__ */ jsx21(SingleSparkMoney, { value: metric.value, title: metric.valueTitle, "aria-label": metric.valueTitle }) : metric ? /* @__PURE__ */ jsxs13("div", { className: "uh-animated-metric", "aria-label": metric.value, title: metric.value, children: [
+      /* @__PURE__ */ jsx21("div", { className: "uh-fee-number", children: metric?.unavailable ? unavailable : metric && metric.value == null ? /* @__PURE__ */ jsx21(SingleSparkSkeleton, { variant: "input", width: 140, height: 48, label: `Loading ${metric.label}` }) : metric?.format === "count" ? /* @__PURE__ */ jsx21(SingleSparkMoney, { value: metric.value }) : metric ? /* @__PURE__ */ jsxs13("div", { className: "uh-animated-metric", "aria-label": metric.value, title: metric.value, children: [
         /* @__PURE__ */ jsx21("span", { className: "singlespark-sr-only", children: metric.value }),
         Number(metric.value.replaceAll(",", "")) >= 1 ? /* @__PURE__ */ jsxs13("span", { "aria-hidden": "true", children: [
           metric.value.split(".")[0],
@@ -1493,7 +1490,6 @@ import { jsx as jsx35, jsxs as jsxs21 } from "react/jsx-runtime";
 function SingleSparkSidebar({
   className,
   brandHref = "/",
-  brandLabel = "SingleSpark",
   brand,
   localLinks = false,
   footer,
@@ -1519,7 +1515,7 @@ function SingleSparkSidebar({
               {
                 path: brandHref,
                 local: localLinks,
-                label: brandLabel,
+                label: "SingleSpark",
                 component: "SingleSparkHero",
                 onNavigate,
                 className: "uh-brand",

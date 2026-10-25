@@ -6,25 +6,30 @@ import {
   Checkbox,
   Input,
   NavigationIndicator,
+  NotificationFrame,
   RangeInput,
   Textarea
-} from "./chunk-Y2BLDS4Z.js";
+} from "./chunk-ZCP7T4LD.js";
 import "./chunk-JIJS2BJG.js";
 import {
   SingleSparkSparkline
-} from "./chunk-TBO6LKPX.js";
+} from "./chunk-OKNQGOBV.js";
 import {
+  SingleSparkAccordion,
   SingleSparkButton,
   SingleSparkNotice,
   SingleSparkPanel
-} from "./chunk-K6TMLM72.js";
+} from "./chunk-TFIRYEHT.js";
 import {
   SingleSparkLoading,
   SingleSparkSkeleton
 } from "./chunk-V7OTFJLA.js";
+import "./chunk-C5AITWP6.js";
+import "./chunk-2AUPHWIP.js";
+import "./chunk-R25B6UBL.js";
 import {
   SingleSparkIcon
-} from "./chunk-DRA3EEEB.js";
+} from "./chunk-I46M5C7U.js";
 import {
   SingleSparkMoney
 } from "./chunk-BX7LGP4G.js";
@@ -1730,7 +1735,7 @@ function ComingSoonOverlay({ title, description, children }) {
 
 // react/components/ui/ProcessSteps.tsx
 import { Fragment as Fragment5, jsx as jsx33, jsxs as jsxs29 } from "react/jsx-runtime";
-function ProcessSteps({ steps, label, statusLabels = {} }) {
+function ProcessSteps({ steps, label, statusLabels = {}, elapsedLabel = "Elapsed time" }) {
   const states = { pending: "Not started", active: "In progress", complete: "Completed", error: "Stopped" };
   return /* @__PURE__ */ jsx33("ol", { className: "process-steps", "aria-label": label, "aria-busy": steps.some((step) => step.status === "active"), children: steps.map((step, index) => /* @__PURE__ */ jsxs29(
     "li",
@@ -1747,7 +1752,7 @@ function ProcessSteps({ steps, label, statusLabels = {} }) {
           statusLabels[step.status] ?? states[step.status],
           step.elapsed && /* @__PURE__ */ jsxs29(Fragment5, { children: [
             " \xB7 ",
-            /* @__PURE__ */ jsx33("span", { "aria-label": "Elapsed time", children: step.elapsed })
+            /* @__PURE__ */ jsx33("span", { "data-elapsed": true, "aria-label": elapsedLabel, children: step.elapsed })
           ] })
         ] })
       ]
@@ -1757,16 +1762,515 @@ function ProcessSteps({ steps, label, statusLabels = {} }) {
 }
 
 // react/components/ui/TransactionProgressDialog.tsx
-import { jsx as jsx34, jsxs as jsxs30 } from "react/jsx-runtime";
-function TransactionProgressDialog({ status, steps, elapsed, children, labels = {}, ...dialog }) {
-  return /* @__PURE__ */ jsxs30(DetailDialog, { ...dialog, children: [
-    /* @__PURE__ */ jsx34("p", { role: "status", "aria-live": "polite", style: { overflowWrap: "anywhere" }, children: status }),
-    /* @__PURE__ */ jsx34(ProcessSteps, { steps, label: labels.steps ?? "Transaction steps", statusLabels: labels }),
-    /* @__PURE__ */ jsxs30("p", { children: [
-      (labels.elapsed ?? "Total elapsed") + ": ",
-      /* @__PURE__ */ jsx34("span", { "aria-label": labels.elapsed ?? "Total elapsed time", children: elapsed })
+import { useMemo } from "react";
+import { createPortal as createPortal3 } from "react-dom";
+
+// react/components/ui/TimingSteps.tsx
+import { jsx as jsx34 } from "react/jsx-runtime";
+function TimingSteps({ steps, labels = {} }) {
+  return /* @__PURE__ */ jsx34("div", { className: "timing-steps", children: /* @__PURE__ */ jsx34(
+    ProcessSteps,
+    {
+      steps: steps.map((step) => ({ ...step, description: step.status === "active" ? step.description : void 0 })),
+      label: labels.steps ?? "Transaction steps",
+      statusLabels: labels,
+      elapsedLabel: labels.elapsed
+    }
+  ) });
+}
+
+// react/components/ui/TimingDetails.tsx
+import { jsx as jsx35 } from "react/jsx-runtime";
+function TimingDetails({ steps, details, labels = {} }) {
+  if (!details?.length || details.length <= steps.length) return null;
+  return /* @__PURE__ */ jsx35(SingleSparkAccordion, { className: "timing-details", label: labels.details ?? "Timing details", children: /* @__PURE__ */ jsx35(TimingSteps, { steps: details, labels }) });
+}
+
+// react/components/ui/TransactionProgressDialog.tsx
+import { jsx as jsx36, jsxs as jsxs30 } from "react/jsx-runtime";
+function TransactionProgressDialog({
+  title,
+  status,
+  steps,
+  details,
+  elapsed,
+  children,
+  labels = {},
+  done = false,
+  open = true,
+  closeLabel = "Close",
+  onClose,
+  className = "",
+  ...dialog
+}) {
+  const portalTheme = useMemo(() => {
+    if (!open || typeof window === "undefined" || typeof getComputedStyle === "undefined") return {};
+    const style = getComputedStyle(document.activeElement ?? document.body);
+    const aliases = {
+      "--card": "--ss-surface",
+      "--panel": "--ss-surface",
+      "--bg": "--ss-bg",
+      "--ink": "--ss-text",
+      "--text-strong": "--ss-text",
+      "--muted": "--ss-muted",
+      "--line": "--ss-border",
+      "--accent": "--ss-primary",
+      "--button-bg": "--ss-primary",
+      "--button-text": "--ss-primary-text",
+      "--button-hover": "--ss-primary-hover"
+    };
+    return Object.fromEntries(Object.entries(aliases).map(([name, token]) => [
+      name,
+      style.getPropertyValue(name).trim() || (name === "--text-strong" ? style.getPropertyValue("--ink").trim() : "") || style.getPropertyValue(token).trim()
+    ]).filter(([, value]) => value));
+  }, [open]);
+  if (!open || typeof document === "undefined") return null;
+  return createPortal3(/* @__PURE__ */ jsxs30(
+    Dialog,
+    {
+      ...dialog,
+      open: true,
+      onClose,
+      ariaLabel: dialog.ariaLabel ?? title,
+      overlayStyle: { ...portalTheme, ...dialog.overlayStyle },
+      className: `interaction-progress-dialog ${className}`.trim(),
+      children: [
+        /* @__PURE__ */ jsxs30("header", { className: "interaction-progress-dialog__header", children: [
+          /* @__PURE__ */ jsx36("h2", { children: title }),
+          /* @__PURE__ */ jsx36("button", { type: "button", className: "interaction-progress-dialog__close", "aria-label": closeLabel, onClick: onClose, children: /* @__PURE__ */ jsx36(SingleSparkIcon, { name: "close", size: 22 }) })
+        ] }),
+        /* @__PURE__ */ jsxs30("div", { className: "interaction-progress-dialog__body", children: [
+          /* @__PURE__ */ jsxs30("div", { className: "interaction-progress-dialog__summary", children: [
+            /* @__PURE__ */ jsxs30("p", { role: "status", "aria-live": "polite", children: [
+              done && /* @__PURE__ */ jsx36("span", { className: "interaction-progress-dialog__success", "aria-hidden": "true", children: /* @__PURE__ */ jsx36(SingleSparkIcon, { name: "check", size: 18 }) }),
+              status
+            ] }),
+            /* @__PURE__ */ jsxs30("span", { className: "interaction-progress-dialog__total", children: [
+              /* @__PURE__ */ jsx36("small", { children: labels.elapsed ?? "Total elapsed" }),
+              /* @__PURE__ */ jsx36("strong", { children: elapsed })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsx36(TimingSteps, { steps, labels }),
+          /* @__PURE__ */ jsx36(TimingDetails, { steps, details, labels }),
+          children
+        ] }),
+        /* @__PURE__ */ jsx36("footer", { className: "interaction-progress-dialog__footer", children: /* @__PURE__ */ jsx36(Button, { onClick: onClose, children: closeLabel }) })
+      ]
+    }
+  ), document.body);
+}
+
+// react/components/ui/InteractionTiming.ts
+import { useEffect as useEffect5, useState as useState12 } from "react";
+function createInteractionTiming(onChange) {
+  const state = { started: performance.now(), ended: null, rows: [] };
+  const publish = () => {
+    try {
+      onChange?.({ ...state, rows: state.rows.map((row) => ({ ...row })) });
+    } catch {
+    }
+  };
+  return {
+    async measure(key, task) {
+      if (state.ended !== null) return task();
+      const row = { id: `${key}-${state.rows.length}`, key, started: performance.now(), duration: null, status: "active" };
+      state.rows.push(row);
+      publish();
+      try {
+        const value = await task();
+        if (state.ended === null) row.status = "complete";
+        return value;
+      } catch (error) {
+        if (state.ended === null) row.status = "error";
+        throw error;
+      } finally {
+        if (state.ended === null) {
+          row.duration = Math.max(0, performance.now() - row.started);
+          publish();
+        }
+      }
+    },
+    finish() {
+      if (state.ended !== null) return;
+      state.ended = performance.now();
+      for (const row of state.rows) if (row.status === "active") {
+        row.status = "error";
+        row.duration = Math.max(0, state.ended - row.started);
+      }
+      publish();
+    }
+  };
+}
+var formatDuration = (ms) => ms < 1e3 ? `${Math.round(Math.max(0, ms))} ms` : `${(ms / 1e3).toFixed(1)} s`;
+function timingSteps(timing, options, now) {
+  return timing.rows.map((row) => ({
+    id: row.id,
+    label: options.label(row.key),
+    description: options.description?.(row.key),
+    status: row.status,
+    elapsed: formatDuration(row.duration ?? Math.max(0, (timing.ended ?? now) - row.started))
+  }));
+}
+function compactTimingSteps(timing, options, now) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const row of timing.rows) {
+    const key = options.groups?.[row.key] ?? row.key;
+    if (!groups.has(key)) groups.set(key, { id: key, label: options.label(key), status: "complete", duration: 0 });
+    const group = groups.get(key);
+    group.duration += row.duration ?? Math.max(0, (timing.ended ?? now) - row.started);
+    if (row.status === "active") {
+      group.status = "active";
+      group.description = options.description?.(row.key);
+    } else if (row.status === "error" && group.status !== "active") group.status = "error";
+  }
+  return [...groups.values()].map(({ duration, ...group }) => ({ ...group, elapsed: formatDuration(duration) }));
+}
+function useInteractionTimings(timing, options) {
+  const [now, setNow] = useState12(() => performance.now());
+  useEffect5(() => {
+    if (!timing || timing.ended !== null) return;
+    setNow(performance.now());
+    const timer = setInterval(() => setNow(performance.now()), 250);
+    return () => clearInterval(timer);
+  }, [timing?.started, timing?.ended]);
+  return timing ? {
+    steps: compactTimingSteps(timing, options, now),
+    details: timingSteps(timing, options, now),
+    elapsed: formatDuration(Math.max(0, (timing.ended ?? Math.max(now, timing.started)) - timing.started))
+  } : null;
+}
+
+// react/components/ui/TagsField.tsx
+import { useEffect as useEffect6, useId as useId7, useRef as useRef13, useState as useState13 } from "react";
+import { jsx as jsx37, jsxs as jsxs31 } from "react/jsx-runtime";
+function TagsField({ value, onChange, labels, suggestions = [], maxTags = 10, maxCharacters = 10 }) {
+  const [draft, setDraft] = useState13(""), [open, setOpen] = useState13(false), [active, setActive] = useState13(-1), [error, setError] = useState13("");
+  const input = useRef13(null), id = useId7(), query = draft.trim();
+  const options = suggestions.filter((tag) => !value.includes(tag) && tag.toLowerCase().includes(query.toLowerCase())).map((tag) => ({ value: tag, label: tag }));
+  if (query && !value.includes(query) && !suggestions.includes(query)) options.unshift({ value: query, label: `${labels.add} \u201C${query}\u201D` });
+  const disabled = (option) => value.length >= maxTags || Array.from(option.value).length > maxCharacters;
+  useEffect6(() => {
+    if (open && active >= 0) document.getElementById(`${id}-${active}`)?.scrollIntoView({ block: "nearest" });
+  }, [open, active, id]);
+  function add(tag) {
+    const next = tag.trim();
+    if (!next) return;
+    if (Array.from(next).length > maxCharacters) {
+      setError(labels.length);
+      return;
+    }
+    if (value.includes(next)) {
+      setDraft("");
+      return;
+    }
+    if (value.length >= maxTags) {
+      setError(labels.limit);
+      return;
+    }
+    onChange([...value, next]);
+    setDraft("");
+    setActive(-1);
+    setError("");
+    setOpen(true);
+    input.current?.focus();
+  }
+  function remove(index) {
+    onChange(value.filter((_, i) => i !== index));
+    setError("");
+    setActive(-1);
+  }
+  function keyDown(event) {
+    if (event.nativeEvent.isComposing || event.keyCode === 229) return;
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const selected = options[active];
+      add(open && selected && !disabled(selected) ? selected.value : draft);
+    } else if (event.key === "Escape") {
+      if (open) {
+        event.preventDefault();
+        event.stopPropagation();
+        setOpen(false);
+      }
+    } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      setOpen(true);
+      const enabled = options.map((option, index2) => disabled(option) ? -1 : index2).filter((index2) => index2 >= 0);
+      if (!enabled.length) return;
+      const direction = event.key === "ArrowDown" ? 1 : -1, index = enabled.indexOf(active);
+      setActive(enabled[index < 0 ? direction > 0 ? 0 : enabled.length - 1 : (index + direction + enabled.length) % enabled.length]);
+    } else if (event.key === "Backspace" && !draft && value.length) remove(value.length - 1);
+  }
+  return /* @__PURE__ */ jsxs31("fieldset", { className: "tags-field", children: [
+    /* @__PURE__ */ jsxs31("legend", { children: [
+      labels.label,
+      " ",
+      /* @__PURE__ */ jsxs31("small", { children: [
+        value.length,
+        "/",
+        maxTags,
+        " ",
+        labels.countUnit
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxs31("div", { className: "tag-input", onBlur: (event) => {
+      if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+    }, children: [
+      /* @__PURE__ */ jsxs31("div", { className: "tag-entry", onClick: (event) => {
+        if (event.target === event.currentTarget) input.current?.focus();
+      }, children: [
+        value.map((tag, index) => /* @__PURE__ */ jsxs31(Button, { className: "tag-chip", size: "sm", variant: "ghost", onClick: () => remove(index), "aria-label": `${labels.remove} ${tag}`, children: [
+          tag,
+          /* @__PURE__ */ jsx37("span", { "aria-hidden": "true", children: "\xD7" })
+        ] }, tag)),
+        /* @__PURE__ */ jsx37(Input, { bare: true, ref: input, role: "combobox", "aria-label": labels.input, "aria-autocomplete": "list", "aria-expanded": open, "aria-controls": `${id}-options`, "aria-activedescendant": open && active >= 0 ? `${id}-${active}` : void 0, "aria-describedby": `${id}-hint`, "aria-invalid": Boolean(error), autoComplete: "off", placeholder: labels.input, value: draft, onFocus: () => setOpen(true), onChange: (event) => {
+          setDraft(event.target.value);
+          setActive(-1);
+          setError("");
+          setOpen(true);
+        }, onKeyDown: keyDown }),
+        draft && /* @__PURE__ */ jsxs31("small", { className: "tag-draft-count", children: [
+          Array.from(draft).length,
+          "/",
+          maxCharacters
+        ] })
+      ] }),
+      open && options.length > 0 && /* @__PURE__ */ jsx37("div", { className: "tag-options", id: `${id}-options`, role: "listbox", "aria-label": labels.options, children: options.map((option, index) => /* @__PURE__ */ jsx37(Button, { id: `${id}-${index}`, role: "option", "aria-selected": active === index, disabled: disabled(option), className: active === index ? "tag-option is-active" : "tag-option", variant: "ghost", onMouseDown: (event) => event.preventDefault(), onClick: () => add(option.value), title: disabled(option) ? labels.limit : void 0, children: option.label }, option.value)) })
+    ] }),
+    /* @__PURE__ */ jsx37("p", { className: `tag-hint ${error ? "tag-hint--error" : ""}`, id: `${id}-hint`, role: error ? "alert" : void 0, children: error || labels.limit })
+  ] });
+}
+
+// react/components/ui/TokenMediaUpload.tsx
+import { useEffect as useEffect7, useRef as useRef14, useState as useState14 } from "react";
+import { Fragment as Fragment6, jsx as jsx38, jsxs as jsxs32 } from "react/jsx-runtime";
+function TokenMediaUpload({
+  value,
+  t,
+  authenticated,
+  onAuthenticate,
+  onChange,
+  onBusyChange,
+  uploadMedia,
+  large = false,
+  imagesOnly = false,
+  disabled = false,
+  compact = false,
+  renderError
+}) {
+  const inputRef = useRef14(null);
+  const objectUrlRef = useRef14(null);
+  const uploadedUrlRef = useRef14(null);
+  const [preview, setPreview] = useState14(value);
+  const [mediaType, setMediaType] = useState14("");
+  const [uploading, setUploading] = useState14(false);
+  const [error, setError] = useState14(null);
+  const isVideo = mediaType.startsWith("video/") || /\.(?:mp4|webm)(?:$|[?#])/i.test(preview);
+  useEffect7(() => {
+    if (objectUrlRef.current && (!uploadedUrlRef.current || value === uploadedUrlRef.current)) return;
+    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    objectUrlRef.current = null;
+    uploadedUrlRef.current = null;
+    setPreview(value);
+  }, [value]);
+  useEffect7(() => () => {
+    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+  }, []);
+  const clear = () => {
+    if (uploading || disabled) return;
+    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    objectUrlRef.current = null;
+    uploadedUrlRef.current = null;
+    setPreview("");
+    setMediaType("");
+    setError(null);
+    onChange("");
+  };
+  const upload = async (file) => {
+    if (!file || uploading || disabled || !authenticated) return;
+    const allowed = imagesOnly ? ["image/png", "image/jpeg", "image/webp"] : ["image/png", "image/jpeg", "image/webp", "video/mp4", "video/webm"];
+    if (!allowed.includes(file.type)) {
+      setError("create.media.invalidImage");
+      return;
+    }
+    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    objectUrlRef.current = URL.createObjectURL(file);
+    uploadedUrlRef.current = null;
+    setPreview(objectUrlRef.current);
+    setMediaType(file.type);
+    setUploading(true);
+    setError(null);
+    onBusyChange(true);
+    let timer;
+    try {
+      const publish = async () => {
+        if (!uploadMedia) throw Error("create.media.unavailable");
+        return uploadMedia(file);
+      };
+      const url = await Promise.race([publish(), new Promise((_, reject) => {
+        timer = setTimeout(() => reject(Error("create.media.timeout")), 6e4);
+      })]);
+      uploadedUrlRef.current = url;
+      onChange(url);
+    } catch (cause) {
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+      uploadedUrlRef.current = null;
+      setPreview(value);
+      setMediaType("");
+      const key = cause instanceof Error ? cause.message : "";
+      setError(["create.media.invalidImage", "create.media.tooLarge", "create.media.unavailable", "create.media.timeout"].includes(key) ? key : "create.media.failed");
+    } finally {
+      clearTimeout(timer);
+      setUploading(false);
+      onBusyChange(false);
+    }
+  };
+  return /* @__PURE__ */ jsxs32("div", { className: `token-media-upload${large ? " token-media-upload--large" : ""}${compact ? " token-media-upload--compact" : ""}`, children: [
+    /* @__PURE__ */ jsxs32(
+      "button",
+      {
+        className: "create-media-button",
+        type: "button",
+        "aria-label": t(authenticated ? imagesOnly ? "create.media.selectImage" : "create.media.select" : "create.media.authenticate"),
+        title: t(authenticated ? imagesOnly ? "create.media.selectImage" : "create.media.select" : "create.media.authenticate"),
+        disabled: uploading || disabled,
+        "aria-busy": uploading,
+        onClick: () => authenticated ? inputRef.current?.click() : onAuthenticate(),
+        children: [
+          preview ? isVideo ? /* @__PURE__ */ jsx38("video", { src: preview, "aria-label": t("create.media.preview"), muted: true, loop: true, autoPlay: true, playsInline: true }) : /* @__PURE__ */ jsx38("img", { src: preview, alt: t("create.media.preview") }) : compact ? /* @__PURE__ */ jsx38(SingleSparkIcon, { name: "image", size: 26, className: "token-media-upload__image-icon" }) : /* @__PURE__ */ jsxs32(Fragment6, { children: [
+            !imagesOnly && /* @__PURE__ */ jsx38("i", { className: "ph ph-image" }),
+            /* @__PURE__ */ jsx38("span", { children: t(imagesOnly ? "create.media.selectImage" : "create.media.placeholder") }),
+            /* @__PURE__ */ jsx38("small", { children: t(imagesOnly ? "create.media.imageHint" : "create.media.dropHint") })
+          ] }),
+          uploading && /* @__PURE__ */ jsx38("span", { className: "create-media-uploading", "aria-hidden": "true", children: /* @__PURE__ */ jsx38(SingleSparkLoading, { size: 24, decorative: true }) })
+        ]
+      }
+    ),
+    uploading && /* @__PURE__ */ jsx38("span", { className: "token-media-upload__status", role: "status", children: t("create.media.uploading") }),
+    /* @__PURE__ */ jsx38(
+      "input",
+      {
+        ref: inputRef,
+        "data-testid": "token-media-input",
+        "aria-label": t("create.media.fileInput"),
+        type: "file",
+        hidden: true,
+        accept: imagesOnly ? "image/png,image/jpeg,image/webp" : "image/png,image/jpeg,image/webp,video/mp4,video/webm",
+        disabled: uploading || disabled,
+        onChange: (event) => {
+          const file = event.currentTarget.files?.[0];
+          event.currentTarget.value = "";
+          void upload(file);
+        }
+      }
+    ),
+    error && (renderError ? renderError(t(error)) : /* @__PURE__ */ jsx38("div", { className: "u-business token-media-upload__error", role: "alert", children: /* @__PURE__ */ jsx38(NotificationFrame, { variant: "toast", children: t(error) }) })),
+    preview && !uploading && /* @__PURE__ */ jsx38("button", { className: "token-media-upload__remove", type: "button", disabled, onClick: clear, children: t(imagesOnly ? "create.media.removeImage" : "create.media.remove") })
+  ] });
+}
+
+// react/components/ui/CopyLinkField.tsx
+import { useEffect as useEffect8, useRef as useRef15, useState as useState15 } from "react";
+import { jsx as jsx39, jsxs as jsxs33 } from "react/jsx-runtime";
+function CopyLinkField({ value, label, copyLabel = "Copy link", copiedLabel = "Copied", onError }) {
+  const [copiedValue, setCopiedValue] = useState15(null);
+  const current = useRef15(value);
+  useEffect8(() => {
+    current.current = value;
+    setCopiedValue(null);
+  }, [value]);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      if (current.current === value) setCopiedValue(value);
+    } catch (error) {
+      onError?.(error);
+    }
+  }
+  const copied = copiedValue === value;
+  return /* @__PURE__ */ jsxs33("div", { className: "copy-link-field", children: [
+    /* @__PURE__ */ jsx39(Input, { readOnly: true, value, "aria-label": label }),
+    /* @__PURE__ */ jsx39(
+      Button,
+      {
+        variant: "ghost",
+        className: "copy-link-field__copy",
+        disabled: !value,
+        onClick: () => void copy(),
+        "aria-label": copied ? copiedLabel : copyLabel,
+        title: copied ? copiedLabel : copyLabel,
+        children: /* @__PURE__ */ jsx39(SingleSparkIcon, { name: copied ? "check" : "copy" })
+      }
+    )
+  ] });
+}
+
+// react/components/ui/DataValue.tsx
+import { Fragment as Fragment7, jsx as jsx40, jsxs as jsxs34 } from "react/jsx-runtime";
+function DataValue({
+  value,
+  loading = false,
+  loadingLabel = "Loading data",
+  unavailableLabel = "Unavailable",
+  unit,
+  digits = 4,
+  lang = "en",
+  compact = false
+}) {
+  if (loading && value == null) return /* @__PURE__ */ jsx40(SingleSparkSkeleton, { variant: "input", width: "7ch", height: "1.2em", className: "value-skeleton", label: loadingLabel });
+  if (value == null || typeof value === "string" && !value.trim() || !Number.isFinite(Number(value))) return /* @__PURE__ */ jsx40("span", { className: "unavailable-value", children: unavailableLabel });
+  const full = String(value), short = compact && Number(value) >= 1e3;
+  const formatted = short ? new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 2 }).format(Number(value)) : new Intl.NumberFormat(lang === "zh" ? "zh-CN" : lang, { maximumFractionDigits: digits }).format(typeof value === "bigint" ? value : Number(value));
+  const money = /* @__PURE__ */ jsx40(SingleSparkMoney, { value: formatted, "aria-label": short ? full : void 0 });
+  return /* @__PURE__ */ jsxs34(Fragment7, { children: [
+    short ? /* @__PURE__ */ jsx40("span", { title: full, children: money }) : money,
+    unit && /* @__PURE__ */ jsxs34(Fragment7, { children: [
+      " ",
+      unit
+    ] })
+  ] });
+}
+
+// react/components/ui/ContractAddressList.tsx
+import { jsx as jsx41, jsxs as jsxs35 } from "react/jsx-runtime";
+function ContractAddressList({ network, label, entries, actions, children }) {
+  return /* @__PURE__ */ jsxs35("section", { className: "contract-assets", "aria-label": label, children: [
+    /* @__PURE__ */ jsxs35("div", { className: "contract-assets__heading", children: [
+      /* @__PURE__ */ jsx41("span", { children: network }),
+      actions
+    ] }),
+    /* @__PURE__ */ jsxs35("details", { children: [
+      /* @__PURE__ */ jsx41("summary", { children: label }),
+      /* @__PURE__ */ jsx41("dl", { className: "contract-assets__list", children: entries.map((entry) => /* @__PURE__ */ jsxs35("div", { children: [
+        /* @__PURE__ */ jsx41("dt", { children: entry.label }),
+        /* @__PURE__ */ jsx41("dd", { children: /* @__PURE__ */ jsxs35("a", { href: entry.href, target: "_blank", rel: "noreferrer", children: [
+          /* @__PURE__ */ jsx41("code", { children: entry.address }),
+          " \u2197"
+        ] }) })
+      ] }, entry.address + entry.label)) })
     ] }),
     children
+  ] });
+}
+
+// react/components/ui/GitHubLink.tsx
+import { jsx as jsx42 } from "react/jsx-runtime";
+function GitHubLink({ href, label, title, className = "sidebar-social-link" }) {
+  return /* @__PURE__ */ jsx42("a", { className, href, target: "_blank", rel: "noopener noreferrer", "aria-label": label, title, children: /* @__PURE__ */ jsx42("svg", { viewBox: "0 0 16 16", width: "20", height: "20", fill: "currentColor", "aria-hidden": "true", children: /* @__PURE__ */ jsx42("path", { d: "M6.766 11.328c-2.063-.25-3.516-1.734-3.516-3.656 0-.781.281-1.625.75-2.188-.203-.515-.172-1.609.063-2.062.625-.078 1.468.25 1.968.703.594-.187 1.219-.281 1.985-.281.765 0 1.39.094 1.953.265.484-.437 1.344-.765 1.969-.687.218.422.25 1.515.046 2.047.5.593.766 1.39.766 2.203 0 1.922-1.453 3.375-3.547 3.64.531.344.89 1.094.89 1.954v1.625c0 .468.391.734.86.547C13.781 14.359 16 11.53 16 8.03 16 3.61 12.406 0 7.984 0 3.563 0 0 3.61 0 8.031a7.88 7.88 0 0 0 5.172 7.422c.422.156.828-.125.828-.547v-1.25c-.219.094-.5.156-.75.156-1.031 0-1.64-.562-2.078-1.609-.172-.422-.36-.672-.719-.719-.187-.015-.25-.093-.25-.187 0-.188.313-.328.625-.328.453 0 .844.281 1.25.86.313.452.64.655 1.031.655s.641-.14 1-.5c.266-.265.47-.5.657-.656" }) }) });
+}
+
+// react/components/ui/InteractionTimings.tsx
+import { jsx as jsx43, jsxs as jsxs36 } from "react/jsx-runtime";
+function InteractionTimings({ view, labels = {} }) {
+  if (!view?.steps.length) return null;
+  return /* @__PURE__ */ jsxs36("section", { className: "interaction-timings", "aria-label": labels.steps ?? "Transaction steps", children: [
+    /* @__PURE__ */ jsx43(TimingSteps, { steps: view.steps, labels }),
+    /* @__PURE__ */ jsxs36("p", { className: "fine-print", children: [
+      labels.elapsed ?? "Total elapsed",
+      ": ",
+      /* @__PURE__ */ jsx43("span", { children: view.elapsed })
+    ] }),
+    /* @__PURE__ */ jsx43(TimingDetails, { ...view, labels })
   ] });
 }
 export {
@@ -1781,11 +2285,16 @@ export {
   CollectibleMarquee,
   CollectibleReel,
   ComingSoonOverlay,
+  ContractAddressList,
+  CopyLinkField,
   DataTable,
+  DataValue,
   DetailDialog,
   Dialog,
   EmptyState,
+  GitHubLink,
   Input,
+  InteractionTimings,
   LaunchFormLayout,
   LaunchWizard,
   LocationSharingField,
@@ -1803,16 +2312,25 @@ export {
   Skeleton,
   Sparkline,
   StatTile,
+  TagsField,
   Textarea,
+  TimingDetails,
+  TimingSteps,
   TokenCardLayout,
   TokenDetailHeader,
   TokenDetailLayout,
   TokenHistoryToolbar,
   TokenLaunchPreview,
+  TokenMediaUpload,
   TokenPluginPanel,
   TransactionProgressDialog,
   TransactionRecovery,
   VaultOverview,
+  compactTimingSteps,
+  createInteractionTiming,
+  formatDuration,
   tiltCollectibleCard,
-  useDialogInteraction
+  timingSteps,
+  useDialogInteraction,
+  useInteractionTimings
 };

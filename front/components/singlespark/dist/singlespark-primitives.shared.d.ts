@@ -39,7 +39,6 @@ export interface SingleSparkAccordionProps {
     className?: string;
 }
 export interface SingleSparkListItemProps {
-    children?: ReactNode;
     selected?: boolean;
     disabled?: boolean;
     title?: ReactNode;
@@ -48,6 +47,7 @@ export interface SingleSparkListItemProps {
     trailing?: ReactNode;
     onClick?: () => void;
     className?: string;
+    children?: ReactNode;
 }
 export declare const SingleSparkAvatarAsset0: URL;
 export declare const SingleSparkListAsset1: URL;
